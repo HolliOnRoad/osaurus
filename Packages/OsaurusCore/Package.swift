@@ -20,6 +20,7 @@ let package = Package(
         .package(url: "https://github.com/rryam/VecturaKit", branch: "main"),
         .package(url: "https://github.com/21-DOT-DEV/swift-secp256k1", exact: "0.21.1"),
         .package(path: "../OsaurusRepository"),
+        .package(path: "../VMLXRuntime"),
         .package(url: "https://github.com/mgriebling/SwiftMath", from: "1.7.3"),
     ],
     targets: [
@@ -45,6 +46,7 @@ let package = Package(
                 .product(name: "SwiftMath", package: "SwiftMath"),
                 .product(name: "Containerization", package: "containerization"),
                 .product(name: "ContainerizationExtras", package: "containerization"),
+                .product(name: "VMLXRuntime", package: "VMLXRuntime"),
             ],
             path: ".",
             exclude: ["Tests"]
