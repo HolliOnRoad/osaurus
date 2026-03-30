@@ -102,19 +102,17 @@ public func vmlxLoadWeights(
         // Quantize all layers with config-level bits/group_size.
         // The actual per-layer bits will be fixed by vmlxFixQuantizedBits() after
         // model.update() loads the packed weights.
+        var quantizedCount = 0
         quantize(model: model) { path, module in
             if weights["\(path).scales"] != nil {
+                quantizedCount += 1
                 return (defaultGroupSize, defaultBits, mode)
             }
             return nil
         }
+        print("[WeightLoader] Quantized \(quantizedCount) modules, bits=\(defaultBits), gs=\(defaultGroupSize)")
     }
 
-    // 4. Load weights into model
-    // Use .noUnusedKeys to catch weight naming errors, but allow missing keys
-    // (e.g., bias parameters that exist in the model but not in the weights —
-    //  they stay at their initialized zero values, which is correct behavior
-    //  for models like Qwen2 where Q/K/V have bias but O does not).
     // Load weights (no strict verification for JANG mixed-precision compatibility)
     let parameters = ModuleParameters.unflattened(weights)
     try model.update(parameters: parameters, verify: [])

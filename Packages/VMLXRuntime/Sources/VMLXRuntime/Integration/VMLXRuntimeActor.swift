@@ -424,38 +424,26 @@ public actor VMLXRuntimeActor {
                     var thinkTagInjected = false
                     let thinkingBudget = maxTokens / 2  // Cap thinking at half of maxTokens
 
-                    // Pipelined generation: keep token as MLXArray on GPU,
-                    // only call .item() after the NEXT forward pass is submitted.
-                    // This overlaps GPU compute with CPU readback.
-
-                    // First step: prefill/first token
+                    // Prefill: process all input tokens
                     var logits = container.forward(
                         inputTokens.expandedDimensions(axis: 0), cache: cache)
-                    var y: MLXArray
-                    if temperature == 0 {
-                        y = logits[0, -1].argMax()
-                    } else {
-                        y = MLXRandom.categorical(
-                            (logits[0, -1] / temperature).expandedDimensions(axis: 0))
-                    }
-                    asyncEval([y])
+                    var y = logits[0, -1].argMax()
+                    MLX.eval(y)
 
                     for _ in 0 ..< maxTokens {
                         try Task.checkCancellation()
 
-                        // Start NEXT forward pass with current token (still on GPU)
-                        let nextLogits = container.forward(
-                            y.reshaped(1, 1), cache: cache)
-                        var nextY: MLXArray
+                        // Forward pass + sample
+                        let nextLogits = container.forward(y.reshaped(1, 1), cache: cache)
+                        let nextY: MLXArray
                         if temperature == 0 {
                             nextY = nextLogits[0, -1].argMax()
                         } else {
                             nextY = MLXRandom.categorical(
                                 (nextLogits[0, -1] / temperature).expandedDimensions(axis: 0))
                         }
-                        asyncEval([nextY])
+                        MLX.eval(nextY)
 
-                        // NOW read current token (GPU already computing next)
                         let nextToken = y.item(Int.self)
                         y = nextY
 

@@ -1,5 +1,5 @@
 {
-  "originHash" : "4d1ea738689dc5aa84992e8b8ac61c9522e6589c5efc17a02a455289e53619c8",
+  "originHash" : "a684b1a392b238a1e566ec3e8ba1d1d430cc98ba952e0c6c0bef72e562b44862",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/FluidInference/FluidAudio.git",
       "state" : {
-        "revision" : "d9eef864d29783fc22754b12090631da5388c3a9",
-        "version" : "0.13.4"
+        "branch" : "main",
+        "revision" : "7eb11e2bb6de3015a10208abac3a4dae0c42a4f1"
       }
     },
     {
@@ -58,10 +58,10 @@
     {
       "identity" : "mlx-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ml-explore/mlx-swift",
+      "location" : "https://github.com/jjang-ai/mlx-swift.git",
       "state" : {
-        "revision" : "61b9e011e09a62b489f6bd647958f1555bdf2896",
-        "version" : "0.31.3"
+        "branch" : "main",
+        "revision" : "ea6e95c0f2e9858d7bbe0ddeee3c46183ac019e3"
       }
     },
     {
