@@ -468,19 +468,34 @@ public actor VMLXRuntimeActor {
                         }
 
                         // Decode token to text
-                        let text = container.decode([nextToken])
+                        var text = container.decode([nextToken])
 
-                        // Track thinking tokens and enforce budget
-                        if insideThinking {
-                            thinkingTokenCount += 1
-                            if text.contains("</think>") {
-                                insideThinking = false
-                            } else if thinkingTokenCount >= thinkingBudget {
-                                // Force close thinking — model is looping
-                                insideThinking = false
-                                continuation.yield(.tokens("\n</think>\n"))
+                        // Handle thinking state
+                        if enableThinking {
+                            // Track thinking tokens and enforce budget
+                            if insideThinking {
+                                thinkingTokenCount += 1
+                                if text.contains("</think>") {
+                                    insideThinking = false
+                                } else if thinkingTokenCount >= thinkingBudget {
+                                    insideThinking = false
+                                    continuation.yield(.tokens("\n</think>\n"))
+                                }
+                            }
+                        } else {
+                            // Thinking OFF — strip any <think>/</ think> tags from output
+                            // so StreamingDeltaProcessor doesn't enter thinking mode
+                            text = text.replacingOccurrences(of: "<think>", with: "")
+                            text = text.replacingOccurrences(of: "</think>", with: "")
+                            if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                // Skip empty tokens left after stripping
+                                inputTokens = MLXArray([Int32(nextToken)])
+                                continue
                             }
                         }
+
+                        // Replace broken emoji replacement chars (U+FFFD)
+                        text = text.replacingOccurrences(of: "\u{FFFD}", with: "")
 
                         // Process through accumulator
                         let events = accumulator.process(text: text, tokenIds: [nextToken])
