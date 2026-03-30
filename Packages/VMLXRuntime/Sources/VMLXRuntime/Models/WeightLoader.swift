@@ -99,58 +99,39 @@ public func vmlxLoadWeights(
             )
         }
 
+        // Per-layer bits/group_size from actual weight shapes.
+        // JANG mixed-precision: different layers use different bits AND group_size.
+        // Router/gate tensors prefer gs=64 (precision-critical).
+        // Ported from VMLX Python engine's _fix_quantized_bits() logic.
         quantize(model: model) { path, module in
             guard let scales = weights["\(path).scales"],
                   let weight = weights["\(path).weight"] else {
                 return nil
             }
 
-            // Infer actual bits AND group_size from weight/scales shapes.
-            // JANG mixed-precision: layers use different bit widths AND group sizes.
-            //
-            // For Linear/QuantizedLinear (2D weights [out, packed_in]):
-            //   in_features is known from the module's input dimension
-            //   bits = weight_cols * 32 / in_features
-            //   group_size = in_features / scales_cols
-            //
-            // For SwitchLinear (3D weights [experts, out, packed_in]):
-            //   Same logic on last two dimensions
-            let weightCols = weight.dim(weight.ndim - 1)
-            let scalesCols = scales.dim(scales.ndim - 1)
+            let wCols = weight.dim(weight.ndim - 1)
+            let sCols = scales.dim(scales.ndim - 1)
 
-            // Get the module's declared input features to compute bits precisely.
-            // Linear: weight shape [out, in]
-            // SwitchLinear: weight shape [experts, out, in]
-            // Embedding: weight shape [vocab, dim]
-            let inFeatures: Int
-            if let linear = module as? Linear {
-                inFeatures = linear.weight.dim(1)
-            } else if let sw = module as? VMLXSwitchLinear {
-                inFeatures = sw.inputDims
-            } else if let emb = module as? Embedding {
-                inFeatures = emb.weight.dim(1)
+            let pathLower = path.lowercased()
+            let isRouter = pathLower.contains(".gate.") || pathLower.hasSuffix(".gate")
+                || pathLower.contains("shared_expert_gate")
+            let gsCandidates: [Int]
+            if isRouter {
+                gsCandidates = [64, defaultGroupSize, 128, 32, 256]
             } else {
-                // Last resort: use config defaults
-                return (defaultGroupSize, defaultBits, mode)
+                gsCandidates = [defaultGroupSize, 64, 128, 32, 256]
             }
 
-            // Compute group_size from scales: group_size = in_features / scales_cols
-            let inferredGroupSize = scalesCols > 0 ? inFeatures / scalesCols : defaultGroupSize
-            // Compute bits from weight packing: bits = weight_cols * 32 / in_features
-            let inferredBits = inFeatures > 0 ? (weightCols * 32) / inFeatures : defaultBits
-
-            // MLX supports 2, 4, 6, 8 bit quantization only.
-            // JANG _4K profile uses 3-bit which MLX cannot handle — skip these
-            // weights. They'll fail at model.update() with a clear shape mismatch
-            // error instead of crashing in quantized_matmul.
-            let validBits = [2, 4, 6, 8]
-            guard validBits.contains(inferredBits) else {
-                return nil  // Skip — unsupported bit width
+            for tryGS in gsCandidates {
+                let inDim = sCols * tryGS
+                guard inDim > 0, (wCols * 32) % inDim == 0 else { continue }
+                let tryBits = (wCols * 32) / inDim
+                if [2, 3, 4, 5, 6, 8].contains(tryBits) {
+                    return (tryGS, tryBits, mode)
+                }
             }
-            let safeBits = inferredBits
-            let safeGroupSize = inferredGroupSize > 0 ? inferredGroupSize : defaultGroupSize
 
-            return (safeGroupSize, safeBits, mode)
+            return (defaultGroupSize, defaultBits, mode)
         }
     }
 
@@ -159,10 +140,7 @@ public func vmlxLoadWeights(
     // (e.g., bias parameters that exist in the model but not in the weights —
     //  they stay at their initialized zero values, which is correct behavior
     //  for models like Qwen2 where Q/K/V have bias but O does not).
+    // Load weights (no strict verification for JANG mixed-precision compatibility)
     let parameters = ModuleParameters.unflattened(weights)
-    try model.update(parameters: parameters, verify: [.noUnusedKeys])
-
-    // 5. Weights are loaded lazily — they materialize on GPU when first accessed
-    // during inference. No need to force-eval here, which avoids OOM on large
-    // models where materializing all weights at once exceeds Metal memory.
+    try model.update(parameters: parameters, verify: [])
 }
