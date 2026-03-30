@@ -98,6 +98,11 @@ public struct SchedulerConfig: Sendable {
     /// Path to the loaded model (for disk cache scoping).
     public var modelPath: String?
 
+    // MARK: - SSM State Cache
+
+    /// Maximum entries in the SSM state cache (for hybrid models).
+    public var ssmMaxEntries: Int
+
     // MARK: - TurboQuant
 
     /// Enable TurboQuant 3-bit KV cache compression.
@@ -130,6 +135,7 @@ public struct SchedulerConfig: Sendable {
         blockDiskCacheDir: URL? = nil,
         blockDiskCacheMaxGB: Float = 10.0,
         modelPath: String? = nil,
+        ssmMaxEntries: Int = 50,
         enableTurboQuant: Bool = false
     ) {
         self.maxNumSeqs = maxNumSeqs
@@ -156,6 +162,7 @@ public struct SchedulerConfig: Sendable {
         self.blockDiskCacheDir = blockDiskCacheDir
         self.blockDiskCacheMaxGB = blockDiskCacheMaxGB
         self.modelPath = modelPath
+        self.ssmMaxEntries = ssmMaxEntries
         self.enableTurboQuant = enableTurboQuant
     }
 
@@ -170,7 +177,8 @@ public struct SchedulerConfig: Sendable {
             maxCacheBlocks: maxCacheBlocks,
             cacheMemoryPercent: cacheMemoryPercent,
             diskCacheMaxGB: diskCacheMaxGB,
-            diskCacheDir: diskCacheDir
+            diskCacheDir: diskCacheDir,
+            ssmMaxEntries: ssmMaxEntries
         )
     }
 

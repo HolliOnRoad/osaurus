@@ -40,20 +40,23 @@ public protocol ToolCallParser: Sendable {
 }
 
 /// Auto-detect the appropriate tool parser for a model.
+/// Uses a factory registry so new parser types can be added without type casts.
 public func autoDetectToolParser(modelName: String) -> (any ToolCallParser)? {
     let name = modelName.lowercased()
 
-    let parsers: [(any ToolCallParser.Type)] = [
-        GenericToolParser.self,
-        // Future: QwenToolParser, LlamaToolParser, etc.
+    // (patterns, factory) pairs, ordered by specificity.
+    // More specific model families should appear before generic fallbacks.
+    let registry: [(patterns: [String], factory: () -> any ToolCallParser)] = [
+        // Future: add model-specific parsers here first
+        // (["qwen"], { QwenToolParser() }),
+        // (["llama"], { LlamaToolParser() }),
+        (["generic", "default"], { GenericToolParser() }),
     ]
 
-    for parserType in parsers {
-        for supported in parserType.supportedModels {
-            if name.contains(supported.lowercased()) {
-                if let parser = parserType as? GenericToolParser.Type {
-                    return parser.init()
-                }
+    for entry in registry {
+        for pattern in entry.patterns {
+            if name.contains(pattern) {
+                return entry.factory()
             }
         }
     }

@@ -113,23 +113,27 @@ public struct Sampler: Sendable {
     }
 
     /// Keep tokens with cumulative probability <= top_p (nucleus sampling).
+    /// Uses a threshold approach: find the minimum probability that stays within the
+    /// top-p nucleus, then apply that threshold to the original (unsorted) logits.
     public static func topPFilter(logits: MLXArray, p: Float) -> MLXArray {
         let probs = softmax(logits)
-        let sortedIndices = argSort(probs)
-        let sortedProbs = probs.take(sortedIndices)
+
+        // Sort probabilities ascending (default)
+        let sortedProbs = sorted(probs)
         let cumProbs = sortedProbs.cumsum()
 
-        // Find cutoff: keep tokens where cumulative prob exceeds (1 - p).
-        // Tokens in the ascending-sorted order below the (1-p) threshold
-        // are the ones we want to zero out.
-        let cutoffMask = cumProbs .> MLXArray(1.0 - p)
+        // Tokens in the ascending tail where cumulative prob < (1 - p) should be removed.
+        // The remaining tokens (cumProbs >= 1-p) form the top-p nucleus.
+        let removeMask = cumProbs .< MLXArray(1.0 - p)
 
-        // Map the keep-mask back to the original token order.
-        // We need to "unsort": create an inverse permutation of sortedIndices.
-        let inversePerm = argSort(sortedIndices)
-        let keepInOriginal = cutoffMask.take(inversePerm)
+        // Find threshold: the smallest probability that survives the filter.
+        // Replace removed probs with infinity so they don't affect the min.
+        let survivingProbs = which(removeMask, MLXArray(Float.infinity), sortedProbs)
+        let threshold = survivingProbs.min()
 
-        return which(keepInOriginal, logits, MLXArray(Float(-1e9)))
+        // Apply threshold to original logits: keep tokens whose prob >= threshold
+        let keepMask = probs .>= threshold
+        return which(keepMask, logits, MLXArray(Float(-1e9)))
     }
 
     /// Greedy argmax.
