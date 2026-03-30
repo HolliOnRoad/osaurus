@@ -35,11 +35,37 @@ actor VMLXServiceBridge: ToolCapableService {
         service.handles(requestedModel: requestedModel)
     }
 
+    /// Ensure the requested model is loaded before inference.
+    /// Auto-loads by resolving model name to directory path via ModelManager.
+    private func ensureModelLoaded(requestedModel: String?) async throws {
+        let modelLoaded = await service.isModelLoaded
+        if modelLoaded { return }
+
+        // Resolve model name to a path
+        let modelName = requestedModel ?? ""
+        guard !modelName.isEmpty else {
+            throw NSError(domain: "VMLXServiceBridge", code: 1,
+                         userInfo: [NSLocalizedDescriptionKey: "No model specified"])
+        }
+
+        // Try to find the model in Osaurus's model directory
+        if let found = ModelManager.findInstalledModel(named: modelName) {
+            let modelsDir = DirectoryPickerService.effectiveModelsDirectory()
+            let modelPath = modelsDir.appendingPathComponent(found.id)
+            let resolved = modelPath.resolvingSymlinksInPath()
+            try await service.loadModel(from: resolved)
+        } else {
+            // Try loading by name (VMLXRuntime scans its own directories)
+            try await service.loadModel(name: modelName)
+        }
+    }
+
     func generateOneShot(
         messages: [ChatMessage],
         parameters: GenerationParameters,
         requestedModel: String?
     ) async throws -> String {
+        try await ensureModelLoaded(requestedModel: requestedModel)
         let vmlxMessages = messages.map { $0.toVMLX() }
         let params = parameters.toSamplingParams()
         return try await service.generateOneShot(
@@ -55,6 +81,7 @@ actor VMLXServiceBridge: ToolCapableService {
         requestedModel: String?,
         stopSequences: [String]
     ) async throws -> AsyncThrowingStream<String, Error> {
+        try await ensureModelLoaded(requestedModel: requestedModel)
         let vmlxMessages = messages.map { $0.toVMLX() }
         var params = parameters.toSamplingParams()
         params.stop = stopSequences
@@ -76,6 +103,7 @@ actor VMLXServiceBridge: ToolCapableService {
         toolChoice: ToolChoiceOption?,
         requestedModel: String?
     ) async throws -> String {
+        try await ensureModelLoaded(requestedModel: requestedModel)
         let vmlxMessages = messages.map { $0.toVMLX() }
         var params = parameters.toSamplingParams()
         params.stop = stopSequences
@@ -99,6 +127,7 @@ actor VMLXServiceBridge: ToolCapableService {
         toolChoice: ToolChoiceOption?,
         requestedModel: String?
     ) async throws -> AsyncThrowingStream<String, Error> {
+        try await ensureModelLoaded(requestedModel: requestedModel)
         let vmlxMessages = messages.map { $0.toVMLX() }
         var params = parameters.toSamplingParams()
         params.stop = stopSequences
