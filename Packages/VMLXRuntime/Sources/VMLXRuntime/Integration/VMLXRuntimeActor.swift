@@ -417,14 +417,8 @@ public actor VMLXRuntimeActor {
                     var generatedTokenCount = 0
                     var thinkingTokenCount = 0
                     var insideThinking = enableThinking
+                    var thinkTagInjected = false
                     let thinkingBudget = maxTokens / 2  // Cap thinking at half of maxTokens
-
-                    // When thinking is enabled, the chat template adds <think> to the
-                    // prompt but the model's output doesn't include the tag itself.
-                    // Inject it so Osaurus's StreamingDeltaProcessor enters thinking mode.
-                    if enableThinking {
-                        continuation.yield(.tokens("<think>\n"))
-                    }
 
                     for _ in 0 ..< maxTokens {
                         try Task.checkCancellation()
@@ -496,6 +490,13 @@ public actor VMLXRuntimeActor {
 
                         // Replace broken emoji replacement chars (U+FFFD)
                         text = text.replacingOccurrences(of: "\u{FFFD}", with: "")
+
+                        // Inject <think> tag on first token (deferred from before prefill
+                        // so the thinking block doesn't appear during the slow prefill phase)
+                        if enableThinking && !thinkTagInjected {
+                            thinkTagInjected = true
+                            continuation.yield(.tokens("<think>\n"))
+                        }
 
                         // Process through accumulator
                         let events = accumulator.process(text: text, tokenIds: [nextToken])
