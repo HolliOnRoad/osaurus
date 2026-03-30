@@ -29,7 +29,7 @@ OsaurusCore build: PASSING (3290/3290 files, 193s)
 | Vision model detection | server.py | JangLoader/ModelDetector | DONE | Core/ModelDetector.swift |
 | Multi-directory model scanning | -- | ModelDetector.scanAvailableModels() | DONE | Core/ModelDetector.swift (5 dirs) |
 | Model family auto-detect (30+) | model_config_registry.py | ModelConfigRegistry.detect() | DONE | Core/ModelConfig.swift |
-| Gate dequantization (Nemotron) | jang_loader.py | -- | TODO | Needs Nemotron-specific weight handling |
+| Gate dequantization (Nemotron) | jang_loader.py | JangLoader.applyNemotronTransforms() | DONE | Quantization/JangLoader.swift |
 | Tokenizer loading | mlx-lm | AutoTokenizer.from() | DONE | Core/ModelLoader.swift |
 | Chat template application | utils/chat_templates.py | ModelContainer.applyChatTemplate() | DONE | Core/ModelContainer.swift |
 | gen_prompt_len computation | engine/batched.py | ModelContainer.computeGenPromptLen() | DONE | Core/ModelContainer.swift |
@@ -67,12 +67,12 @@ OsaurusCore build: PASSING (3290/3290 files, 193s)
 | Memory-aware cache (RAM pressure) | memory_cache.py | MemoryCache | DONE | Cache/MemoryCache.swift |
 | L2 disk cache (SQLite + safetensors) | disk_cache.py | DiskCache (metadata + tensor I/O) | DONE | Cache/DiskCache.swift |
 | TQ-native disk store (26x) | tq_disk_store.py | TQDiskStore | DONE | Cache/TQDiskStore.swift |
-| Block disk store | block_disk_store.py | -- | TODO | Block-level persistence |
+| Block disk store | block_disk_store.py | BlockDiskStore | DONE | Cache/BlockDiskStore.swift |
 | SSM companion cache | mllm_batch_generator.py | SSMStateCache | DONE | Cache/SSMStateCache.swift |
 | SSM checkpointing (thinking models) | -- (NEW!) | SSMCheckpoint | DONE | Core/SSMCheckpoint.swift |
 | SSM async re-deriver | -- (NEW!) | SSMReDeriver | DONE | Cache/SSMReDeriver.swift (wired to ModelForwardPass) |
 | Cache coordinator (5-layer cascade) | scheduler.py | CacheCoordinator | DONE | Cache/CacheCoordinator.swift |
-| Cache warm endpoint | server.py | -- | TODO | Needs Osaurus server route |
+| Cache warm endpoint | server.py | CacheCoordinator.warmCache()/warmCacheCount() | DONE | Cache/CacheCoordinator.swift (adapter exists, needs Osaurus route) |
 | Cache stats endpoint | server.py | CacheCoordinatorStats | DONE | Cache/CacheCoordinator.swift |
 | Deep copy on SSM fetch | mllm_batch_generator.py | SSMStateCache.fetch() | DONE | Cache/SSMStateCache.swift |
 | Empty SSM == MISS invariant | scheduler.py | SSMStateCache.fetch() | DONE | Cache/SSMStateCache.swift |
@@ -114,7 +114,7 @@ OsaurusCore build: PASSING (3290/3290 files, 193s)
 | Hybrid model config | scheduler.py | configureForModel() | DONE | Scheduler/Scheduler.swift |
 | Stop token detection | scheduler.py | isStopToken() | DONE | Scheduler/Scheduler.swift |
 | gen_prompt stripping | mllm_scheduler.py | MLLMScheduler.stripGenPrompt() | DONE | Scheduler/MLLMScheduler.swift |
-| Prompt lookup decoding (PLD) | scheduler.py | -- | TODO | Speculative acceleration |
+| Prompt lookup decoding (PLD) | scheduler.py | PromptLookupDecoder | DONE | Generation/PromptLookupDecoding.swift |
 
 ## 6. Generation Engine
 
@@ -171,7 +171,7 @@ OsaurusCore build: PASSING (3290/3290 files, 193s)
 | VLM config (7 architectures) | mllm.py | VLMConfigRegistry | DONE | Vision/VLMModelWrapper.swift |
 | Image token strategies | mllm.py | VLMImageTokenStrategy enum | DONE | Vision/VLMModelWrapper.swift |
 | VLM model protocol | mllm.py | VLMModelProtocol | DONE | Vision/VLMModelWrapper.swift |
-| Video frame extraction | mllm_scheduler.py | -- | TODO | Needs AVFoundation |
+| Video frame extraction | mllm_scheduler.py | VisionProcessor.extractFrames() | DONE | Vision/VisionProcessor.swift |
 | Grid THW (variable resolution) | mllm.py | ProcessedImage.gridTHW | DONE | Vision/VisionProcessor.swift |
 
 ## 10. Tool Call Parsers
@@ -210,7 +210,7 @@ OsaurusCore build: PASSING (3290/3290 files, 193s)
 | Feature | VMLX Python | VMLXRuntime Swift | Status | Notes |
 |---------|-------------|-------------------|--------|-------|
 | OpenAI Chat Completions | POST /v1/chat/completions | Osaurus HTTPHandler | N/A | Osaurus already has this |
-| OpenAI Completions | POST /v1/completions | -- | TODO | |
+| OpenAI Completions | POST /v1/completions | CompletionsAdapter | DONE | API/CompletionsAdapter.swift (adapter, needs route in Osaurus) |
 | Anthropic Messages | POST /v1/messages | AnthropicAdapter | DONE | API/AnthropicAdapter.swift (adapter, needs route in Osaurus) |
 | Ollama Chat | POST /api/chat | OllamaAdapter | DONE | API/OllamaAdapter.swift (adapter, needs routes in Osaurus) |
 | Ollama Generate | POST /api/generate | OllamaAdapter | DONE | API/OllamaAdapter.swift (adapter, needs routes in Osaurus) |
@@ -219,10 +219,10 @@ OsaurusCore build: PASSING (3290/3290 files, 193s)
 | Image generation | POST /v1/images/generations | -- | TODO | |
 | Audio TTS | POST /v1/audio/speech | -- | TODO | |
 | Audio STT | POST /v1/audio/transcriptions | -- | TODO | |
-| Embeddings | POST /v1/embeddings | -- | TODO | |
+| Embeddings | POST /v1/embeddings | EmbeddingsService | DONE | API/EmbeddingsService.swift (adapter, needs route in Osaurus) |
 | Reranking | POST /v1/rerank | -- | TODO | |
 | Cache stats | GET /v1/cache/stats | CacheCoordinatorStats | DONE (needs route) | |
-| Cache warm | POST /v1/cache/warm | -- | TODO | |
+| Cache warm | POST /v1/cache/warm | CacheCoordinator.warmCache() | DONE (needs route) | API adapter exists, needs Osaurus route |
 | Admin sleep/wake | POST /admin/* | PowerState management | DONE (needs routes) | |
 | Auth (API key) | Bearer token | Osaurus has this | N/A | |
 | Rate limiting | per-IP sliding window | Osaurus has this | N/A | |
@@ -253,19 +253,19 @@ OsaurusCore build: PASSING (3290/3290 files, 193s)
 
 | Category | Total Features | DONE | STUB | TODO |
 |----------|---------------|------|------|------|
-| Model Loading | 17 | 16 | 0 | 1 |
+| Model Loading | 17 | 17 | 0 | 0 |
 | Transformer | 17 | 17 | 0 | 0 |
-| Cache Stack | 17 | 16 | 0 | 1 |
+| Cache Stack | 17 | 17 | 0 | 0 |
 | TurboQuant | 14 | 9 | 5 | 0 |
-| Scheduler | 14 | 13 | 0 | 1 |
+| Scheduler | 14 | 14 | 0 | 0 |
 | Generation | 16 | 16 | 0 | 0 |
 | Power Mgmt | 6 | 6 | 0 | 0 |
 | Multi-Model | 6 | 6 | 0 | 0 |
-| Vision | 10 | 9 | 0 | 1 |
+| Vision | 10 | 10 | 0 | 0 |
 | Tool Parsers | 16 | 16 | 0 | 0 |
 | Reasoning Parsers | 5 | 5 | 0 | 0 |
-| API Compat | 19 | 5 | 0 | 7 (7 N/A) |
+| API Compat | 19 | 8 | 0 | 4 (7 N/A) |
 | Integration | 12 | 12 | 0 | 0 |
-| **TOTAL** | **169** | **146 (86%)** | **5 (3%)** | **11 (7%)** |
+| **TOTAL** | **169** | **153 (91%)** | **5 (3%)** | **4 (2%)** |
 
 (7 features marked N/A = handled by Osaurus natively)

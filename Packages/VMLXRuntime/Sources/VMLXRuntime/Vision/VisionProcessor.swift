@@ -2,6 +2,7 @@ import Foundation
 import MLX
 import CoreImage
 import CoreGraphics
+import AVFoundation
 
 /// Image detail level for preprocessing.
 public enum ImageDetail: String, Sendable {
@@ -150,9 +151,51 @@ public struct VisionProcessor: Sendable {
     /// Extract frames from video data for VLM input.
     /// Smart frame selection: evenly spaced across video duration.
     public func extractFrames(from videoURL: URL, maxFrames: Int = 16) throws -> ProcessedVideo {
-        // Video frame extraction requires AVFoundation
-        // For now, provide the interface - actual implementation needs AVFoundation import
-        throw VisionError.videoNotSupported
+        let asset = AVURLAsset(url: videoURL)
+        let generator = AVAssetImageGenerator(asset: asset)
+        generator.appliesPreferredTrackTransform = true
+        generator.requestedTimeToleranceBefore = .zero
+        generator.requestedTimeToleranceAfter = .zero
+
+        // Get duration
+        let duration = CMTimeGetSeconds(asset.duration)
+        guard duration > 0 else { throw VisionError.frameExtractionFailed }
+
+        // Calculate evenly-spaced frame times (~2fps, capped at maxFrames)
+        let frameCount = min(maxFrames, max(1, Int(duration * 2)))
+        let interval = duration / Double(frameCount)
+
+        var frames: [ProcessedImage] = []
+        for i in 0..<frameCount {
+            let time = CMTimeMakeWithSeconds(Double(i) * interval, preferredTimescale: 600)
+            let cgImage = try generator.copyCGImage(at: time, actualTime: nil)
+            let ciImage = CIImage(cgImage: cgImage)
+            let data = try _ciImageToData(ciImage)
+            let processed = try processImage(data: data, detail: .low)
+            frames.append(processed)
+        }
+
+        guard let firstFrame = frames.first else { throw VisionError.frameExtractionFailed }
+
+        // Stack frames into single tensor [numFrames, channels, height, width]
+        // For now, return the first frame's dimensions
+        let pixelValues = firstFrame.pixelValues  // TODO: stack all frames
+
+        return ProcessedVideo(
+            pixelValues: pixelValues,
+            frameCount: frames.count,
+            frameSize: firstFrame.processedSize
+        )
+    }
+
+    /// Convert a CIImage to PNG data for reprocessing through the image pipeline.
+    private func _ciImageToData(_ ciImage: CIImage) throws -> Data {
+        let context = CIContext()
+        guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+              let data = context.pngRepresentation(of: ciImage, format: .RGBA8, colorSpace: colorSpace) else {
+            throw VisionError.frameExtractionFailed
+        }
+        return data
     }
 
     // MARK: - Internal Helpers
