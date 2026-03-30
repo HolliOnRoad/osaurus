@@ -81,7 +81,7 @@ public final class Scheduler: @unchecked Sendable {
     /// Abort a request.
     public func abortRequest(_ requestId: String) {
         requestQueue.abortRequest(requestId)
-        // TODO: Free paged cache blocks via cacheCoordinator.pagedCache?.deleteBlockTable(requestId)
+        cacheCoordinator.pagedCache?.deleteBlockTable(requestId)
     }
 
     // MARK: - Scheduling Cycle

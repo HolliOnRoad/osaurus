@@ -177,12 +177,17 @@ public struct VisionProcessor: Sendable {
 
         guard let firstFrame = frames.first else { throw VisionError.frameExtractionFailed }
 
-        // Stack frames into single tensor [numFrames, channels, height, width]
-        // For now, return the first frame's dimensions
-        let pixelValues = firstFrame.pixelValues  // TODO: stack all frames
+        // Stack frames into [numFrames, channels, height, width]
+        let frameArrays = frames.map { $0.pixelValues }
+        let stacked: MLXArray
+        if frameArrays.count == 1 {
+            stacked = frameArrays[0]
+        } else {
+            stacked = concatenated(frameArrays, axis: 0)
+        }
 
         return ProcessedVideo(
-            pixelValues: pixelValues,
+            pixelValues: stacked,
             frameCount: frames.count,
             frameSize: firstFrame.processedSize
         )

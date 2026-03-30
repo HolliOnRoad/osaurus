@@ -104,15 +104,17 @@ public final class TurboQuantKVCache: @unchecked Sendable {
 
         offset += newKeys.shape[2]
 
-        // TODO: Incremental compression of the delta
-        // For now, append to float storage
-        if let existing = _floatKeys {
-            _floatKeys = concatenated([existing, newKeys], axis: 2)
-            _floatValues = concatenated([_floatValues!, newValues], axis: 2)
-        } else {
-            _floatKeys = newKeys
-            _floatValues = newValues
-        }
+        // Decode existing compressed → float
+        var allKeys = TurboQuantEncoder.decodeKeys(compressedKeys!, seed: config.seed)
+        var allValues = TurboQuantEncoder.decodeValues(compressedValues!, seed: config.seed)
+
+        // Append new tokens
+        allKeys = concatenated([allKeys, newKeys], axis: 2)
+        allValues = concatenated([allValues, newValues], axis: 2)
+
+        // Re-encode everything
+        compressedKeys = TurboQuantEncoder.encodeKeys(keys: allKeys, bits: keyBits ?? 3, seed: config.seed)
+        compressedValues = TurboQuantEncoder.encodeValues(values: allValues, bits: valueBits ?? 3, seed: config.seed)
     }
 
     // MARK: - Access

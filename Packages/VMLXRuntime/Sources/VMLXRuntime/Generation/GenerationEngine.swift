@@ -109,11 +109,11 @@ public struct GenerationEngine: Sendable {
     /// Run generation with a model, cache, and configuration.
     /// Returns a stream of events (tokens, thinking, tool calls).
     ///
-    /// - Note: This static method is not currently called. The actual generation loop
-    ///   lives in `VMLXRuntimeActor.generateStream()`, which manages the model's
-    ///   internal KV cache directly via `TransformerModelForwardPass`. This method
-    ///   is retained as a reference implementation for the intended cache + TQ + SSM
-    ///   orchestration flow that will be unified in a future refactor.
+    /// - Note: This static `generate()` method is a reference implementation.
+    ///   The actual generation loop runs in `VMLXRuntimeActor.generateStream()`,
+    ///   which manages the model's internal KV cache directly via
+    ///   `TransformerModelForwardPass`. The TODOs below are documented for
+    ///   completeness but do not block inference.
     ///
     /// - Parameter model: The model to use for forward passes. When `nil`, the engine
     ///   runs in stub mode (no actual generation) — useful for testing cache/scheduling logic.
