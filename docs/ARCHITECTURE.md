@@ -383,8 +383,33 @@ All cache layers are hybrid-SSM-aware from day one. The `LayerCacheEntry` enum e
 - [ ] `streamDeltas()`, `generateOneShot()`, `respondWithTools()`, `streamWithTools()`
 
 ### 10.4 Osaurus Wiring
-- [ ] Replace `MLXService.shared` with `VMLXService.shared` in ChatEngine service array
-- [ ] UI, agents, plugins, server, memory, identity unchanged
+- [x] VMLXServiceBridge added to ChatEngine default services (before MLXService for priority)
+- [x] Model discovery merges VMLXRuntime models (ModelDetector.scanAvailableModels) with MLXService models
+- [x] UI, agents, plugins, server, memory, identity unchanged -- all go through ChatEngine
+
+### 10.5 Integration Map -- How Every Subsystem Connects
+
+All inference in Osaurus flows through `ChatEngine` -> `ModelServiceRouter`. No subsystem
+bypasses this path.
+
+**Inference paths:**
+- Chat UI -> `ChatView` -> `ChatEngine.streamChat()`
+- Sandbox agents -> `HostAPIBridgeServer` -> `ChatEngine.completeChat()`
+- Plugins -> `PluginHostAPI` -> `ChatEngine`
+- Work mode -> `WorkExecutionEngine` -> `ChatEngine`
+- HTTP API -> `HTTPHandler` -> `ChatEngine`
+- Memory -> `MemoryService` -> `ModelServiceRouter` directly
+
+**Service priority (ModelServiceRouter.resolve):**
+1. Remote providers (matched by prefix, e.g., "openai/gpt-4") -- checked first for non-default models
+2. `FoundationModelService` (Apple on-device, macOS 26+) -- handles "default", "foundation", empty
+3. `VMLXServiceBridge` (JANG models, "vmlx", "local") -- handles JANG quants via VMLXRuntime
+4. `MLXService` (fallback for non-JANG MLX models) -- handles models found in ModelManager
+
+**Model discovery (installedModelsProvider):**
+- `VMLXServiceBridge.getAvailableModels()` -- scans `~/.cache/huggingface/hub/`, `~/jang/models/`, `~/models/`, `~/.mlxstudio/models/`, `~/.osaurus/models/`
+- `MLXService.getAvailableModels()` -- delegates to `ModelManager.installedModelNames()`
+- De-duplicated: VMLX models take priority, MLX models fill gaps
 
 ---
 

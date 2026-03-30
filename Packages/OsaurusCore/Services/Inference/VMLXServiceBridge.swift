@@ -116,8 +116,8 @@ actor VMLXServiceBridge: ToolCapableService {
 
     // MARK: - Model Management Passthrough
 
-    func loadModel(name: String, isHybrid: Bool = false, turboQuant: TurboQuantConfig? = nil) async throws {
-        try await service.loadModel(name: name, isHybrid: isHybrid, turboQuant: turboQuant)
+    func loadModel(name: String) async throws {
+        try await service.loadModel(name: name)
     }
 
     func unloadModel() async {
@@ -126,6 +126,14 @@ actor VMLXServiceBridge: ToolCapableService {
 
     var isModelLoaded: Bool {
         get async { await service.isModelLoaded }
+    }
+
+    // MARK: - Static Model Discovery
+
+    /// Return available VMLX model names by scanning well-known directories.
+    /// Called from ChatEngine's installedModelsProvider to merge with MLXService models.
+    nonisolated static func getAvailableModels() -> [String] {
+        ModelDetector.scanAvailableModels().map(\.name)
     }
 }
 

@@ -15,9 +15,15 @@ actor ChatEngine: Sendable, ChatEngineProtocol {
     private var inferenceSource: InferenceSource = .httpAPI
 
     init(
-        services: [ModelService] = [FoundationModelService(), MLXService()],
+        services: [ModelService] = [FoundationModelService(), VMLXServiceBridge(), MLXService()],
+        remoteServices: [ModelService] = [],
         installedModelsProvider: @escaping @Sendable () -> [String] = {
-            MLXService.getAvailableModels()
+            // Merge VMLX models (JANG quants from well-known dirs) with MLX models (ModelManager)
+            let vmlxModels = VMLXServiceBridge.getAvailableModels()
+            let mlxModels = MLXService.getAvailableModels()
+            // De-duplicate: VMLX models take priority, then MLX models not already listed
+            let vmlxSet = Set(vmlxModels)
+            return vmlxModels + mlxModels.filter { !vmlxSet.contains($0) }
         },
         source: InferenceSource = .httpAPI
     ) {
