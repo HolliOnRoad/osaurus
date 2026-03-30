@@ -24,14 +24,8 @@ public actor VMLXRuntimeActor {
     /// Whether a model is loaded and ready.
     public var isModelLoaded: Bool { currentModelName != nil }
 
-    /// Scheduler configuration.
-    private var schedulerConfig: SchedulerConfig
-
-    /// Cache coordinator (manages all 5 cache layers).
-    private var cacheCoordinator: CacheCoordinator
-
-    /// Request queue for continuous batching.
-    private var requestQueue: RequestQueue
+    /// Scheduler owns request queue, cache coordinator, and batching logic.
+    private var scheduler: Scheduler
 
     /// Active generation tasks, keyed by requestId.
     private var activeGenerations: [String: Task<Void, Never>] = [:]
@@ -45,9 +39,7 @@ public actor VMLXRuntimeActor {
     // MARK: - Init
 
     public init(config: SchedulerConfig = .autoDetect()) {
-        self.schedulerConfig = config
-        self.cacheCoordinator = CacheCoordinator(config: config.toCacheCoordinatorConfig())
-        self.requestQueue = RequestQueue()
+        self.scheduler = Scheduler(config: config)
     }
 
     // MARK: - Model Management
@@ -62,7 +54,10 @@ public actor VMLXRuntimeActor {
         currentModelName = name
         self.isHybrid = isHybrid
         self.turboQuantConfig = turboQuant
-        cacheCoordinator.setHybrid(isHybrid)
+        scheduler.configureForModel(
+            isHybrid: isHybrid,
+            enableTQ: turboQuant != nil
+        )
 
         // TODO: Actual model loading via MLX will go here
         // - Load safetensors weights
@@ -80,8 +75,8 @@ public actor VMLXRuntimeActor {
         }
         activeGenerations.removeAll()
 
-        // Clear caches
-        cacheCoordinator.clearAll()
+        // Shut down scheduler (aborts running requests, frees resources)
+        scheduler.shutdown()
 
         currentModelName = nil
         isHybrid = false
@@ -106,7 +101,7 @@ public actor VMLXRuntimeActor {
         // Capture cache result synchronously while still on actor
         // TODO: Tokenize messages using loaded tokenizer
         let promptTokenIds: [Int] = []  // Placeholder
-        let cacheResult = cacheCoordinator.fetch(tokens: promptTokenIds)
+        let cacheResult = scheduler.cache.fetch(tokens: promptTokenIds)
 
         // Build tool/reasoning parsers
         let toolParser: (any ToolCallParser)? = request.tools != nil
@@ -210,18 +205,18 @@ public actor VMLXRuntimeActor {
 
     // MARK: - Cache Management
 
-    /// Clear all caches.
+    /// Clear all caches (delegates to the scheduler's cache coordinator).
     public func clearCache() {
-        cacheCoordinator.clearAll()
+        scheduler.cache.clearAll()
     }
 
     /// Get cache statistics.
     public var cacheStats: CacheCoordinatorStats {
-        cacheCoordinator.stats
+        scheduler.cacheStats
     }
 
     /// Get scheduler config.
-    public var config: SchedulerConfig { schedulerConfig }
+    public var config: SchedulerConfig { scheduler.config }
 
     // MARK: - Private
 

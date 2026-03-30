@@ -104,7 +104,11 @@ public struct GenerationEngine: Sendable {
 
     /// Run generation with a model, cache, and configuration.
     /// Returns a stream of events (tokens, thinking, tool calls).
+    ///
+    /// - Parameter model: The model to use for forward passes. When `nil`, the engine
+    ///   runs in stub mode (no actual generation) — useful for testing cache/scheduling logic.
     public static func generate(
+        model: (any ModelForwardPass)? = nil,
         promptTokenIds: [Int],
         existingCache: HybridCache?,
         cachedTokenCount: Int,
