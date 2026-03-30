@@ -1,6 +1,9 @@
 import Foundation
 
-/// JANG config file names to search for (in order of priority).
+/// JANG config file name.
+public let jangConfigFileName = "jang_config.json"
+
+/// Legacy config file names to search for (fallback only).
 public let jangConfigFileNames = [
     "jang_config.json",
     "jjqf_config.json",
@@ -8,78 +11,156 @@ public let jangConfigFileNames = [
     "mxq_config.json"
 ]
 
+// MARK: - JANG Config Structs
+
+/// Quantization settings from jang_config.json `quantization` block.
+public struct JangQuantization: Sendable, Equatable {
+    public let method: String            // "jang-importance"
+    public let profile: String           // "JANG_2S", "JANG_4K", etc.
+    public let targetBits: Float         // e.g., 2.5
+    public let actualBits: Float         // e.g., 2.85
+    public let blockSize: Int            // e.g., 64
+    public let calibrationMethod: String // "weights"
+    public let quantizationMethod: String // "mse"
+    public let scoringMethod: String     // "weight-magnitude"
+    public let bitWidthsUsed: [Int]      // [2, 4, 6]
+    public let quantizationScheme: String // "asymmetric"
+    public let quantizationBackend: String // "mx.quantize"
+
+    public init(
+        method: String = "jang-importance",
+        profile: String = "JANG_2S",
+        targetBits: Float = 2.5,
+        actualBits: Float = 2.85,
+        blockSize: Int = 64,
+        calibrationMethod: String = "weights",
+        quantizationMethod: String = "mse",
+        scoringMethod: String = "weight-magnitude",
+        bitWidthsUsed: [Int] = [2, 4, 6],
+        quantizationScheme: String = "asymmetric",
+        quantizationBackend: String = "mx.quantize"
+    ) {
+        self.method = method
+        self.profile = profile
+        self.targetBits = targetBits
+        self.actualBits = actualBits
+        self.blockSize = blockSize
+        self.calibrationMethod = calibrationMethod
+        self.quantizationMethod = quantizationMethod
+        self.scoringMethod = scoringMethod
+        self.bitWidthsUsed = bitWidthsUsed
+        self.quantizationScheme = quantizationScheme
+        self.quantizationBackend = quantizationBackend
+    }
+}
+
+/// Source model info from jang_config.json `source_model` block.
+public struct JangSourceModel: Sendable, Equatable {
+    public let name: String       // "Qwen3.5-4B"
+    public let dtype: String      // "bfloat16"
+    public let parameters: String // "4025327616" (string in JSON)
+
+    public init(name: String = "", dtype: String = "bfloat16", parameters: String = "0") {
+        self.name = name
+        self.dtype = dtype
+        self.parameters = parameters
+    }
+
+    /// Parameter count as integer.
+    public var parameterCount: Int { Int(parameters) ?? 0 }
+}
+
+/// Architecture info from jang_config.json `architecture` block.
+public struct JangArchitecture: Sendable, Equatable {
+    public let type: String       // "hybrid_ssm", "moe", "hybrid_moe_ssm"
+    public let attention: String  // "none", "gqa", "mla"
+    public let hasVision: Bool
+    public let hasSSM: Bool
+    public let hasMoE: Bool
+
+    public init(
+        type: String = "transformer",
+        attention: String = "gqa",
+        hasVision: Bool = false,
+        hasSSM: Bool = false,
+        hasMoE: Bool = false
+    ) {
+        self.type = type
+        self.attention = attention
+        self.hasVision = hasVision
+        self.hasSSM = hasSSM
+        self.hasMoE = hasMoE
+    }
+}
+
+/// Runtime info from jang_config.json `runtime` block.
+public struct JangRuntime: Sendable, Equatable {
+    public let totalWeightBytes: Int
+    public let totalWeightGB: Float
+
+    public init(totalWeightBytes: Int = 0, totalWeightGB: Float = 0) {
+        self.totalWeightBytes = totalWeightBytes
+        self.totalWeightGB = totalWeightGB
+    }
+}
+
 /// Parsed JANG model configuration from jang_config.json.
+///
+/// Matches the real on-disk format:
+/// ```json
+/// {
+///   "quantization": { ... },
+///   "source_model": { ... },
+///   "architecture": { ... },
+///   "runtime": { ... },
+///   "format": "jang",
+///   "format_version": "2.0"
+/// }
+/// ```
 public struct JangConfig: Sendable {
-    /// Format version: "2.0" (MLX-native) or "1.0" (legacy).
+    /// Format identifier: "jang".
+    public let format: String
+
+    /// Format version: "2.0" (current), "1.0" (legacy).
     public let formatVersion: String
 
-    /// Whether this is v2 format (fast, MLX-native safetensors).
+    /// Whether this is v2 format (MLX-native safetensors).
     public var isV2: Bool { formatVersion.hasPrefix("2") }
 
-    /// TurboQuant settings.
-    public let turboquant: TurboQuantSettings?
+    /// Quantization settings.
+    public let quantization: JangQuantization
 
-    /// Hybrid layer pattern (e.g., "MMM*MMM*..." for Nemotron-H).
-    public let hybridOverridePattern: String?
+    /// Source model information.
+    public let sourceModel: JangSourceModel
 
-    /// Per-layer types if specified.
-    public let layerTypes: [String]?
+    /// Architecture description.
+    public let architecture: JangArchitecture
 
-    /// MLA settings for DeepSeek-style models.
-    public let kvLoraRank: Int?
-    public let qkNopeHeadDim: Int?
-    public let qkRopeHeadDim: Int?
-    public let vHeadDim: Int?
+    /// Runtime size information.
+    public let runtime: JangRuntime
 
     public init(
+        format: String = "jang",
         formatVersion: String = "2.0",
-        turboquant: TurboQuantSettings? = nil,
-        hybridOverridePattern: String? = nil,
-        layerTypes: [String]? = nil,
-        kvLoraRank: Int? = nil,
-        qkNopeHeadDim: Int? = nil,
-        qkRopeHeadDim: Int? = nil,
-        vHeadDim: Int? = nil
+        quantization: JangQuantization = JangQuantization(),
+        sourceModel: JangSourceModel = JangSourceModel(),
+        architecture: JangArchitecture = JangArchitecture(),
+        runtime: JangRuntime = JangRuntime()
     ) {
+        self.format = format
         self.formatVersion = formatVersion
-        self.turboquant = turboquant
-        self.hybridOverridePattern = hybridOverridePattern
-        self.layerTypes = layerTypes
-        self.kvLoraRank = kvLoraRank
-        self.qkNopeHeadDim = qkNopeHeadDim
-        self.qkRopeHeadDim = qkRopeHeadDim
-        self.vHeadDim = vHeadDim
+        self.quantization = quantization
+        self.sourceModel = sourceModel
+        self.architecture = architecture
+        self.runtime = runtime
     }
 }
 
-/// TurboQuant settings from jang_config.json.
-public struct TurboQuantSettings: Sendable {
-    public let enabled: Bool
-    public let defaultKeyBits: Int
-    public let defaultValueBits: Int
-    public let criticalLayers: [Int]
-    public let criticalKeyBits: Int
-    public let criticalValueBits: Int
-
-    public init(
-        enabled: Bool = true,
-        defaultKeyBits: Int = 3,
-        defaultValueBits: Int = 3,
-        criticalLayers: [Int] = [0, 1, 2, -3, -2, -1],
-        criticalKeyBits: Int = 4,
-        criticalValueBits: Int = 4
-    ) {
-        self.enabled = enabled
-        self.defaultKeyBits = defaultKeyBits
-        self.defaultValueBits = defaultValueBits
-        self.criticalLayers = criticalLayers
-        self.criticalKeyBits = criticalKeyBits
-        self.criticalValueBits = criticalValueBits
-    }
-}
+// MARK: - JANG Loader
 
 /// JANG model loader.
-/// Auto-detects JANG models, parses config, and configures TurboQuant.
+/// Auto-detects JANG models, parses jang_config.json, and provides
+/// architecture/quantization introspection.
 public struct JangLoader: Sendable {
 
     /// Check if a model directory contains a JANG model.
@@ -88,6 +169,7 @@ public struct JangLoader: Sendable {
     }
 
     /// Find the JANG config file in a model directory.
+    /// Checks the primary name first, then legacy fallbacks.
     public static func findConfigPath(at modelPath: URL) -> URL? {
         for name in jangConfigFileNames {
             let configURL = modelPath.appendingPathComponent(name)
@@ -98,7 +180,7 @@ public struct JangLoader: Sendable {
         return nil
     }
 
-    /// Load and parse the JANG config.
+    /// Load and parse the JANG config from a model directory.
     public static func loadConfig(at modelPath: URL) throws -> JangConfig {
         guard let configURL = findConfigPath(at: modelPath) else {
             throw JangLoaderError.configNotFound(modelPath.path)
@@ -109,108 +191,190 @@ public struct JangLoader: Sendable {
             throw JangLoaderError.invalidConfig("Failed to parse JSON")
         }
 
-        // Parse format version
+        return try parseConfig(from: json)
+    }
+
+    /// Parse a JangConfig from a raw JSON dictionary.
+    public static func parseConfig(from json: [String: Any]) throws -> JangConfig {
+        let format = json["format"] as? String ?? "jang"
         let formatVersion = json["format_version"] as? String ?? "2.0"
 
-        // Parse TurboQuant settings
-        var tqSettings: TurboQuantSettings?
-        if let tqDict = json["turboquant"] as? [String: Any] {
-            let enabled = tqDict["enabled"] as? Bool ?? true
-            let keyBits = tqDict["default_key_bits"] as? Int ?? 3
-            let valueBits = tqDict["default_value_bits"] as? Int ?? 3
-            let criticalLayers = tqDict["critical_layers"] as? [Int] ?? [0, 1, 2, -3, -2, -1]
-            let criticalKeyBits = tqDict["critical_key_bits"] as? Int ?? 4
-            let criticalValueBits = tqDict["critical_value_bits"] as? Int ?? 4
-
-            tqSettings = TurboQuantSettings(
-                enabled: enabled,
-                defaultKeyBits: keyBits,
-                defaultValueBits: valueBits,
-                criticalLayers: criticalLayers,
-                criticalKeyBits: criticalKeyBits,
-                criticalValueBits: criticalValueBits
+        // Parse quantization block
+        let quantization: JangQuantization
+        if let qDict = json["quantization"] as? [String: Any] {
+            quantization = JangQuantization(
+                method: qDict["method"] as? String ?? "jang-importance",
+                profile: qDict["profile"] as? String ?? "JANG_2S",
+                targetBits: floatValue(qDict["target_bits"]) ?? 2.5,
+                actualBits: floatValue(qDict["actual_bits"]) ?? 2.5,
+                blockSize: qDict["block_size"] as? Int ?? 64,
+                calibrationMethod: qDict["calibration_method"] as? String ?? "weights",
+                quantizationMethod: qDict["quantization_method"] as? String ?? "mse",
+                scoringMethod: qDict["scoring_method"] as? String ?? "weight-magnitude",
+                bitWidthsUsed: qDict["bit_widths_used"] as? [Int] ?? [],
+                quantizationScheme: qDict["quantization_scheme"] as? String ?? "asymmetric",
+                quantizationBackend: qDict["quantization_backend"] as? String ?? "mx.quantize"
             )
+        } else {
+            quantization = JangQuantization()
         }
 
-        // Parse hybrid pattern
-        let hybridPattern = json["hybrid_override_pattern"] as? String
-        let layerTypes = json["layer_types"] as? [String]
+        // Parse source_model block
+        let sourceModel: JangSourceModel
+        if let smDict = json["source_model"] as? [String: Any] {
+            // parameters can be string or int in JSON
+            let params: String
+            if let s = smDict["parameters"] as? String {
+                params = s
+            } else if let n = smDict["parameters"] as? Int {
+                params = String(n)
+            } else {
+                params = "0"
+            }
+            sourceModel = JangSourceModel(
+                name: smDict["name"] as? String ?? "",
+                dtype: smDict["dtype"] as? String ?? "bfloat16",
+                parameters: params
+            )
+        } else {
+            sourceModel = JangSourceModel()
+        }
 
-        // Parse MLA settings
-        let kvLoraRank = json["kv_lora_rank"] as? Int
-        let qkNopeHeadDim = json["qk_nope_head_dim"] as? Int
-        let qkRopeHeadDim = json["qk_rope_head_dim"] as? Int
-        let vHeadDim = json["v_head_dim"] as? Int
+        // Parse architecture block
+        let architecture: JangArchitecture
+        if let aDict = json["architecture"] as? [String: Any] {
+            architecture = JangArchitecture(
+                type: aDict["type"] as? String ?? "transformer",
+                attention: aDict["attention"] as? String ?? "gqa",
+                hasVision: aDict["has_vision"] as? Bool ?? false,
+                hasSSM: aDict["has_ssm"] as? Bool ?? false,
+                hasMoE: aDict["has_moe"] as? Bool ?? false
+            )
+        } else {
+            architecture = JangArchitecture()
+        }
+
+        // Parse runtime block
+        let runtime: JangRuntime
+        if let rDict = json["runtime"] as? [String: Any] {
+            runtime = JangRuntime(
+                totalWeightBytes: rDict["total_weight_bytes"] as? Int ?? 0,
+                totalWeightGB: floatValue(rDict["total_weight_gb"]) ?? 0
+            )
+        } else {
+            runtime = JangRuntime()
+        }
 
         return JangConfig(
+            format: format,
             formatVersion: formatVersion,
-            turboquant: tqSettings,
-            hybridOverridePattern: hybridPattern,
-            layerTypes: layerTypes,
-            kvLoraRank: kvLoraRank,
-            qkNopeHeadDim: qkNopeHeadDim,
-            qkRopeHeadDim: qkRopeHeadDim,
-            vHeadDim: vHeadDim
+            quantization: quantization,
+            sourceModel: sourceModel,
+            architecture: architecture,
+            runtime: runtime
         )
     }
 
-    /// Build TurboQuantConfig from JANG config.
+    // MARK: - Architecture Introspection
+
+    /// Whether the model is hybrid (has SSM layers).
+    public static func isHybridModel(config: JangConfig) -> Bool {
+        config.architecture.hasSSM
+    }
+
+    /// Whether the model supports vision/multimodal input.
+    public static func isVisionModel(config: JangConfig) -> Bool {
+        config.architecture.hasVision
+    }
+
+    /// Whether the model uses MLA (Multi-head Latent Attention).
+    public static func isMLA(config: JangConfig) -> Bool {
+        config.architecture.attention == "mla"
+    }
+
+    /// Whether the model is a Mixture-of-Experts model.
+    public static func isMoE(config: JangConfig) -> Bool {
+        config.architecture.hasMoE
+    }
+
+    // MARK: - TurboQuant Integration
+
+    /// Build a TurboQuantConfig from JANG quantization profile info.
+    ///
+    /// Maps JANG profiles to TQ settings:
+    /// - Uses `quantization.block_size` as a hint for quality tier
+    /// - Uses `quantization.bit_widths_used` to determine critical layer bits
+    /// - Higher bit widths in the profile -> higher critical layer bits
     public static func buildTQConfig(from jangConfig: JangConfig) -> TurboQuantConfig? {
-        guard let tq = jangConfig.turboquant, tq.enabled else { return nil }
+        let q = jangConfig.quantization
+        let bitWidths = q.bitWidthsUsed
 
-        // Detect hybrid layer pattern
+        // No bit widths means no quantization info to work with
+        guard !bitWidths.isEmpty else { return nil }
+
+        let maxBits = bitWidths.max() ?? 4
+        let minBits = bitWidths.min() ?? 2
+
+        // Map JANG quantization to TQ cache compression:
+        // - Default KV bits: use the minimum bit width (aggressive compression for most layers)
+        // - Critical KV bits: use the maximum bit width (preserve quality for critical layers)
+        let defaultBits = max(minBits, 2)  // floor at 2
+        let criticalBits = min(maxBits, 8) // cap at 8
+
+        // Build layer pattern for hybrid models
         var layerPattern: [LayerType]?
-        if let pattern = jangConfig.hybridOverridePattern {
-            layerPattern = parseHybridPattern(pattern)
-        } else if let types = jangConfig.layerTypes {
-            layerPattern = types.map { type -> LayerType in
-                switch type.uppercased() {
-                case "M", "MAMBA", "SSM": return .ssm
-                case "E", "EXPERT", "MOE": return .expert
-                default: return .attention
-                }
-            }
-        }
-
-        // MLA dimensions
-        var mlaKeyDim: Int?
-        var mlaValueDim: Int?
-        if let kvLoraRank = jangConfig.kvLoraRank, kvLoraRank > 0 {
-            if let nope = jangConfig.qkNopeHeadDim, let rope = jangConfig.qkRopeHeadDim {
-                mlaKeyDim = nope + rope
-            }
-            mlaValueDim = jangConfig.vHeadDim
+        if jangConfig.architecture.hasSSM {
+            // Hybrid models: architecture.type hints at layer composition
+            // Actual per-layer pattern comes from config.json (hybridOverridePattern / layer_types)
+            // which ModelDetector merges. Here we just note it's hybrid.
+            layerPattern = nil // Caller should provide from config.json
         }
 
         return TurboQuantConfig(
-            defaultKeyBits: tq.defaultKeyBits,
-            defaultValueBits: tq.defaultValueBits,
-            criticalLayers: tq.criticalLayers,
-            criticalKeyBits: tq.criticalKeyBits,
-            criticalValueBits: tq.criticalValueBits,
-            layerPattern: layerPattern,
-            mlaKeyDim: mlaKeyDim,
-            mlaValueDim: mlaValueDim
+            defaultKeyBits: defaultBits,
+            defaultValueBits: defaultBits,
+            criticalLayers: [0, 1, 2, -3, -2, -1],
+            criticalKeyBits: criticalBits,
+            criticalValueBits: criticalBits,
+            layerPattern: layerPattern
         )
     }
 
-    /// Detect if a JANG model is hybrid (has SSM layers).
-    public static func isHybridModel(config: JangConfig) -> Bool {
-        if let pattern = config.hybridOverridePattern {
-            return pattern.contains("M")
+    /// Build a TurboQuantConfig with an explicit layer pattern (from config.json).
+    ///
+    /// Use this when you have hybrid layer info from HuggingFace config.json
+    /// (e.g., `hybrid_override_pattern` or `text_config.layer_types`).
+    public static func buildTQConfig(
+        from jangConfig: JangConfig,
+        layerPattern: [LayerType]?,
+        kvLoraRank: Int? = nil,
+        qkNopeHeadDim: Int? = nil,
+        qkRopeHeadDim: Int? = nil,
+        vHeadDim: Int? = nil
+    ) -> TurboQuantConfig? {
+        guard var tqConfig = buildTQConfig(from: jangConfig) else { return nil }
+
+        tqConfig.layerPattern = layerPattern
+
+        // MLA dimensions (from config.json for DeepSeek/Mistral-style models)
+        if let rank = kvLoraRank, rank > 0 {
+            if let nope = qkNopeHeadDim, let rope = qkRopeHeadDim {
+                tqConfig.mlaKeyDim = nope + rope
+            }
+            tqConfig.mlaValueDim = vHeadDim
         }
-        if let types = config.layerTypes {
-            let hasSSM = types.contains { $0.uppercased() == "M" || $0.uppercased() == "MAMBA" || $0.uppercased() == "SSM" }
-            let hasAttn = types.contains { $0.uppercased() == "*" || $0.uppercased() == "ATTENTION" || $0.uppercased() == "ATTN" }
-            return hasSSM && hasAttn
-        }
-        return false
+
+        return tqConfig
     }
 
-    /// Check if model uses MLA (Multi-head Latent Attention).
-    public static func isMLA(config: JangConfig) -> Bool {
-        guard let rank = config.kvLoraRank else { return false }
-        return rank > 0
+    // MARK: - Helpers
+
+    /// Extract a Float from JSON values that may be Int, Double, or Float.
+    private static func floatValue(_ value: Any?) -> Float? {
+        if let d = value as? Double { return Float(d) }
+        if let f = value as? Float { return f }
+        if let i = value as? Int { return Float(i) }
+        return nil
     }
 }
 
