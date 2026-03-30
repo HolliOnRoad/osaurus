@@ -70,22 +70,25 @@ public final class TurboQuantKVCache: @unchecked Sendable {
     /// Compress float KV to TurboQuant format. Transitions from fill to compressed phase.
     /// Call this after prefill completes.
     ///
-    /// The actual codebook quantization is delegated to TurboQuantEncoder (Task 3.4).
-    /// For now, this stores the float data and marks the phase transition.
-    /// Once TurboQuantEncoder is implemented, this method will call it.
+    /// Uses TurboQuantEncoder to perform random projection quantization:
+    /// vectors are projected through a deterministic codebook, and the best
+    /// codebook index + vector norm are stored for reconstruction.
     public func compress() {
         precondition(phase == .fill, "Already compressed")
-        guard _floatKeys != nil, _floatValues != nil else { return }
+        guard let keys = _floatKeys, let values = _floatValues else { return }
 
-        // TODO: Actual compression via TurboQuantEncoder
-        // For now, transition phase and keep float data accessible via getKeys/getValues
-        // compressedKeys = TurboQuantEncoder.encode(keys: keys, bits: keyBits ?? 3, seed: config.seed)
-        // compressedValues = TurboQuantEncoder.encode(values: values, bits: valueBits ?? 3, seed: config.seed)
+        compressedKeys = TurboQuantEncoder.encodeKeys(
+            keys: keys, bits: keyBits ?? 3, seed: config.seed
+        )
+        compressedValues = TurboQuantEncoder.encodeValues(
+            values: values, bits: valueBits ?? 3, seed: config.seed
+        )
 
         phase = .compressed
 
-        // In production: _floatKeys and _floatValues would be released after compression
-        // For now, keep them for getKeys/getValues to work until TQ encoder is implemented
+        // Release float data -- compressed version is authoritative now
+        _floatKeys = nil
+        _floatValues = nil
     }
 
     // MARK: - Recompression
@@ -115,16 +118,20 @@ public final class TurboQuantKVCache: @unchecked Sendable {
     // MARK: - Access
 
     /// Get keys for attention computation.
-    /// In compressed phase, this will decompress on-the-fly (once encoder implemented).
-    /// Currently returns float data.
+    /// In compressed phase, decodes from the compressed representation on-the-fly.
     public func getKeys() -> MLXArray? {
-        // TODO: In compressed phase, decompress from compressedKeys
+        if phase == .compressed, let ck = compressedKeys {
+            return TurboQuantEncoder.decodeKeys(ck, seed: config.seed)
+        }
         return _floatKeys
     }
 
     /// Get values for attention computation.
+    /// In compressed phase, decodes from the compressed representation on-the-fly.
     public func getValues() -> MLXArray? {
-        // TODO: In compressed phase, decompress from compressedValues
+        if phase == .compressed, let cv = compressedValues {
+            return TurboQuantEncoder.decodeValues(cv, seed: config.seed)
+        }
         return _floatValues
     }
 
