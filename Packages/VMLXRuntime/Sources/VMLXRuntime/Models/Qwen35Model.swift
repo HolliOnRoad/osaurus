@@ -204,9 +204,10 @@ final class Qwen35RMSNormGated: Module {
     }
 
     func callAsFunction(_ hiddenStates: MLXArray, gate: MLXArray? = nil) -> MLXArray {
-        var x = MLXFast.rmsNorm(hiddenStates, weight: weight, eps: eps)
+        let x = MLXFast.rmsNorm(hiddenStates, weight: weight, eps: eps)
         if let gate {
-            x = x * silu(gate)
+            // Use compiled SwiGLU (silu(gate) * x) matching Python's @mx.compile swiglu
+            return compiledSwiGLU(gate, x)
         }
         return x
     }
@@ -226,7 +227,7 @@ final class Qwen35MLP: Module, UnaryLayer {
     }
 
     func callAsFunction(_ x: MLXArray) -> MLXArray {
-        downProj(silu(gateProj(x)) * upProj(x))
+        downProj(compiledSwiGLU(gateProj(x), upProj(x)))
     }
 }
 
@@ -329,14 +330,11 @@ final class Qwen35GatedDeltaNet: Module {
         let v = convSplit[2].reshaped(B, S, numVHeads, headVDim)
 
         var state = cache?[1]
-        let dtype = q.dtype
         let invScale = pow(Float(headKDim), -0.5)
         let qNormed =
-            MLXArray(pow(invScale, 2)).asType(dtype)
-            * MLXFast.rmsNorm(q, weight: MLXArray.mlxNone, eps: 1e-6)
+            pow(invScale, 2) * MLXFast.rmsNorm(q, weight: MLXArray.mlxNone, eps: 1e-6)
         let kNormed =
-            MLXArray(invScale).asType(dtype)
-            * MLXFast.rmsNorm(k, weight: MLXArray.mlxNone, eps: 1e-6)
+            invScale * MLXFast.rmsNorm(k, weight: MLXArray.mlxNone, eps: 1e-6)
 
         var out: MLXArray
 

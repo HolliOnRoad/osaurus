@@ -126,6 +126,16 @@ public struct VMLXModelRegistry {
             quantization: baseConfig.quantization
         )
 
+        // For large MoE models (≥256 experts), convert non-quantized weights to bfloat16.
+        // This prevents float16 overflow in gate routing math and avoids implicit float32
+        // promotion that kills performance (e.g., MiniMax M2.5 with 512 experts: 23→75+ tok/s).
+        // Matches Python mlx-lm behavior.
+        let numExperts = _getNumExperts(configData: configData)
+        if numExperts >= 256 {
+            NSLog("[ModelRegistry] Large MoE (\(numExperts) experts): converting to bfloat16")
+            _convertToBFloat16(model: model)
+        }
+
         return (model, modelType)
     }
 
@@ -138,5 +148,31 @@ public struct VMLXModelRegistry {
             // Standard transformers + unknown types (fallback to standard)
             return true
         }
+    }
+
+    // MARK: - Private Helpers
+
+    /// Extract num_local_experts from config data.
+    private static func _getNumExperts(configData: Data) -> Int {
+        guard let json = try? JSONSerialization.jsonObject(with: configData) as? [String: Any] else {
+            return 0
+        }
+        if let n = json["num_local_experts"] as? Int { return n }
+        if let tc = json["text_config"] as? [String: Any],
+           let n = tc["num_local_experts"] as? Int { return n }
+        return 0
+    }
+
+    /// Convert all non-quantized floating-point parameters to bfloat16.
+    /// Quantized weights (packed int) are left as-is.
+    private static func _convertToBFloat16(model: Module) {
+        let params = model.parameters()
+        let converted = params.mapValues { (arr: MLXArray) -> MLXArray in
+            if arr.dtype == .float16 || arr.dtype == .float32 {
+                return arr.asType(.bfloat16)
+            }
+            return arr
+        }
+        _ = try? model.update(parameters: converted, verify: [])
     }
 }

@@ -13,9 +13,17 @@ import MLXNN
 
 // MARK: - Compute G
 
-func computeGatedDeltaG(_ aLog: MLXArray, _ a: MLXArray, _ dtBias: MLXArray) -> MLXArray {
+/// Compiled gating decay computation. Matches Python's @mx.compile compute_g.
+/// Fuses: asType + exp + exp + softplus + mul + neg + asType into single kernel.
+private let _compiledComputeG: @Sendable (MLXArray, MLXArray, MLXArray) -> MLXArray = compile(
+    shapeless: true
+) { (aLog: MLXArray, a: MLXArray, dtBias: MLXArray) -> MLXArray in
     let decay = exp(-exp(aLog.asType(.float32)) * softplus(a + dtBias))
     return decay.asType(a.dtype)
+}
+
+func computeGatedDeltaG(_ aLog: MLXArray, _ a: MLXArray, _ dtBias: MLXArray) -> MLXArray {
+    _compiledComputeG(aLog, a, dtBias)
 }
 
 // MARK: - Metal Kernel
@@ -167,42 +175,76 @@ func gatedDeltaKernel(
 
 // MARK: - Ops Fallback
 
+/// Compiled single-step GatedDelta update (no mask variant).
+/// Matches Python's @mx.compile _gated_delta_step_ops.
+private let _compiledGatedDeltaStep: @Sendable ([MLXArray]) -> [MLXArray] = compile(
+    shapeless: true
+) { (arrays: [MLXArray]) -> [MLXArray] in
+    let q = arrays[0], k = arrays[1], v = arrays[2]
+    let g = arrays[3], beta = arrays[4], stateIn = arrays[5]
+
+    let decay: MLXArray
+    if g.ndim == 2 {
+        decay = expandedDimensions(g, axes: [2, 3])
+    } else {
+        decay = expandedDimensions(g, axis: -2)
+    }
+
+    var s = stateIn * decay
+    let kvMem = (s * expandedDimensions(k, axis: -2)).sum(axis: -1)
+    let delta = (v - kvMem) * expandedDimensions(beta, axis: -1)
+    s = s + expandedDimensions(k, axis: -2) * expandedDimensions(delta, axis: -1)
+    let y = (s * expandedDimensions(q, axis: -2)).sum(axis: -1)
+
+    return [y, s]
+}
+
+/// Compiled single-step GatedDelta update (with mask variant).
+private let _compiledGatedDeltaStepMasked: @Sendable ([MLXArray]) -> [MLXArray] = compile(
+    shapeless: true
+) { (arrays: [MLXArray]) -> [MLXArray] in
+    let q = arrays[0], k = arrays[1], v = arrays[2]
+    let g = arrays[3], beta = arrays[4], stateIn = arrays[5]
+    let mask = arrays[6]
+
+    let decay: MLXArray
+    if g.ndim == 2 {
+        decay = expandedDimensions(g, axes: [2, 3])
+    } else {
+        decay = expandedDimensions(g, axis: -2)
+    }
+
+    var s = stateIn * decay
+    let kvMem = (s * expandedDimensions(k, axis: -2)).sum(axis: -1)
+    let delta = (v - kvMem) * expandedDimensions(beta, axis: -1)
+    s = s + expandedDimensions(k, axis: -2) * expandedDimensions(delta, axis: -1)
+    let y = (s * expandedDimensions(q, axis: -2)).sum(axis: -1)
+
+    let expandedMask: MLXArray
+    if mask.ndim == 1 {
+        expandedMask = expandedDimensions(mask, axes: [1, 2, 3])
+    } else if mask.ndim == 2 {
+        expandedMask = expandedDimensions(mask, axes: [2, 3])
+    } else {
+        expandedMask = expandedDimensions(mask, axis: -1)
+    }
+    s = MLX.where(expandedMask, s, stateIn)
+
+    return [y, s]
+}
+
 private func gatedDeltaStepOps(
     q: MLXArray, k: MLXArray, v: MLXArray,
     g: MLXArray, beta: MLXArray, state: MLXArray,
     mask: MLXArray? = nil
 ) -> (MLXArray, MLXArray) {
-    let oldState = state
-    let decay: MLXArray
-    if g.ndim == 2 {
-        decay = expandedDimensions(g, axes: [2, 3])
-    } else if g.ndim == 3 {
-        decay = expandedDimensions(g, axis: -2)
-    } else {
-        fatalError("Unsupported gating shape \(g.shape)")
-    }
-
-    var state = state * decay
-    let kvMem = (state * expandedDimensions(k, axis: -2)).sum(axis: -1)
-    let delta = (v - kvMem) * expandedDimensions(beta, axis: -1)
-    state = state + expandedDimensions(k, axis: -2) * expandedDimensions(delta, axis: -1)
-    let y = (state * expandedDimensions(q, axis: -2)).sum(axis: -1)
-
     if let mask {
-        let expandedMask: MLXArray
-        if mask.ndim == 1 {
-            expandedMask = expandedDimensions(mask, axes: [1, 2, 3])
-        } else if mask.ndim == 2 {
-            expandedMask = expandedDimensions(mask, axes: [2, 3])
-        } else if mask.ndim == 3 {
-            expandedMask = expandedDimensions(mask, axis: -1)
-        } else {
-            fatalError("Unsupported mask shape \(mask.shape)")
-        }
-        state = MLX.where(expandedMask, state, oldState)
+        let result = _compiledGatedDeltaStepMasked([q, k, v, g, beta, state, mask])
+        return (result[0], result[1])
+    } else {
+        let result = _compiledGatedDeltaStep([q, k, v, g, beta, state])
+        return (result[0], result[1])
     }
-
-    return (y, state)
 }
 
 func gatedDeltaOps(

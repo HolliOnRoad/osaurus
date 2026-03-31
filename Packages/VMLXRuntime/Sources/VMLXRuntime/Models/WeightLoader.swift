@@ -152,8 +152,11 @@ public func vmlxFixQuantizedBits(model: Module, defaultGroupSize: Int) {
                 guard inDim > 0, (wCols * 32) % inDim == 0 else { continue }
                 let tryBits = (wCols * 32) / inDim
                 guard [2, 3, 4, 5, 6, 8].contains(tryBits) else { continue }
-                if tryBits != ql.bits { ql.bits = tryBits }
-                if tryGS != ql.groupSize { ql.groupSize = tryGS }
+                if tryBits != ql.bits || tryGS != ql.groupSize {
+                    print("[FixBits] \(name): bits \(ql.bits)→\(tryBits), gs \(ql.groupSize)→\(tryGS)")
+                    ql.bits = tryBits
+                    ql.groupSize = tryGS
+                }
                 break
             }
         }

@@ -11,7 +11,13 @@ public final class CacheBlock: @unchecked Sendable {
     public var tokenCount: Int = 0
     var prevFreeBlock: CacheBlock?
     var nextFreeBlock: CacheBlock?
-    public var cacheData: [(keys: MLXArray, values: MLXArray)]?
+    /// Per-layer cache data stored in this block.
+    /// Each entry is one model layer's slice for the block's token range.
+    /// Uses LayerCacheEntry: .attention(KVCacheLayer) or .ssm(SSMStateLayer).
+    /// For hybrid models, last block stores SSM as .ssm (cumulative);
+    /// non-last blocks mark SSM positions as nil (skip).
+    /// TurboQuant Phase 5 will add .compressedAttention case.
+    public var cacheData: [LayerCacheEntry?]?
     public var lastAccess: Date = Date()
 
     public init(blockId: Int, blockSize: Int) {

@@ -203,6 +203,15 @@ final class StandardAttention: Module {
     }
 }
 
+// MARK: - Compiled SwiGLU
+
+/// Fused SiLU(gate) * up kernel. Matches Python's @mx.compile(shapeless=True) swiglu.
+/// Compiles to a single GPU kernel instead of 2 separate ops (silu + multiply).
+let compiledSwiGLU: @Sendable (MLXArray, MLXArray) -> MLXArray = compile(shapeless: true) {
+    (gate: MLXArray, x: MLXArray) -> MLXArray in
+    silu(gate) * x
+}
+
 // MARK: - MLP (SwiGLU)
 
 final class StandardMLP: Module, UnaryLayer {
@@ -218,7 +227,7 @@ final class StandardMLP: Module, UnaryLayer {
     }
 
     func callAsFunction(_ x: MLXArray) -> MLXArray {
-        downProj(silu(gateProj(x)) * upProj(x))
+        downProj(compiledSwiGLU(gateProj(x), upProj(x)))
     }
 }
 
@@ -250,14 +259,22 @@ final class StandardSparseMoeBlock: Module, UnaryLayer {
     }
 
     func callAsFunction(_ x: MLXArray) -> MLXArray {
-        var gates = gate(x)
-        gates = sigmoid(gates)
+        // Cast to float32 for numerical stability in gate routing (matches Python mlx-lm).
+        // Prevents float16/bfloat16 overflow in sigmoid for large expert counts.
+        let gates = gate(x.asType(.float32))
+        let scores = sigmoid(gates)
+
+        // Apply e_score_correction_bias for expert SELECTION (top-k routing),
+        // but use original scores (without bias) for weighting.
+        let biasedScores = scores + eScoreCorrectionBias
 
         let k = topK
-        let kth = gates.dim(-1) - k
-        let inds = MLX.argPartition(gates, kth: kth, axis: -1)[.ellipsis, (kth)...]
-        let scores = MLX.takeAlong(gates, inds, axis: -1)
-        let normalizedScores = scores / scores.sum(axis: -1, keepDims: true)
+        let inds = MLX.argPartition(-biasedScores, kth: k - 1, axis: -1)[.ellipsis, ..<k]
+        let selectedScores = MLX.takeAlong(scores, inds, axis: -1)
+
+        // Normalize with epsilon guard, cast back to input dtype
+        let normalizedScores = (selectedScores / (selectedScores.sum(axis: -1, keepDims: true) + 1e-20))
+            .asType(x.dtype)
 
         let y = switchMLP(x, inds)
         return (y * normalizedScores[.ellipsis, .newAxis]).sum(axis: -2)

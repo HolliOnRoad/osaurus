@@ -111,7 +111,7 @@ public final class Scheduler: @unchecked Sendable {
                 // Compute tokens for this request based on cache result
                 let requestTokens: Int
                 switch cacheResult {
-                case .hit(let cache, let remaining, _):
+                case .hit(let cache, let remaining, _, _):
                     let cachedCount = request.promptTokenIds.count - remaining.count
                     requestQueue.updateRequest(requestId) { req in
                         req.promptCache = cache

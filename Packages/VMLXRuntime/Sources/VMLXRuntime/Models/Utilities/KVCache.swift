@@ -232,15 +232,19 @@ public func vmlxCreateCausalMask(
 }
 
 /// Create an attention mask for scaled dot product attention.
+/// Uses symbolic `.causal` mode when possible (avoids materializing full mask array).
+/// Falls back to `.array(...)` only when cache offset is non-zero (resumed generation).
 public func vmlxCreateAttentionMask(
     h: MLXArray, cache: VMLXKVCache?
 ) -> MLXFast.ScaledDotProductAttentionMaskMode {
     let t = h.dim(1)
     if t > 1 {
-        var offset = 0
-        if let c = cache {
-            offset = c.offset
+        let offset = cache?.offset ?? 0
+        if offset == 0 {
+            // Fresh prefill: symbolic causal mask (no array materialization)
+            return .causal
         }
+        // Resumed after cache: need explicit mask with offset
         return .array(vmlxCreateCausalMask(n: t, offset: offset))
     }
     return .none
