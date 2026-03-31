@@ -130,8 +130,22 @@ public actor VMLXRuntimeActor {
         scheduler.config.enableDiskCache = enableDiskCache
         if let dir = diskCacheDir {
             scheduler.config.diskCacheDir = dir
+        } else if enableDiskCache && scheduler.config.diskCacheDir == nil {
+            // Auto-configure disk cache directory based on model name
+            let modelHash = currentModelName?.replacingOccurrences(of: "/", with: "_") ?? "default"
+            let cacheBase = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+                ?? URL(fileURLWithPath: NSTemporaryDirectory())
+            scheduler.config.diskCacheDir = cacheBase
+                .appendingPathComponent("osaurus")
+                .appendingPathComponent("kv-cache")
+                .appendingPathComponent(modelHash)
         }
         scheduler.config.enableTurboQuant = enableTurboQuant
+
+        // Rebuild CacheCoordinator so changed settings (disk cache, memory budget, etc.)
+        // take effect. The coordinator is built from config at Scheduler.init; without
+        // rebuilding, runtime config changes would be ignored.
+        scheduler.rebuildCacheCoordinator()
     }
 
     // MARK: - Model Management

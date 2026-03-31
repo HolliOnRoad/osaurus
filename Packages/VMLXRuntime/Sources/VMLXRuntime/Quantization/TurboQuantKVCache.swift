@@ -23,6 +23,18 @@ public final class TurboQuantKVCache: @unchecked Sendable {
     public private(set) var compressedKeys: EncodedKeys?
     public private(set) var compressedValues: EncodedValues?
 
+    /// Decoded buffer: float arrays decoded once after compress().
+    /// Subsequent getKeys()/getValues() reads from these buffers — no re-decode.
+    /// New tokens during decode append to the float window, not the buffer.
+    /// This is the critical Phase 2 fix from Python VMLX TurboQuant.
+    private var _decodedKeyBuffer: MLXArray?
+    private var _decodedValueBuffer: MLXArray?
+
+    /// Float window: new tokens appended during decode (after compression).
+    /// getKeys()/getValues() returns concat(decodedBuffer, floatWindow).
+    private var _floatWindowKeys: MLXArray?
+    private var _floatWindowValues: MLXArray?
+
     /// Cache offset (number of tokens stored).
     public private(set) var offset: Int = 0
 
@@ -73,10 +85,15 @@ public final class TurboQuantKVCache: @unchecked Sendable {
     /// Uses TurboQuantEncoder to perform random projection quantization:
     /// vectors are projected through a deterministic codebook, and the best
     /// codebook index + vector norm are stored for reconstruction.
+    ///
+    /// After encoding, decoded buffers are populated so subsequent getKeys()/getValues()
+    /// reads from float buffers (no re-decode per step). This is the critical Phase 2 fix
+    /// from Python VMLX TurboQuant — without it, post-compress generation is O(n*d^2) per step.
     public func compress() {
         precondition(phase == .fill, "Already compressed")
         guard let keys = _floatKeys, let values = _floatValues else { return }
 
+        // Encode to compressed format
         compressedKeys = TurboQuantEncoder.encodeKeys(
             keys: keys, bits: keyBits ?? 3, seed: config.seed
         )
@@ -84,55 +101,73 @@ public final class TurboQuantKVCache: @unchecked Sendable {
             values: values, bits: valueBits ?? 3, seed: config.seed
         )
 
+        // Decode once into persistent float buffers.
+        // These buffers serve as the read-only compressed region for attention.
+        // New tokens during decode will append to the float window instead.
+        _decodedKeyBuffer = TurboQuantEncoder.decodeKeys(compressedKeys!, seed: config.seed)
+        _decodedValueBuffer = TurboQuantEncoder.decodeValues(compressedValues!, seed: config.seed)
+
+        // Initialize empty float windows for decode-phase tokens
+        _floatWindowKeys = nil
+        _floatWindowValues = nil
+
         phase = .compressed
 
-        // Release float data -- compressed version is authoritative now
+        // Release original float data — decoded buffers + compressed are authoritative now
         _floatKeys = nil
         _floatValues = nil
     }
 
     // MARK: - Recompression
 
-    /// Recompress after new tokens are appended during decode.
-    /// Only compresses the delta (new tokens since last compression).
-    public func recompress(newKeys: MLXArray, newValues: MLXArray) {
+    /// Append new tokens during decode phase. Does NOT re-encode — just grows the float window.
+    /// The float window is concatenated with the decoded buffer in getKeys()/getValues().
+    /// This keeps decode at O(1) per step instead of O(n*d^2) re-encoding.
+    public func appendDecodeTokens(newKeys: MLXArray, newValues: MLXArray) {
         guard phase == .compressed else {
-            // In fill phase, just append
+            // In fill phase, just append to float data
             appendFloat(keys: newKeys, values: newValues)
             return
         }
 
-        offset += newKeys.shape[2]
+        offset += newKeys.dim(2)
 
-        // Decode existing compressed → float
-        var allKeys = TurboQuantEncoder.decodeKeys(compressedKeys!, seed: config.seed)
-        var allValues = TurboQuantEncoder.decodeValues(compressedValues!, seed: config.seed)
-
-        // Append new tokens
-        allKeys = concatenated([allKeys, newKeys], axis: 2)
-        allValues = concatenated([allValues, newValues], axis: 2)
-
-        // Re-encode everything
-        compressedKeys = TurboQuantEncoder.encodeKeys(keys: allKeys, bits: keyBits ?? 3, seed: config.seed)
-        compressedValues = TurboQuantEncoder.encodeValues(values: allValues, bits: valueBits ?? 3, seed: config.seed)
+        // Append to float window (not compressed region)
+        if let existingKeys = _floatWindowKeys {
+            _floatWindowKeys = concatenated([existingKeys, newKeys], axis: 2)
+            _floatWindowValues = concatenated([_floatWindowValues!, newValues], axis: 2)
+        } else {
+            _floatWindowKeys = newKeys
+            _floatWindowValues = newValues
+        }
     }
 
     // MARK: - Access
 
     /// Get keys for attention computation.
-    /// In compressed phase, decodes from the compressed representation on-the-fly.
+    /// In fill phase: returns raw float keys.
+    /// In compressed phase: returns concat(decodedBuffer, floatWindow) — O(1), no re-decode.
     public func getKeys() -> MLXArray? {
-        if phase == .compressed, let ck = compressedKeys {
-            return TurboQuantEncoder.decodeKeys(ck, seed: config.seed)
+        if phase == .compressed {
+            guard let buffer = _decodedKeyBuffer else { return nil }
+            if let window = _floatWindowKeys {
+                return concatenated([buffer, window], axis: 2)
+            }
+            return buffer
         }
         return _floatKeys
     }
 
     /// Get values for attention computation.
-    /// In compressed phase, decodes from the compressed representation on-the-fly.
+    /// In fill phase: returns raw float values.
+    /// In compressed phase: returns concat(decodedBuffer, floatWindow) — O(1), no re-decode.
     public func getValues() -> MLXArray? {
-        if phase == .compressed, let cv = compressedValues {
-            return TurboQuantEncoder.decodeValues(cv, seed: config.seed)
+        if phase == .compressed {
+            guard let buffer = _decodedValueBuffer else { return nil }
+            if let window = _floatWindowValues {
+                return concatenated([buffer, window], axis: 2)
+            }
+            return buffer
         }
         return _floatValues
     }

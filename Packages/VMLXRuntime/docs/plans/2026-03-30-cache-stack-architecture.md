@@ -371,9 +371,17 @@ Each item builds on the previous. Do not skip ahead.
 29. [ ] Async path: generate with KV-only, inject SSM when ready (non-thinking only)
 30. [ ] Test: verify reasoning quality with re-derived SSM state
 
+### Phase 5: TurboQuant (partial -- decoded buffer done, storage integration deferred)
+-- Decoded buffer cache added to TurboQuantKVCache (Phase 5.2 DONE)
+-- compress() now populates _decodedKeyBuffer/_decodedValueBuffer
+-- getKeys()/getValues() returns concat(decodedBuffer, floatWindow) — O(1), no re-decode
+-- appendDecodeTokens() appends to float window (not re-encode)
+-- Storage integration (.compressedAttention enum) deferred: 38 switch statements need updating
+-- VMLXKVCache conformance wrapper deferred: model forward pass needs standard VMLXKVCacheSimple
+
 ### Phase 7: Settings Integration + Edge Cases
-31. [ ] Fix applyUserConfig timing: call BEFORE model load, not after
-32. [ ] Auto-configure disk cache directory (~/.osaurus/cache/<model_hash>/)
+31. [x] Fix applyUserConfig timing: rebuildCacheCoordinator() after config changes
+32. [x] Auto-configure disk cache directory (~/.osaurus/cache/<model_hash>/) — done in applyUserConfig
 33. [ ] Enable paged cache by default (or add UI toggle)
 34. [ ] Verify KV bits propagates to quantized cache construction
 35. [ ] Verify memory budget slider affects MemoryCache

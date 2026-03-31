@@ -28,7 +28,7 @@ public final class Scheduler: @unchecked Sendable {
 
     public var config: SchedulerConfig
     private let requestQueue: RequestQueue
-    private let cacheCoordinator: CacheCoordinator
+    private var cacheCoordinator: CacheCoordinator
     private let lock = OSAllocatedUnfairLock()
 
     /// Whether the current model is hybrid (SSM + attention).
@@ -68,6 +68,17 @@ public final class Scheduler: @unchecked Sendable {
             self.stopTokenIds = stopTokenIds
             self.isTQActive = enableTQ
             cacheCoordinator.setHybrid(isHybrid)
+        }
+    }
+
+    /// Rebuild the CacheCoordinator from current config.
+    /// Call after applyUserConfig() changes cache-related settings (disk cache, memory budget, etc.)
+    /// so the new settings take effect. Clears all existing cached data.
+    public func rebuildCacheCoordinator() {
+        lock.withLock {
+            let newCoordinator = CacheCoordinator(config: config.toCacheCoordinatorConfig())
+            newCoordinator.setHybrid(isHybrid)
+            cacheCoordinator = newCoordinator
         }
     }
 
