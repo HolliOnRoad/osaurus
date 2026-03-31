@@ -2484,7 +2484,7 @@ final class HTTPHandler: ChannelInboundHandler, Sendable {
 
         Task(priority: .userInitiated) {
             // Get local models
-            var models = MLXService.getAvailableModels().map { OpenAIModel(modelName: $0) }
+            var models = MLXService.getAllLocalModels().map { OpenAIModel(modelName: $0) }
             if FoundationModelService.isDefaultModelAvailable() {
                 models.insert(OpenAIModel(modelName: "foundation"), at: 0)
             }
@@ -2539,7 +2539,7 @@ final class HTTPHandler: ChannelInboundHandler, Sendable {
             let now = Date().ISO8601Format()
 
             // Get local models
-            var models = MLXService.getAvailableModels().map { name -> OpenAIModel in
+            var models = MLXService.getAllLocalModels().map { name -> OpenAIModel in
                 var m = OpenAIModel(from: name)
                 m.name = name
                 m.model = name

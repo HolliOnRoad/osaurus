@@ -39,6 +39,15 @@ actor MLXService: ToolCapableService {
         return ModelManager.installedModelNames()
     }
 
+    /// Merged model list: VMLX models (JANG + well-known dirs) + MLX models (ModelManager),
+    /// de-duplicated with VMLX priority. Use this everywhere models are listed.
+    nonisolated static func getAllLocalModels() -> [String] {
+        let vmlxModels = VMLXServiceBridge.getAvailableModels()
+        let mlxModels = ModelManager.installedModelNames()
+        let vmlxSet = Set(vmlxModels)
+        return vmlxModels + mlxModels.filter { !vmlxSet.contains($0) }
+    }
+
     fileprivate nonisolated static func findModel(named name: String) -> LocalModelRef? {
         if let found = ModelManager.findInstalledModel(named: name) {
             return LocalModelRef(name: found.name, modelId: found.id)

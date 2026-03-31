@@ -578,6 +578,11 @@ public final class ChatWindowManager: NSObject, ObservableObject {
             }
             let active = self.activeLocalModelNames()
             await ModelRuntime.shared.unloadModelsNotIn(active)
+            // Also unload VMLX model if no active window uses it
+            if let vmlxModel = await VMLXServiceBridge.shared.loadedModelName,
+               !active.contains(where: { $0.lowercased().contains(vmlxModel.lowercased()) }) {
+                await VMLXServiceBridge.forceUnload()
+            }
         }
 
         // Sever NSWindow -> NSHostingController link so the SwiftUI view tree

@@ -1070,8 +1070,8 @@ final class PluginHostContext: @unchecked Sendable {
                 ])
             }
 
-            // Local MLX models
-            for name in MLXService.getAvailableModels() {
+            // Local models (VMLX + MLX merged)
+            for name in MLXService.getAllLocalModels() {
                 models.append([
                     "id": name,
                     "name": name,
