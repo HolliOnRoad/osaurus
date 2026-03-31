@@ -443,7 +443,8 @@ public actor VMLXRuntimeActor {
             tokens = try container.applyChatTemplate(
                 messages: request.messages,
                 addGenerationPrompt: true,
-                enableThinking: enableThinking
+                enableThinking: enableThinking,
+                reasoningEffort: request.reasoningEffort
             )
         } catch {
             throw VMLXRuntimeError.tokenizationFailed

@@ -137,13 +137,18 @@ public final class VMLXModelContainer: @unchecked Sendable {
     public func applyChatTemplate(
         messages: [VMLXChatMessage],
         addGenerationPrompt: Bool = true,
-        enableThinking: Bool = true
+        enableThinking: Bool = true,
+        reasoningEffort: String? = nil
     ) throws -> [Int] {
         let chatMessages: [Message] = messages.map { msg in
             ["role": msg.role, "content": msg.textContent]
         }
 
         if tokenizer.hasChatTemplate {
+            var context: [String: any Sendable] = ["enable_thinking": enableThinking]
+            if let effort = reasoningEffort {
+                context["reasoning_effort"] = effort
+            }
             return try tokenizer.applyChatTemplate(
                 messages: chatMessages,
                 chatTemplate: nil,
@@ -151,7 +156,7 @@ public final class VMLXModelContainer: @unchecked Sendable {
                 truncation: false,
                 maxLength: nil,
                 tools: nil,
-                additionalContext: ["enable_thinking": enableThinking]
+                additionalContext: context
             )
         }
 

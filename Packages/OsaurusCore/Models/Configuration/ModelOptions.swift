@@ -77,6 +77,7 @@ enum ModelProfileRegistry {
     static let profiles: [any ModelProfile.Type] = [
         VeniceModelProfile.self,
         OpenAIReasoningProfile.self,
+        GPTOSSReasoningProfile.self,
         QwenThinkingProfile.self,
         Gemini31FlashImageProfile.self,
         GeminiProImageProfile.self,
@@ -130,6 +131,38 @@ struct OpenAIReasoningProfile: ModelProfile {
     ]
 }
 
+// MARK: - GPT-OSS Reasoning Profile
+
+/// GPT-OSS models — reasoning effort control (low/medium/high) via chat template kwarg.
+/// Always thinks (uses <|channel|>analysis), effort controls depth.
+struct GPTOSSReasoningProfile: ModelProfile {
+    static let displayName = "Reasoning"
+
+    static func matches(modelId: String) -> Bool {
+        let lower = modelId.lowercased()
+        return lower.contains("gpt-oss") || lower.contains("gpt_oss")
+    }
+
+    static let options: [ModelOptionDefinition] = [
+        ModelOptionDefinition(
+            id: "reasoningEffort",
+            label: "Reasoning Effort",
+            icon: "brain",
+            kind: .segmented([
+                ModelOptionSegment(id: "low", label: "Low"),
+                ModelOptionSegment(id: "medium", label: "Medium"),
+                ModelOptionSegment(id: "high", label: "High"),
+            ])
+        )
+    ]
+
+    static let defaults: [String: ModelOptionValue] = [
+        "reasoningEffort": .string("medium")
+    ]
+
+    static let thinkingOption: (id: String, inverted: Bool)? = nil  // Always thinks
+}
+
 // MARK: - Qwen Thinking Profile
 
 /// Qwen3 / Qwen3.5 local models — supports disabling thinking via `enable_thinking` chat template kwarg.
@@ -143,7 +176,6 @@ struct QwenThinkingProfile: ModelProfile {
         return (lower.contains("qwen3") && !lower.contains("coder"))
             || lower.contains("minimax")
             || lower.contains("deepseek")
-            || lower.contains("gpt-oss") || lower.contains("gpt_oss")
             || lower.contains("glm")
             || lower.contains("phi-4")
             || lower.contains("qwq")

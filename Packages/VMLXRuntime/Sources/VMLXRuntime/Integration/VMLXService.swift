@@ -132,7 +132,8 @@ public actor VMLXService: VMLXToolCapableService {
             repetitionPenalty: params.repetitionPenalty,
             stop: stopSequences,
             stream: true,
-            enableThinking: params.enableThinking
+            enableThinking: params.enableThinking,
+            reasoningEffort: params.reasoningEffort
         )
 
         let eventStream = try await runtime.generateStream(request: request)

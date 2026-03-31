@@ -358,16 +358,25 @@ extension GenerationParameters {
     /// Convert Osaurus GenerationParameters to VMLXRuntime's SamplingParams.
     /// topP: uses per-request override if set, otherwise falls back to globalTopP.
     func toSamplingParams(globalTopP: Float = 0.9) -> SamplingParams {
-        // Default repetition penalty 1.1 for local models — prevents degeneration
-        // into repetition loops on long generations, especially with quantized models.
-        // Only applied when no explicit penalty is set from the request.
         SamplingParams(
             maxTokens: maxTokens,
             temperature: temperature ?? 0.7,
             topP: topPOverride ?? globalTopP,
             repetitionPenalty: repetitionPenalty ?? 1.1,
-            enableThinking: !isThinkingDisabled
+            enableThinking: !isThinkingDisabled,
+            reasoningEffort: reasoningEffort
         )
+    }
+
+    /// Extract reasoning effort from model options ("low", "medium", "high").
+    var reasoningEffort: String? {
+        if let val = modelOptions["reasoningEffort"] {
+            switch val {
+            case .string(let s): return s
+            default: return nil
+            }
+        }
+        return nil
     }
 
     /// Whether thinking is explicitly disabled via modelOptions.
