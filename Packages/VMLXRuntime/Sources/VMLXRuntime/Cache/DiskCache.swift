@@ -173,6 +173,33 @@ public final class DiskCache: @unchecked Sendable {
                 arrays["layer_\(i)_keys"] = kv.keys
                 arrays["layer_\(i)_values"] = kv.values
 
+            case .compressedAttention(let ek, let ev, let offset):
+                // Store TurboQuant-compressed attention to disk.
+                // Saves 5x less disk space than float16 attention.
+                metadata["__layer_\(i)_type__"] = "compressed_attention"
+                metadata["__layer_\(i)_offset__"] = String(offset)
+                metadata["__layer_\(i)_index_bits__"] = String(ek.indexBits)
+                metadata["__layer_\(i)_seed__"] = String(ek.seed)
+                metadata["__layer_\(i)_sink_count__"] = String(ek.sinkCount)
+                metadata["__layer_\(i)_shape__"] = ek.shape.map(String.init).joined(separator: ",")
+                metadata["__layer_\(i)_value_shape__"] = ev.shape.map(String.init).joined(separator: ",")
+                MLX.eval(ek.indicesPacked, ek.qjlPacked, ek.residualNorms, ek.vectorNorms)
+                MLX.eval(ev.indicesPacked, ev.vectorNorms)
+                arrays["layer_\(i)_ek_indices"] = ek.indicesPacked
+                arrays["layer_\(i)_ek_qjl"] = ek.qjlPacked
+                arrays["layer_\(i)_ek_residual"] = ek.residualNorms
+                arrays["layer_\(i)_ek_norms"] = ek.vectorNorms
+                arrays["layer_\(i)_ev_indices"] = ev.indicesPacked
+                arrays["layer_\(i)_ev_norms"] = ev.vectorNorms
+                if let sinkK = ek.sinkData {
+                    MLX.eval(sinkK)
+                    arrays["layer_\(i)_ek_sink"] = sinkK
+                }
+                if let sinkV = ev.sinkData {
+                    MLX.eval(sinkV)
+                    arrays["layer_\(i)_ev_sink"] = sinkV
+                }
+
             case .ssm(let ssm):
                 metadata["__layer_\(i)_type__"] = "ssm"
                 metadata["__layer_\(i)_offset__"] = "0"
@@ -258,6 +285,42 @@ public final class DiskCache: @unchecked Sendable {
                 }
                 let offset = Int(metadata["__layer_\(i)_offset__"] ?? "0") ?? 0
                 layers.append(.attention(KVCacheLayer(keys: keys, values: values, offset: offset)))
+
+            case "compressed_attention":
+                // Reconstruct TurboQuant-compressed attention from disk
+                guard let ekIndices = arrays["layer_\(i)_ek_indices"],
+                      let ekQjl = arrays["layer_\(i)_ek_qjl"],
+                      let ekResidual = arrays["layer_\(i)_ek_residual"],
+                      let ekNorms = arrays["layer_\(i)_ek_norms"],
+                      let evIndices = arrays["layer_\(i)_ev_indices"],
+                      let evNorms = arrays["layer_\(i)_ev_norms"] else {
+                    lock.withLock { _misses += 1 }
+                    return nil
+                }
+                let offset = Int(metadata["__layer_\(i)_offset__"] ?? "0") ?? 0
+                let indexBits = Int(metadata["__layer_\(i)_index_bits__"] ?? "3") ?? 3
+                let seed = Int(metadata["__layer_\(i)_seed__"] ?? "42") ?? 42
+                let shapeStr = metadata["__layer_\(i)_shape__"] ?? ""
+                let shape = shapeStr.split(separator: ",").compactMap { Int($0) }
+                let valShapeStr = metadata["__layer_\(i)_value_shape__"] ?? ""
+                let valShape = valShapeStr.split(separator: ",").compactMap { Int($0) }
+
+                // Load optional sink data (full-precision first N tokens)
+                let ekSink = arrays["layer_\(i)_ek_sink"]
+                let evSink = arrays["layer_\(i)_ev_sink"]
+
+                let ek = EncodedKeys(
+                    indicesPacked: ekIndices, qjlPacked: ekQjl,
+                    residualNorms: ekResidual, vectorNorms: ekNorms,
+                    shape: shape, indexBits: indexBits, seed: seed,
+                    sinkData: ekSink
+                )
+                let ev = EncodedValues(
+                    indicesPacked: evIndices, vectorNorms: evNorms,
+                    shape: valShape, indexBits: indexBits, seed: seed,
+                    sinkData: evSink
+                )
+                layers.append(.compressedAttention(ek, ev, offset))
 
             case "ssm":
                 let stateCount = Int(metadata["__layer_\(i)_state_count__"] ?? "0") ?? 0

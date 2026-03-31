@@ -11,13 +11,13 @@ public enum ReDeriverStatus: Sendable {
     case failed(Error)
 }
 
-/// Actor that manages async re-derivation of SSM state.
+/// Actor that manages re-derivation of SSM state when the SSM companion
+/// cache entry has been evicted but attention KV blocks still exist.
 ///
 /// When SSM checkpoint has been evicted but KV blocks exist:
-/// 1. Run full forward pass on cached tokens (all layers — SSM can't run independently)
-/// 2. Checkpoint SSM at stable boundary
-/// 3. Store checkpoint for future use
-/// 4. As side effect: refresh attention KV cache
+/// 1. Run full forward pass on cached tokens (all layers)
+/// 2. Extract SSM state from VMLXMambaCache objects after prefill
+/// 3. Store checkpoint for future cache hits
 ///
 /// Decision logic:
 /// - Tokens < syncThreshold (default 512): sync re-derive (wait for result)
@@ -25,19 +25,16 @@ public enum ReDeriverStatus: Sendable {
 ///
 /// Deduplicates concurrent requests for the same token hash.
 ///
-/// ## Model Forward Pass Integration
+/// ## Integration with VMLXRuntimeActor
 ///
-/// The re-deriver accepts an optional `ModelForwardPass` reference. When a model is
-/// available, `requestReDerive()` runs prefill on tokens up to `stableBoundary` to:
-/// - Refresh attention KV cache state (side effect of prefill)
-/// - Record the boundary in the checkpoint for cache keying
+/// The re-deriver accepts a `VMLXModelContainer` reference for running the
+/// forward pass. After prefill, SSM state is extracted from VMLXMambaCache
+/// objects in the cache array.
 ///
-/// For pure-attention models (no Mamba layers), the SSM states array remains empty
-/// because there are no SSM layers to extract state from. The checkpoint still records
-/// the boundary position, which is used for cache key matching.
-///
-/// When Mamba layer support is added to `TransformerModel`, the re-deriver will also
-/// extract SSM hidden states at the stable boundary and populate `ssmStates`.
+/// Currently, the generation loop uses a safe fallback: full prefill on
+/// partialHit re-derives SSM state as a side effect, and CacheCoordinator.store()
+/// saves the SSM companion for future turns. The re-deriver provides an
+/// explicit path for targeted re-derivation when the full fallback is too slow.
 public actor SSMReDeriver {
 
     /// Threshold: below this token count, re-derive synchronously (worth waiting).
@@ -52,24 +49,23 @@ public actor SSMReDeriver {
     /// SSM state cache to store re-derived checkpoints.
     private let ssmCache: SSMStateCache
 
-    /// Optional model forward pass for running actual prefill during re-derivation.
-    /// When nil, the re-deriver creates boundary-only checkpoints (no SSM state, no KV refresh).
-    private var model: (any ModelForwardPass)?
+    /// Model container for running prefill during re-derivation.
+    /// When nil, requestReDerive() returns nil immediately.
+    private var container: VMLXModelContainer?
 
     /// Stats
     public private(set) var syncReDerives: Int = 0
     public private(set) var asyncReDerives: Int = 0
     public private(set) var deduplicatedRequests: Int = 0
 
-    public init(ssmCache: SSMStateCache, syncThreshold: Int = 512, model: (any ModelForwardPass)? = nil) {
+    public init(ssmCache: SSMStateCache, syncThreshold: Int = 512) {
         self.ssmCache = ssmCache
         self.syncThreshold = syncThreshold
-        self.model = model
     }
 
-    /// Update the model forward pass reference (e.g., after model load/unload).
-    public func setModel(_ model: (any ModelForwardPass)?) {
-        self.model = model
+    /// Update the model container reference (call after model load/unload).
+    public func setModel(_ container: VMLXModelContainer?) {
+        self.container = container
     }
 
     // MARK: - Decision Logic
@@ -83,14 +79,8 @@ public actor SSMReDeriver {
 
     /// Request SSM state re-derivation for a token sequence.
     ///
-    /// If a `ModelForwardPass` is available (either set via `init` or `setModel(_:)`),
-    /// prefill is run on `tokens[0..<stableBoundary]` to:
-    /// - Refresh attention KV cache (side effect of running the forward pass)
-    /// - Record the stable boundary in the checkpoint for cache keying
-    ///
-    /// SSM state extraction requires Mamba layer support in `TransformerModel`.
-    /// For pure-attention models, `ssmStates` remains empty — the checkpoint still
-    /// records the boundary position for correct cache key matching.
+    /// Runs prefill on `tokens[0..<stableBoundary]` using the model container.
+    /// After prefill, extracts SSM state from VMLXMambaCache objects.
     ///
     /// If sync: waits and returns the checkpoint.
     /// If async: starts background task and returns nil (checkpoint stored when done).
@@ -99,13 +89,10 @@ public actor SSMReDeriver {
     ///   - tokens: Full token sequence for the conversation.
     ///   - stableBoundary: Token index up to which state should be checkpointed.
     ///   - forceSync: If true, always wait for the result regardless of token count.
-    ///   - model: Optional override for the model forward pass. If nil, uses the
-    ///     instance-level model set via `init` or `setModel(_:)`.
     public func requestReDerive(
         tokens: [Int],
         stableBoundary: Int,
-        forceSync: Bool = false,
-        model override: (any ModelForwardPass)? = nil
+        forceSync: Bool = false
     ) async throws -> SSMCheckpoint? {
         let tokenHash = SSMStateCache.hashTokens(tokens, count: stableBoundary)
 
@@ -121,53 +108,42 @@ public actor SSMReDeriver {
                 return try await existingTask.value
             }
             deduplicatedRequests += 1
-            return nil  // Async — will complete later
+            return nil
         }
 
-        // Resolve which model to use: explicit override > instance model > nil
-        let activeModel = override ?? self.model
+        // Need a model to re-derive
+        guard let container = self.container else {
+            return nil
+        }
 
         // Start new re-derivation
         let prefillTokens = Array(tokens.prefix(stableBoundary))
         let task = Task<SSMCheckpoint, Error> {
-            // If we have a model, run actual prefill to refresh KV cache
-            if let fwdPass = activeModel, !prefillTokens.isEmpty {
+            // Run full forward pass to re-derive SSM state.
+            // This populates both attention KV and SSM state in the cache objects.
+            let cache = container.newCache()
+
+            if !prefillTokens.isEmpty {
                 let inputIds = MLXArray(prefillTokens.map { Int32($0) })
-                var cacheArrays: [MLXArray] = []
-
-                // Build causal mask for the prefill sequence
-                let mask: MLXArray?
-                if prefillTokens.count > 1 {
-                    mask = TransformerModel.createCausalMask(
-                        seqLen: prefillTokens.count,
-                        offset: 0,
-                        dtype: .float16
-                    )
-                } else {
-                    mask = nil
-                }
-
-                // Run prefill — this refreshes the model's internal KV cache
-                // as a side effect. For hybrid models with Mamba layers, this
-                // would also recompute SSM hidden states.
-                _ = try await fwdPass.prefill(
-                    inputIds: inputIds,
-                    cache: &cacheArrays,
-                    mask: mask
-                )
+                let logits = container.forward(
+                    inputIds.expandedDimensions(axis: 0), cache: cache)
+                // Force GPU computation to materialize SSM state
+                MLX.eval(logits)
             }
 
-            // Create checkpoint with boundary info.
-            // SSM states are empty for pure-attention models — when Mamba layer
-            // support is added to TransformerModel, extract SSM hidden states
-            // here via a new protocol method (e.g., `extractSSMStates(atLayer:)`).
-            let checkpoint = SSMCheckpoint(
-                ssmStates: [],  // Empty for attention-only models; populated when Mamba layers are supported
+            // Extract SSM states from VMLXMambaCache objects
+            var ssmStates: [SSMStateLayer] = []
+            for c in cache {
+                if let mambaCache = c as? VMLXMambaCache, !mambaCache.state.isEmpty {
+                    ssmStates.append(SSMStateLayer(state: mambaCache.state))
+                }
+            }
+
+            return SSMCheckpoint(
+                ssmStates: ssmStates,
                 boundary: stableBoundary,
                 tokenHash: tokenHash
             )
-
-            return checkpoint
         }
 
         activeTasks[tokenHash] = task
@@ -181,7 +157,6 @@ public actor SSMReDeriver {
             return checkpoint
         } else {
             asyncReDerives += 1
-            // Fire and forget — store when complete
             Task {
                 do {
                     let checkpoint = try await task.value
@@ -192,38 +167,32 @@ public actor SSMReDeriver {
                     self.activeTasks.removeValue(forKey: tokenHash)
                 }
             }
-            return nil  // Async — caller should proceed with full prefill
+            return nil
         }
     }
 
     // MARK: - Queries
 
-    /// Check if a re-derivation is in progress for this token hash.
     public func isReDeriving(tokenHash: String) -> Bool {
         activeTasks[tokenHash] != nil
     }
 
-    /// Check if a completed checkpoint exists.
     public func hasCheckpoint(tokenHash: String) -> Bool {
         completedCheckpoints[tokenHash] != nil
     }
 
-    /// Get a completed checkpoint (and remove from pending).
     public func consumeCheckpoint(tokenHash: String) -> SSMCheckpoint? {
         completedCheckpoints.removeValue(forKey: tokenHash)
     }
 
-    /// Number of active re-derivation tasks.
     public var activeTaskCount: Int {
         activeTasks.count
     }
 
-    /// Clear all completed checkpoints.
     public func clearCompleted() {
         completedCheckpoints.removeAll()
     }
 
-    /// Cancel all active re-derivation tasks.
     public func cancelAll() {
         for (_, task) in activeTasks {
             task.cancel()

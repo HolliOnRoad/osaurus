@@ -89,7 +89,8 @@ public actor VMLXService: VMLXToolCapableService {
             topP: params.topP,
             repetitionPenalty: params.repetitionPenalty,
             stop: params.stop,
-            stream: false
+            stream: false,
+            enableThinking: params.enableThinking
         )
         return try await runtime.generate(request: request)
     }
@@ -129,8 +130,15 @@ public actor VMLXService: VMLXToolCapableService {
                         case .toolInvocation(let name, let args, _):
                             continuation.yield("\u{FFFE}tool:" + name)
                             continuation.yield("\u{FFFE}args:" + args)
-                        case .usage:
-                            break  // Usage not part of delta stream
+                        case .usage(let prompt, let completion, let cached,
+                                    let ttft, let ppTPS, let decTPS, let detail):
+                            // Encode stats as sentinel-prefixed JSON for the bridge to parse
+                            let statsJSON = "{\"p\":\(prompt),\"c\":\(completion),\"k\":\(cached),"
+                                + "\"ttft\":\(String(format:"%.3f",ttft)),"
+                                + "\"pp\":\(String(format:"%.1f",ppTPS)),"
+                                + "\"tg\":\(String(format:"%.1f",decTPS)),"
+                                + "\"d\":\"\(detail ?? "miss")\"}"
+                            continuation.yield("\u{FFFE}stats:" + statsJSON)
                         }
                     }
                     continuation.finish()
@@ -161,7 +169,8 @@ public actor VMLXService: VMLXToolCapableService {
             stop: stopSequences,
             stream: false,
             tools: tools,
-            toolChoice: toolChoice
+            toolChoice: toolChoice,
+            enableThinking: params.enableThinking
         )
         return try await runtime.generate(request: request)
     }
@@ -184,7 +193,8 @@ public actor VMLXService: VMLXToolCapableService {
             stop: stopSequences,
             stream: true,
             tools: tools,
-            toolChoice: toolChoice
+            toolChoice: toolChoice,
+            enableThinking: params.enableThinking
         )
 
         let eventStream = try await runtime.generateStream(request: request)
@@ -201,8 +211,14 @@ public actor VMLXService: VMLXToolCapableService {
                         case .toolInvocation(let name, let args, _):
                             continuation.yield("\u{FFFE}tool:" + name)
                             continuation.yield("\u{FFFE}args:" + args)
-                        case .usage:
-                            break
+                        case .usage(let prompt, let completion, let cached,
+                                    let ttft, let ppTPS, let decTPS, let detail):
+                            let statsJSON = "{\"p\":\(prompt),\"c\":\(completion),\"k\":\(cached),"
+                                + "\"ttft\":\(String(format:"%.3f",ttft)),"
+                                + "\"pp\":\(String(format:"%.1f",ppTPS)),"
+                                + "\"tg\":\(String(format:"%.1f",decTPS)),"
+                                + "\"d\":\"\(detail ?? "miss")\"}"
+                            continuation.yield("\u{FFFE}stats:" + statsJSON)
                         }
                     }
                     continuation.finish()
@@ -223,7 +239,9 @@ public actor VMLXService: VMLXToolCapableService {
         prefillStepSize: Int? = nil,
         enableDiskCache: Bool = false,
         diskCacheDir: URL? = nil,
-        enableTurboQuant: Bool = false
+        enableTurboQuant: Bool = false,
+        cacheMemoryPercent: Float? = nil,
+        usePagedCache: Bool? = nil
     ) async {
         await runtime.applyUserConfig(
             kvBits: kvBits,
@@ -232,7 +250,9 @@ public actor VMLXService: VMLXToolCapableService {
             prefillStepSize: prefillStepSize,
             enableDiskCache: enableDiskCache,
             diskCacheDir: diskCacheDir,
-            enableTurboQuant: enableTurboQuant
+            enableTurboQuant: enableTurboQuant,
+            cacheMemoryPercent: cacheMemoryPercent,
+            usePagedCache: usePagedCache
         )
     }
 

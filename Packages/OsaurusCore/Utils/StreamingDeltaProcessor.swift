@@ -186,12 +186,15 @@ final class StreamingDeltaProcessor {
 
     private func syncIfNeeded(now: Date) {
         let totalChars = contentLength + thinkingLength
+        // Sync intervals tuned for smooth local inference streaming.
+        // Shorter intervals = smoother token-by-token appearance.
+        // At 70 tok/s, 30ms = ~2 tokens per UI update (smooth).
         let syncIntervalMs: Double =
             switch totalChars {
-            case 0 ..< 2_000: 100
-            case 2_000 ..< 5_000: 150
-            case 5_000 ..< 10_000: 200
-            default: 250
+            case 0 ..< 2_000: 30
+            case 2_000 ..< 5_000: 50
+            case 5_000 ..< 10_000: 75
+            default: 100
             }
 
         let timeSinceSync = now.timeIntervalSince(lastSyncTime) * 1000
@@ -205,19 +208,22 @@ final class StreamingDeltaProcessor {
     private func recomputeFlushTuning() {
         let totalChars = contentLength + thinkingLength
 
+        // Flush tuning for local inference: prioritize responsiveness.
+        // Smaller buffers + shorter intervals = smoother streaming.
         switch totalChars {
         case 0 ..< 2_000:
-            flushIntervalMs = 50; maxBufferSize = 256
+            flushIntervalMs = 20; maxBufferSize = 64
         case 2_000 ..< 8_000:
-            flushIntervalMs = 75; maxBufferSize = 512
+            flushIntervalMs = 30; maxBufferSize = 128
         case 8_000 ..< 20_000:
-            flushIntervalMs = 100; maxBufferSize = 768
+            flushIntervalMs = 50; maxBufferSize = 256
         default:
-            flushIntervalMs = 150; maxBufferSize = 1024
+            flushIntervalMs = 75; maxBufferSize = 512
         }
 
-        if longestFlushMs > 50 {
-            flushIntervalMs = min(200, flushIntervalMs * 1.5)
+        // Only back off if flushes are genuinely slow (>30ms means layout is heavy)
+        if longestFlushMs > 30 {
+            flushIntervalMs = min(150, flushIntervalMs * 1.5)
         }
     }
 

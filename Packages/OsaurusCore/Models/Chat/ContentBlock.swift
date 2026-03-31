@@ -35,6 +35,7 @@ enum ContentBlockKind: Equatable {
     case sharedArtifact(artifact: SharedArtifact)
     case pendingToolCall(toolName: String, argPreview: String?, argSize: Int)
     case preflightCapabilities(items: [PreflightCapabilityItem])
+    case inferenceStats(stats: GenerationStats)
     case typingIndicator
     case groupSpacer
 
@@ -75,6 +76,10 @@ enum ContentBlockKind: Equatable {
         case let (.preflightCapabilities(lItems), .preflightCapabilities(rItems)):
             return lItems == rItems
 
+        case let (.inferenceStats(lStats), .inferenceStats(rStats)):
+            return lStats.completionTokens == rStats.completionTokens
+                && lStats.promptTokens == rStats.promptTokens
+
         case (.typingIndicator, .typingIndicator):
             return true
 
@@ -101,7 +106,7 @@ struct ContentBlock: Identifiable, Equatable, Hashable {
         case let .header(role, _, _): return role
         case let .paragraph(_, _, _, role): return role
         case .toolCallGroup, .thinking, .sharedArtifact, .pendingToolCall, .preflightCapabilities,
-            .typingIndicator, .groupSpacer:
+            .inferenceStats, .typingIndicator, .groupSpacer:
             return .assistant
         case .userMessage: return .user
         }
@@ -239,7 +244,8 @@ extension ContentBlock {
         streamingTurnId: UUID?,
         agentName: String,
         previousTurn: ChatTurn? = nil,
-        thinkingEnabled: Bool = false
+        thinkingEnabled: Bool = false,
+        showInferenceStats: Bool = false
     ) -> [ContentBlock] {
         var blocks: [ContentBlock] = []
         var previousRole: MessageRole? = previousTurn?.role
@@ -375,6 +381,20 @@ extension ContentBlock {
                         position: .middle
                     )
                 )
+            }
+
+            // Show inference stats below assistant messages (if available and enabled)
+            if !isStreaming, turn.role == .assistant, let stats = turn.generationStats {
+                if showInferenceStats {
+                    turnBlocks.append(
+                        ContentBlock(
+                            id: "stats-\(turn.id.uuidString)",
+                            turnId: turn.id,
+                            kind: .inferenceStats(stats: stats),
+                            position: .last
+                        )
+                    )
+                }
             }
 
             blocks.append(contentsOf: assignPositions(to: turnBlocks))

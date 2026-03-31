@@ -14,7 +14,6 @@ final class ChatSession: ObservableObject {
     @Published var turns: [ChatTurn] = []
     @Published var isStreaming: Bool = false
     @Published var lastStreamError: String?
-    @Published var pendingSecretPrompt: SecretPromptState?
     /// Tracks expand/collapse state for tool calls, thinking blocks, etc.
     /// Lives on the session so state survives NSTableView cell reuse.
     let expandedBlocksStore = ExpandedBlocksStore()
@@ -59,7 +58,7 @@ final class ChatSession: ObservableObject {
     private var activeRunId: UUID?
     private var activeRunContext: RunContext?
     var chatEngineFactory: @MainActor () -> ChatEngineProtocol = {
-        ChatEngine(source: .chatUI)
+        ChatEngine(remoteServices: RemoteProviderManager.shared.connectedServices(), source: .chatUI)
     }
     // nonisolated(unsafe) allows deinit to access these for cleanup
     nonisolated(unsafe) private var remoteModelsObserver: NSObjectProtocol?
@@ -122,10 +121,6 @@ final class ChatSession: ObservableObject {
             Task { [weak self] in
                 await self?.refreshPickerItems()
             }
-        }
-
-        if MockChatData.isEnabled {
-            rebuildVisibleBlocks()
         }
     }
 
@@ -199,67 +194,32 @@ final class ChatSession: ObservableObject {
         return pickerItems.first { $0.id == model }
     }
 
-    /// Flattened content blocks for NSTableView rendering.
-    /// Stored and updated explicitly (not recomputed on every body pass).
-    /// Call `rebuildVisibleBlocks()` after any turn mutation to refresh.
-    @Published private(set) var visibleBlocks: [ContentBlock] = []
-
-    /// Precomputed group header map. Updated alongside `visibleBlocks`.
-    @Published private(set) var visibleBlocksGroupHeaderMap: [UUID: UUID] = [:]
-
-    /// Whether the message thread has content (includes USE_MOCK_CHAT_DATA stress data).
-    var hasVisibleThreadMessages: Bool {
-        if MockChatData.isEnabled {
-            return !visibleBlocks.isEmpty
-        }
-        return !turns.isEmpty
-    }
-
-    /// Last assistant turn for hover/regen chrome; respects mock thread when enabled.
-    var lastAssistantTurnIdForThread: UUID? {
-        if MockChatData.isEnabled {
-            return visibleBlocks.last { $0.role == .assistant }?.turnId
-        }
-        return turns.last { $0.role == .assistant }?.id
-    }
-
-    /// Rebuild `visibleBlocks` and `visibleBlocksGroupHeaderMap` from current turns.
-    /// Cheap to call repeatedly — BlockMemoizer fast-paths when nothing changed.
-    func rebuildVisibleBlocks() {
+    /// Flattened content blocks for efficient LazyVStack rendering
+    /// Each block is a paragraph, header, tool call, etc. that can be independently recycled
+    ///
+    /// PERFORMANCE: Uses BlockMemoizer for incremental updates during streaming.
+    /// Only regenerates blocks for the last turn instead of all blocks (O(1) vs O(n)).
+    var visibleBlocks: [ContentBlock] {
+        // Get agent name for assistant messages
         let agent = AgentManager.shared.agent(for: agentId ?? Agent.defaultId)
         let displayName = agent?.isBuiltIn == true ? "Assistant" : (agent?.name ?? "Assistant")
+
+        // Determine streaming turn ID
         let streamingTurnId = isStreaming ? turns.last?.id : nil
 
-        if MockChatData.isEnabled {
-            let mockTurns = MockChatData.mockTurnsForPerformanceTest()
-            let newBlocks = blockMemoizer.blocks(
-                from: mockTurns,
-                streamingTurnId: nil,
-                agentName: displayName,
-                thinkingEnabled: activeModelOptions["disableThinking"]?.boolValue == false
-            )
-            let newHeaderMap = blockMemoizer.groupHeaderMap
-            withAnimation(.none) {
-                visibleBlocks = newBlocks
-                visibleBlocksGroupHeaderMap = newHeaderMap
-            }
-            return
-        }
-
-        let newBlocks = blockMemoizer.blocks(
+        let showStats = ServerConfigurationStore.load()?.showInferenceStats ?? false
+        return blockMemoizer.blocks(
             from: turns,
             streamingTurnId: streamingTurnId,
             agentName: displayName,
-            thinkingEnabled: activeModelOptions["disableThinking"]?.boolValue == false
+            thinkingEnabled: activeModelOptions["disableThinking"]?.boolValue == false,
+            showInferenceStats: showStats
         )
-        let newHeaderMap = blockMemoizer.groupHeaderMap
+    }
 
-        // use withAnimation(.none) to suppress the warning about publishing during view updates
-        // this wraps the changes in a proper SwiftUI transaction
-        withAnimation(.none) {
-            visibleBlocks = newBlocks
-            visibleBlocksGroupHeaderMap = newHeaderMap
-        }
+    /// Precomputed group header map from BlockMemoizer.
+    var visibleBlocksGroupHeaderMap: [UUID: UUID] {
+        blockMemoizer.groupHeaderMap
     }
 
     /// Estimated token count for current session context (~4 chars per token).
@@ -392,8 +352,6 @@ final class ChatSession: ObservableObject {
         // Clear caches
         blockMemoizer.clear()
         _tokenCacheValid = false
-        visibleBlocks = []
-        visibleBlocksGroupHeaderMap = [:]
 
         // Apply model from agent or global config (don't auto-persist, it's already saved)
         isLoadingModel = true
@@ -406,8 +364,6 @@ final class ChatSession: ObservableObject {
             selectedModel = pickerItems.first?.id
         }
         isLoadingModel = false
-
-        rebuildVisibleBlocks()
     }
 
     /// Reset for a specific agent
@@ -507,7 +463,6 @@ final class ChatSession: ObservableObject {
         // Clear caches to force a clean block rebuild for the new session
         blockMemoizer.clear()
         _tokenCacheValid = false
-        rebuildVisibleBlocks()
 
         Task { [weak self] in await self?.refreshMemoryTokens() }
     }
@@ -543,7 +498,6 @@ final class ChatSession: ObservableObject {
 
         // Mark as dirty and save
         isDirty = true
-        rebuildVisibleBlocks()
         save()
         send("")  // Empty send to trigger regeneration with existing history
     }
@@ -553,7 +507,6 @@ final class ChatSession: ObservableObject {
         guard let index = turns.firstIndex(where: { $0.id == id }) else { return }
         turns = Array(turns.prefix(index))
         isDirty = true
-        rebuildVisibleBlocks()
         save()
     }
 
@@ -565,7 +518,6 @@ final class ChatSession: ObservableObject {
         // Remove this turn and all subsequent turns
         turns = Array(turns.prefix(index))
         isDirty = true
-        rebuildVisibleBlocks()
 
         // Regenerate
         send("")
@@ -641,7 +593,6 @@ final class ChatSession: ObservableObject {
         ServerController.signalGenerationEnd()
         trimTrailingEmptyAssistantTurn()
         consolidateAssistantTurns()
-        rebuildVisibleBlocks()
         save()
     }
 
@@ -684,10 +635,7 @@ final class ChatSession: ObservableObject {
                 content: context.userContent,
                 tokenCount: max(1, context.userContent.count / 4)
             )
-            Task.detached {
-                await EmbeddingService.awaitStartupInit()
-                await MemorySearchService.shared.indexConversationChunk(userChunk)
-            }
+            Task.detached { await MemorySearchService.shared.indexConversationChunk(userChunk) }
             if let assistantContent, !assistantContent.isEmpty {
                 do {
                     try db.insertChunk(
@@ -707,10 +655,7 @@ final class ChatSession: ObservableObject {
                     content: assistantContent,
                     tokenCount: max(1, assistantContent.count / 4)
                 )
-                Task.detached {
-                    await EmbeddingService.awaitStartupInit()
-                    await MemorySearchService.shared.indexConversationChunk(assistantChunk)
-                }
+                Task.detached { await MemorySearchService.shared.indexConversationChunk(assistantChunk) }
             }
         }
 
@@ -776,7 +721,6 @@ final class ChatSession: ObservableObject {
         if hasContent {
             turns.append(ChatTurn(role: .user, content: trimmed, attachments: attachments))
             isDirty = true
-            rebuildVisibleBlocks()
 
             // Immediately save new session so it appears in sidebar
             if sessionId == nil {
@@ -823,9 +767,6 @@ final class ChatSession: ObservableObject {
 
             var assistantTurn = ChatTurn(role: .assistant, content: "")
             turns.append(assistantTurn)
-            // Must refresh block memoizer before first delta — otherwise visibleBlocks stays
-            // user-only while isStreaming is true and the table early-returns without assistant rows.
-            rebuildVisibleBlocks()
             do {
                 let engine = chatEngineFactory()
                 let chatCfg = ChatConfigurationStore.load()
@@ -951,19 +892,12 @@ final class ChatSession: ObservableObject {
                 }
 
                 let maxAttempts = max(chatCfg.maxToolAttempts ?? 15, 1)
-                let toolBudgetWarningThreshold = 3
                 var attempts = 0
-                var reachedToolLimit = false
-                var pendingBudgetNotice: String?
                 let effectiveTemp = AgentManager.shared.effectiveTemperature(for: effectiveAgentId)
 
                 outer: while attempts < maxAttempts {
                     attempts += 1
-                    var msgs = buildMessages()
-                    if let notice = pendingBudgetNotice {
-                        msgs.append(ChatMessage(role: "user", content: notice))
-                        pendingBudgetNotice = nil
-                    }
+                    let msgs = buildMessages()
                     let convTokens =
                         msgs
                         .filter { $0.role != "system" }
@@ -997,9 +931,7 @@ final class ChatSession: ObservableObject {
                             modelId: selectedModel ?? "default",
                             modelOptions: activeModelOptions
                         ) { [weak self] in
-                            // rebuildVisibleBlocks mutates @Published properties which already
-                            // emit objectWillChange — the extra send() below is redundant.
-                            self?.rebuildVisibleBlocks()
+                            self?.objectWillChange.send()
                         }
 
                         let stream = try await engine.streamChat(request: req)
@@ -1011,16 +943,17 @@ final class ChatSession: ObservableObject {
                             }
                             if let toolName = StreamingToolHint.decode(delta) {
                                 assistantTurn.pendingToolName = toolName
-                                rebuildVisibleBlocks()
+                                self.objectWillChange.send()
                                 continue
                             }
                             if let argFragment = StreamingToolHint.decodeArgs(delta) {
                                 assistantTurn.appendToolArgFragment(argFragment)
-                                // throttle: only refresh every 5 fragments to avoid flooding the
-                                // table with row reconfigurations during arg streaming.
-                                if assistantTurn.pendingToolArgSize % 5 == 0 {
-                                    rebuildVisibleBlocks()
-                                }
+                                self.objectWillChange.send()
+                                continue
+                            }
+                            if let stats = StreamingToolHint.decodeStats(delta) {
+                                assistantTurn.generationStats = stats
+                                self.objectWillChange.send()
                                 continue
                             }
                             if !delta.isEmpty {
@@ -1081,10 +1014,8 @@ final class ChatSession: ObservableObject {
                             }
                             if !isRunActive(runId) { break outer }
 
-                            // Hot-load tools injected by capabilities_load or sandbox_plugin_register
-                            if inv.toolName == "capabilities_load"
-                                || inv.toolName == "sandbox_plugin_register"
-                            {
+                            // Hot-load tools injected by capabilities_load
+                            if inv.toolName == "capabilities_load" {
                                 let newTools = await CapabilityLoadBuffer.shared.drain()
                                 for tool in newTools
                                 where !toolSpecs.contains(where: { $0.function.name == tool.function.name }) {
@@ -1100,27 +1031,6 @@ final class ChatSession: ObservableObject {
                                 if let artifact = SharedArtifact.fromEnrichedToolResult(resultText) {
                                     PluginManager.shared.notifyArtifactHandlers(artifact: artifact)
                                 }
-                            }
-
-                            if inv.toolName == "sandbox_secret_set",
-                                let prompt = SecretPromptParser.parse(resultText)
-                            {
-                                let stored: Bool = await withCheckedContinuation { continuation in
-                                    let promptState = SecretPromptState(
-                                        key: prompt.key,
-                                        description: prompt.description,
-                                        instructions: prompt.instructions,
-                                        agentId: prompt.agentId
-                                    ) { value in
-                                        continuation.resume(returning: value != nil)
-                                    }
-                                    self.pendingSecretPrompt = promptState
-                                }
-                                self.pendingSecretPrompt = nil
-                                resultText =
-                                    stored
-                                    ? SecretToolResult.stored(key: prompt.key)
-                                    : SecretToolResult.cancelled(key: prompt.key)
                             }
 
                             // Log tool success (truncated result)
@@ -1150,54 +1060,9 @@ final class ChatSession: ObservableObject {
                         // the number of @Published change signals and SwiftUI layout passes.
                         turns.append(contentsOf: [toolTurn, newAssistantTurn])
                         assistantTurn = newAssistantTurn
-                        rebuildVisibleBlocks()
 
-                        let remaining = maxAttempts - attempts
-                        if remaining <= 0 {
-                            reachedToolLimit = true
-                        } else if remaining <= toolBudgetWarningThreshold {
-                            pendingBudgetNotice =
-                                "[System Notice] Tool call budget: \(remaining) of \(maxAttempts) remaining. Wrap up your current work and provide a summary."
-                        }
+                        // Continue loop with new history
                         continue
-                    }
-                }
-
-                if reachedToolLimit && isRunActive(runId) {
-                    do {
-                        var finalReq = ChatCompletionRequest(
-                            model: selectedModel ?? "default",
-                            messages: buildMessages(),
-                            temperature: effectiveTemp,
-                            max_tokens: effectiveMaxTokensForAgent ?? 16384,
-                            stream: true,
-                            top_p: chatCfg.topPOverride,
-                            frequency_penalty: nil,
-                            presence_penalty: nil,
-                            stop: nil,
-                            n: nil,
-                            tools: nil,
-                            tool_choice: nil,
-                            session_id: sessionId?.uuidString
-                        )
-                        finalReq.modelOptions = activeModelOptions.isEmpty ? nil : activeModelOptions
-
-                        let processor = StreamingDeltaProcessor(
-                            turn: assistantTurn,
-                            modelId: selectedModel ?? "default",
-                            modelOptions: activeModelOptions
-                        ) { [weak self] in
-                            self?.rebuildVisibleBlocks()
-                        }
-
-                        let stream = try await engine.streamChat(request: finalReq)
-                        for try await delta in stream {
-                            if !isRunActive(runId) { break }
-                            if !delta.isEmpty { processor.receiveDelta(delta) }
-                        }
-                        processor.finalize()
-                    } catch {
-                        debugLog("send: final wrap-up call failed: \(error.localizedDescription)")
                     }
                 }
             } catch {
@@ -1227,26 +1092,12 @@ struct ChatView: View {
     // Inline editing state
     @State private var editingTurnId: UUID?
     @State private var editText: String = ""
-    @State private var userImagePreview: NSImage?
-    // Bonjour agent connection
-    @State private var pendingDiscoveredAgent: DiscoveredAgent? = nil
 
     /// Convenience accessor for the window's theme
     private var theme: ThemeProtocol { windowState.theme }
 
     /// Convenience accessor for the window ID
     private var windowId: UUID { windowState.windowId }
-
-    /// Picker items filtered to the active Bonjour provider, or all items when no Bonjour agent is selected.
-    private var filteredPickerItems: [ModelPickerItem] {
-        guard let providerId = windowState.selectedDiscoveredAgentProviderId else {
-            return session.pickerItems
-        }
-        return session.pickerItems.filter {
-            if case .remote(_, let id) = $0.source { return id == providerId }
-            return false
-        }
-    }
 
     /// Observed session - needed to properly propagate @Published changes from ChatSession
     @ObservedObject private var observedSession: ChatSession
@@ -1312,14 +1163,6 @@ struct ChatView: View {
         )
         .themedAlertScope(.chat(windowState.windowId))
         .overlay(ThemedAlertHost(scope: .chat(windowState.windowId)))
-        .overlay {
-            if let promptState = session.pendingSecretPrompt {
-                SecretPromptOverlay(state: promptState) {
-                    promptState.cancel()
-                    session.pendingSecretPrompt = nil
-                }
-            }
-        }
     }
 
     private var workCloseConfirmationPresented: Binding<Bool> {
@@ -1394,7 +1237,7 @@ struct ChatView: View {
 
                         // Content area (show immediately, model discovery is async)
                         if session.hasAnyModel || session.isDiscoveringModels {
-                            if !session.hasVisibleThreadMessages {
+                            if session.turns.isEmpty {
                                 // Empty state
                                 ChatEmptyState(
                                     hasModels: true,
@@ -1416,10 +1259,7 @@ struct ChatView: View {
                                     onSelectAgent: { newAgentId in
                                         windowState.switchAgent(to: newAgentId)
                                     },
-                                    onOpenOnboarding: nil,
-                                    discoveredAgents: windowState.discoveredAgents,
-                                    onSelectDiscoveredAgent: { agent in pendingDiscoveredAgent = agent },
-                                    activeDiscoveredAgent: windowState.selectedDiscoveredAgent
+                                    onOpenOnboarding: nil
                                 )
                                 .transition(.opacity.combined(with: .scale(scale: 0.98)))
                             } else {
@@ -1436,7 +1276,7 @@ struct ChatView: View {
                                 isContinuousVoiceMode: $observedSession.isContinuousVoiceMode,
                                 voiceInputState: $observedSession.voiceInputState,
                                 showVoiceOverlay: $observedSession.showVoiceOverlay,
-                                pickerItems: filteredPickerItems,
+                                pickerItems: observedSession.pickerItems,
                                 activeModelOptions: $observedSession.activeModelOptions,
                                 isStreaming: observedSession.isStreaming,
                                 supportsImages: observedSession.selectedModelSupportsImages,
@@ -1489,13 +1329,11 @@ struct ChatView: View {
                                     ChatWindowManager.shared.closeWindow(id: windowState.windowId)
                                     // Show onboarding window
                                     AppDelegate.shared?.showOnboardingWindow()
-                                },
-                                discoveredAgents: windowState.discoveredAgents,
-                                onSelectDiscoveredAgent: { agent in pendingDiscoveredAgent = agent }
+                                }
                             )
                         }
                     }
-                    .animation(theme.springAnimation(responseMultiplier: 0.9), value: session.hasVisibleThreadMessages)
+                    .animation(theme.springAnimation(responseMultiplier: 0.9), value: session.turns.isEmpty)
                 }
             }
         }
@@ -1536,83 +1374,8 @@ struct ChatView: View {
         .onDisappear {
             cleanupKeyMonitor()
         }
-        .onChange(of: observedSession.pickerItems) { _, newItems in
-            guard let providerId = windowState.selectedDiscoveredAgentProviderId else { return }
-            let providerItems = newItems.filter {
-                if case .remote(_, let id) = $0.source { return id == providerId }
-                return false
-            }
-            guard let firstItem = providerItems.first else { return }
-            let currentIsFromProvider =
-                newItems.first(where: { $0.id == session.selectedModel }).map {
-                    if case .remote(_, let id) = $0.source { return id == providerId }
-                    return false
-                } ?? false
-            if !currentIsFromProvider {
-                session.selectedModel = firstItem.id
-            }
-        }
-        .onChange(of: windowState.selectedDiscoveredAgentProviderId) { _, providerId in
-            guard providerId == nil else { return }
-            // Bonjour agent deselected — restore agent's preferred model
-            let agentModel = AgentManager.shared.effectiveModel(for: windowState.agentId)
-            if let model = agentModel, session.pickerItems.contains(where: { $0.id == model }) {
-                session.selectedModel = model
-            } else {
-                session.selectedModel = session.pickerItems.first?.id
-            }
-        }
         .environment(\.theme, windowState.theme)
         .tint(theme.accentColor)
-        .sheet(item: $pendingDiscoveredAgent) { agent in
-            BonjourTokenSheet(agentName: agent.name) { token in
-                connectToDiscoveredAgent(agent, token: token)
-                pendingDiscoveredAgent = nil
-            } onCancel: {
-                pendingDiscoveredAgent = nil
-            }
-            .environment(\.theme, windowState.theme)
-        }
-    }
-
-    private func connectToDiscoveredAgent(_ agent: DiscoveredAgent, token: String) {
-        // Strip trailing dot from mDNS hostnames (e.g. "device.local." -> "device.local")
-        let rawHost = agent.host ?? "localhost"
-        let host = rawHost.hasSuffix(".") ? String(rawHost.dropLast()) : rawHost
-        let manager = RemoteProviderManager.shared
-
-        let providerId: UUID
-        // Reuse an existing provider that points to the same host:port
-        if let existing = manager.configuration.providers.first(where: {
-            $0.host == host && $0.effectivePort == agent.port
-        }) {
-            providerId = existing.id
-            if !token.isEmpty {
-                var updated = existing
-                updated.authType = .apiKey
-                updated.enabled = true
-                manager.updateProvider(updated, apiKey: token)
-            }
-            Task { try? await manager.connect(providerId: existing.id) }
-        } else {
-            let provider = RemoteProvider(
-                name: agent.name,
-                host: host,
-                providerProtocol: .http,
-                port: agent.port,
-                basePath: "/v1",
-                authType: token.isEmpty ? .none : .apiKey,
-                providerType: .openai,
-                enabled: true,
-                autoConnect: true
-            )
-            providerId = provider.id
-            manager.addProvider(provider, apiKey: token.isEmpty ? nil : token, isEphemeral: true)
-        }
-
-        windowState.selectedDiscoveredAgent = agent
-        windowState.selectedDiscoveredAgentProviderId = providerId
-        Task { await session.refreshPickerItems() }
     }
 
     // MARK: - Background
@@ -1624,7 +1387,6 @@ struct ChatView: View {
                 .clipShape(backgroundShape)
 
             // Layer 2: Glass effect (if enabled)
-            /*
             if theme.glassEnabled {
                 ThemedGlassSurface(
                     cornerRadius: 24,
@@ -1632,11 +1394,11 @@ struct ChatView: View {
                     bottomLeadingRadius: windowState.showSidebar ? 0 : nil
                 )
                 .allowsHitTesting(false)
-            
+
                 // Solid backing scaled by glass opacity so low values produce real transparency
                 let baseBacking = theme.windowBackingOpacity
                 let backingOpacity = baseBacking * (0.4 + theme.glassOpacityPrimary * 0.6)
-            
+
                 LinearGradient(
                     colors: [
                         theme.primaryBackground.opacity(backingOpacity + theme.glassOpacityPrimary * 0.3),
@@ -1648,7 +1410,6 @@ struct ChatView: View {
                 .clipShape(backgroundShape)
                 .allowsHitTesting(false)
             }
-            */
         }
     }
 
@@ -1767,11 +1528,10 @@ struct ChatView: View {
 
     /// Isolated message thread view to prevent cascading re-renders
     private func messageThread(_ width: CGFloat) -> some View {
-        // read stored @Published values — no blockMemoizer call on every body pass
         let blocks = session.visibleBlocks
         let groupHeaderMap = session.visibleBlocksGroupHeaderMap
         let displayName = windowState.cachedAgentDisplayName
-        let lastAssistantTurnId = session.lastAssistantTurnIdForThread
+        let lastAssistantTurnId = session.turns.last { $0.role == .assistant }?.id
 
         return ZStack {
             MessageThreadView(
@@ -1792,8 +1552,7 @@ struct ChatView: View {
                 editingTurnId: editingTurnId,
                 editText: $editText,
                 onConfirmEdit: confirmEditAndRegenerate,
-                onCancelEdit: cancelEditing,
-                onUserImagePreview: openUserAttachmentPreview(attachmentId:)
+                onCancelEdit: cancelEditing
             )
             .onReceive(NotificationCenter.default.publisher(for: .chatOverlayActivated)) { _ in
                 isPinnedToBottom = true
@@ -1806,38 +1565,12 @@ struct ChatView: View {
                     Spacer()
                     ScrollToBottomButton(
                         isPinnedToBottom: isPinnedToBottom,
-                        hasTurns: session.hasVisibleThreadMessages,
+                        hasTurns: !session.turns.isEmpty,
                         onTap: {
                             isPinnedToBottom = true
                             scrollToBottomTrigger += 1
                         }
                     )
-                }
-            }
-        }
-        .sheet(
-            isPresented: Binding(
-                get: { userImagePreview != nil },
-                set: { if !$0 { userImagePreview = nil } }
-            )
-        ) {
-            if let img = userImagePreview {
-                ImageFullScreenView(image: img, altText: "")
-                    .imageFullScreenSheetPresentation()
-            }
-        }
-    }
-
-    private func openUserAttachmentPreview(attachmentId: String) {
-        if let img = ChatImageCache.shared.cachedImage(for: attachmentId) {
-            userImagePreview = img
-            return
-        }
-        for turn in session.turns {
-            for att in turn.attachments where att.id.uuidString == attachmentId {
-                if let data = att.imageData, let img = NSImage(data: data) {
-                    userImagePreview = img
-                    return
                 }
             }
         }
@@ -1956,49 +1689,6 @@ struct ChatView: View {
             NSEvent.removeMonitor(monitor)
             keyMonitor = nil
         }
-    }
-}
-
-// MARK: - Bonjour Token Sheet
-
-/// Sheet shown when the user selects a Bonjour-discovered remote agent.
-/// Prompts for an optional server token before connecting.
-private struct BonjourTokenSheet: View {
-    let agentName: String
-    let onConnect: (String) -> Void
-    let onCancel: () -> Void
-
-    @State private var token: String = ""
-    @Environment(\.theme) private var theme
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Connect to \(agentName)")
-                    .font(theme.font(size: 16, weight: .semibold))
-                    .foregroundColor(theme.primaryText)
-
-                Text("Enter the server token for this agent, or leave blank if none is required.")
-                    .font(theme.font(size: 13))
-                    .foregroundColor(theme.secondaryText)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            SecureField("Server token (optional)", text: $token)
-                .textFieldStyle(.roundedBorder)
-                .font(theme.font(size: 13))
-
-            HStack {
-                Button("Cancel") { onCancel() }
-                    .keyboardShortcut(.cancelAction)
-                Spacer()
-                Button("Connect") { onConnect(token) }
-                    .keyboardShortcut(.defaultAction)
-                    .buttonStyle(.borderedProminent)
-            }
-        }
-        .padding(24)
-        .frame(width: 380)
     }
 }
 

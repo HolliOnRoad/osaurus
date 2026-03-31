@@ -187,6 +187,11 @@ final class ChatTurn: ObservableObject, Identifiable {
         pendingToolArgSize = 0
     }
 
+    // MARK: - Generation Stats
+
+    /// Performance stats from the inference engine, shown below assistant messages.
+    @Published var generationStats: GenerationStats?
+
     // MARK: - Initializers
 
     init(role: MessageRole, content: String, attachments: [Attachment] = [], id: UUID = UUID()) {

@@ -57,13 +57,20 @@ public struct SSMStateLayer: @unchecked Sendable {
 
 /// Every layer in a model produces exactly one of these.
 /// Hybrid models (Nemotron-H, Jamba, Qwen3.5-A3B) mix both types.
+/// TurboQuant-compressed layers use `.compressedAttention` for 3-bit storage.
 public enum LayerCacheEntry: @unchecked Sendable {
     case attention(KVCacheLayer)
     case ssm(SSMStateLayer)
+    /// TurboQuant-compressed attention layer (Phase 5).
+    /// Stores 3-bit encoded keys/values + token offset.
+    /// On cache fetch, decode to float and load into VMLXKVCacheSimple.
+    case compressedAttention(EncodedKeys, EncodedValues, Int)
 
     public var isAttention: Bool {
-        if case .attention = self { return true }
-        return false
+        switch self {
+        case .attention, .compressedAttention: return true
+        default: return false
+        }
     }
 
     public var isSSM: Bool {
@@ -71,9 +78,15 @@ public enum LayerCacheEntry: @unchecked Sendable {
         return false
     }
 
+    public var isCompressed: Bool {
+        if case .compressedAttention = self { return true }
+        return false
+    }
+
     public var canTruncate: Bool {
         switch self {
         case .attention: return true
+        case .compressedAttention: return false  // Compressed data can't be partially truncated
         case .ssm(let s): return s.canTruncate
         }
     }
@@ -82,16 +95,18 @@ public enum LayerCacheEntry: @unchecked Sendable {
         switch self {
         case .attention(let kv): return kv.estimatedBytes
         case .ssm(let ssm): return ssm.estimatedBytes
+        case .compressedAttention(let ek, let ev, _):
+            return ek.estimatedBytes + ev.estimatedBytes
         }
     }
 
-    /// Truncate if possible, returns nil for SSM layers.
+    /// Truncate if possible. Returns nil for SSM and compressed layers.
     public func truncated(to tokenCount: Int) -> LayerCacheEntry? {
         switch self {
         case .attention(let kv):
             return .attention(kv.truncated(to: tokenCount))
-        case .ssm:
-            return nil  // Cumulative state cannot be un-done
+        case .ssm, .compressedAttention:
+            return nil  // Cannot truncate cumulative SSM or compressed data
         }
     }
 }

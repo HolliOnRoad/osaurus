@@ -446,7 +446,7 @@ struct CacheCoordinatorIntegrationTests {
         // Fetch with same tokens
         let result = coordinator.fetch(tokens: tokens)
         switch result {
-        case .hit(let hitCache, let remaining, let detail):
+        case .hit(let hitCache, let remaining, let detail, _):
             #expect(hitCache.layerCount == 4)
             #expect(remaining.isEmpty)
             #expect(detail == .memory)
@@ -591,7 +591,7 @@ struct CacheCoordinatorIntegrationTests {
         // tokens1 should hit memory
         let result1 = coordinator.fetch(tokens: tokens1)
         switch result1 {
-        case .hit(_, _, let detail):
+        case .hit(_, _, let detail, _):
             #expect(detail == .memory)
             print("tokens1: memory HIT")
         default:
@@ -634,7 +634,7 @@ struct CacheCoordinatorIntegrationTests {
         switch result {
         case .partialHit(let cache, _, let detail):
             print("Partial hit: \(cache.layerCount) attn layers, SSM missing, detail=\(detail)")
-        case .hit(_, _, _):
+        case .hit(_, _, _, _):
             // Also acceptable -- depends on whether ssmStateCache has state
             print("Full hit (SSM state was found)")
         default:
@@ -666,7 +666,7 @@ struct MultiTurnCacheTests {
         // Second turn with exact same prefix should hit
         let result = coordinator.fetch(tokens: turn1Tokens)
         switch result {
-        case .hit(let cache, let remaining, let detail):
+        case .hit(let cache, let remaining, let detail, _):
             #expect(remaining.isEmpty)
             #expect(cache.layerCount == 4)
             print("Turn 2 exact match: HIT detail=\(detail)")

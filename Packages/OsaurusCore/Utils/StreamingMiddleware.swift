@@ -40,10 +40,13 @@ enum StreamingMiddlewareResolver {
         let thinkingDisabled = modelOptions["disableThinking"]?.boolValue == true
         let id = modelId.lowercased()
 
+        // PrependThinkTagMiddleware is for models that output </think> but NOT <think>.
+        // VMLX Qwen3.5 models output <think> natively via the chat template,
+        // so they do NOT need the middleware. Only enable for non-VMLX edge cases
+        // (e.g., remote GLM-flash API that strips the opening tag).
         let needsPrependThink =
             !thinkingDisabled
-            && ((id.contains("glm") && id.contains("flash"))
-                || (id.contains("qwen") && id.contains("3.5") && hasParamSize(id, anyOf: "4b", "9b", "27b")))
+            && (id.contains("glm") && id.contains("flash"))
 
         return needsPrependThink ? PrependThinkTagMiddleware() : nil
     }

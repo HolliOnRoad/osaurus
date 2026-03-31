@@ -47,7 +47,7 @@ struct CacheCoordinatorTests {
         coord.store(tokens: [1, 2, 3, 4, 5], cache: cache)
 
         let result = coord.fetch(tokens: [1, 2, 3, 4, 5])
-        if case .hit(_, let remaining, let detail) = result {
+        if case .hit(_, let remaining, let detail, _) = result {
             #expect(remaining.isEmpty)
             #expect(detail == .memory)
         } else {
@@ -68,7 +68,7 @@ struct CacheCoordinatorTests {
         // Should be partialHit because SSM companion state wasn't stored
         if case .partialHit(_, _, _) = result {
             // Expected — no SSM state in the stored cache
-        } else if case .hit(_, _, _) = result {
+        } else if case .hit(_, _, _, _) = result {
             // Also acceptable if SSM check passes (empty SSM layers)
         } else {
             Issue.record("Expected partialHit or hit")
@@ -126,7 +126,7 @@ struct CacheCoordinatorTests {
         coord.store(tokens: [10, 20, 30, 40], cache: cache)
 
         let result = coord.fetch(tokens: [10, 20, 30, 40])
-        if case .hit(_, let remaining, let detail) = result {
+        if case .hit(_, let remaining, let detail, _) = result {
             #expect(remaining.isEmpty)
             #expect(detail == .prefix)
         } else {

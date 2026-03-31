@@ -24,13 +24,27 @@ public struct EncodedKeys: @unchecked Sendable {
     /// Bits per codebook index (3-8). Lower = more compression, less precision.
     public let indexBits: Int
 
+    /// Codebook seed used during encoding. Required for correct decoding.
+    public let seed: Int
+
+    /// Float16 sink tokens preserved at full precision (first N tokens).
+    /// These are the "attention sinks" (BOS/system prompt start) that all
+    /// subsequent tokens attend to heavily. Compressing them degrades quality.
+    /// Shape: [batch, heads, sinkCount, head_dim] or nil if no sink preservation.
+    public let sinkData: MLXArray?
+
+    /// Number of sink tokens preserved at full precision.
+    public var sinkCount: Int { sinkData?.dim(2) ?? 0 }
+
     public init(
         indicesPacked: MLXArray,
         qjlPacked: MLXArray,
         residualNorms: MLXArray,
         vectorNorms: MLXArray,
         shape: [Int],
-        indexBits: Int
+        indexBits: Int,
+        seed: Int = 42,
+        sinkData: MLXArray? = nil
     ) {
         self.indicesPacked = indicesPacked
         self.qjlPacked = qjlPacked
@@ -38,11 +52,15 @@ public struct EncodedKeys: @unchecked Sendable {
         self.vectorNorms = vectorNorms
         self.shape = shape
         self.indexBits = indexBits
+        self.seed = seed
+        self.sinkData = sinkData
     }
 
-    /// Estimated memory in bytes (compressed representation).
+    /// Estimated memory in bytes (compressed representation + sink data).
     public var estimatedBytes: Int {
-        indicesPacked.nbytes + qjlPacked.nbytes + residualNorms.nbytes + vectorNorms.nbytes
+        var total = indicesPacked.nbytes + qjlPacked.nbytes + residualNorms.nbytes + vectorNorms.nbytes
+        if let sink = sinkData { total += sink.nbytes }
+        return total
     }
 
     /// Number of vectors (tokens * heads) encoded.

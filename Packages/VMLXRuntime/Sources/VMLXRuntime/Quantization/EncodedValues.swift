@@ -16,21 +16,37 @@ public struct EncodedValues: @unchecked Sendable {
     /// Bits per codebook index.
     public let indexBits: Int
 
+    /// Codebook seed used during encoding. Required for correct decoding.
+    /// Note: values use seed+1 internally (different codebook from keys).
+    public let seed: Int
+
+    /// Float16 sink tokens preserved at full precision.
+    /// Shape: [batch, heads, sinkCount, head_dim] or nil.
+    public let sinkData: MLXArray?
+
+    public var sinkCount: Int { sinkData?.dim(2) ?? 0 }
+
     public init(
         indicesPacked: MLXArray,
         vectorNorms: MLXArray,
         shape: [Int],
-        indexBits: Int
+        indexBits: Int,
+        seed: Int = 42,
+        sinkData: MLXArray? = nil
     ) {
         self.indicesPacked = indicesPacked
         self.vectorNorms = vectorNorms
         self.shape = shape
         self.indexBits = indexBits
+        self.seed = seed
+        self.sinkData = sinkData
     }
 
-    /// Estimated memory in bytes (compressed).
+    /// Estimated memory in bytes (compressed + sink data).
     public var estimatedBytes: Int {
-        indicesPacked.nbytes + vectorNorms.nbytes
+        var total = indicesPacked.nbytes + vectorNorms.nbytes
+        if let sink = sinkData { total += sink.nbytes }
+        return total
     }
 
     /// Number of encoded vectors.

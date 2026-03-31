@@ -66,11 +66,12 @@ enum StreamingToolHint: Sendable {
     private static let sentinel: Character = "\u{FFFE}"
     private static let toolPrefix = "\u{FFFE}tool:"
     private static let argsPrefix = "\u{FFFE}args:"
+    private static let statsPrefix = "\u{FFFE}stats:"
 
     static func encode(_ toolName: String) -> String { toolPrefix + toolName }
     static func encodeArgs(_ fragment: String) -> String { argsPrefix + fragment }
 
-    /// O(1) check — only inspects the first character. Covers both tool and args sentinels.
+    /// O(1) check — only inspects the first character. Covers tool, args, and stats sentinels.
     static func isSentinel(_ delta: String) -> Bool { delta.first == sentinel }
 
     /// Extracts the tool name from a sentinel delta, or nil if not a sentinel.
@@ -83,6 +84,25 @@ enum StreamingToolHint: Sendable {
     static func decodeArgs(_ delta: String) -> String? {
         guard delta.hasPrefix(argsPrefix) else { return nil }
         return String(delta.dropFirst(argsPrefix.count))
+    }
+
+    /// Extracts generation stats JSON from a sentinel delta, or nil if not a stats sentinel.
+    static func decodeStats(_ delta: String) -> GenerationStats? {
+        guard delta.hasPrefix(statsPrefix) else { return nil }
+        let json = String(delta.dropFirst(statsPrefix.count))
+        guard let data = json.data(using: .utf8),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        return GenerationStats(
+            ttft: (obj["ttft"] as? Double) ?? 0,
+            prefillTokensPerSecond: (obj["pp"] as? Double) ?? 0,
+            decodeTokensPerSecond: (obj["tg"] as? Double) ?? 0,
+            promptTokens: (obj["p"] as? Int) ?? 0,
+            completionTokens: (obj["c"] as? Int) ?? 0,
+            cachedTokens: (obj["k"] as? Int) ?? 0,
+            cacheDetail: obj["d"] as? String
+        )
     }
 }
 

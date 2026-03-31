@@ -52,6 +52,7 @@ struct ConfigurationView: View {
     @State private var tempEnableTurboQuant: Bool = false
     @State private var tempEnableDiskCache: Bool = false
     @State private var tempCacheMemoryPercent: String = ""
+    @State private var tempShowInferenceStats: Bool = false
 
     // Toast settings state
     @State private var tempToastPosition: ToastPosition = .topRight
@@ -522,6 +523,18 @@ struct ConfigurationView: View {
                                         }
                                     }
 
+                                    // Inference Stats Display
+                                    SettingsSubsection(label: "Diagnostics") {
+                                        VStack(alignment: .leading, spacing: 12) {
+                                            Toggle("Show Inference Stats", isOn: $tempShowInferenceStats)
+                                                .font(.system(size: 13))
+
+                                            Text("Display TTFT, prefill speed, and decode speed below assistant messages in chat.")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(theme.tertiaryText)
+                                        }
+                                    }
+
                                     SettingsDivider()
 
                                     // Eviction Policy
@@ -738,6 +751,7 @@ struct ConfigurationView: View {
         tempEvictionPolicy = configuration.modelEvictionPolicy
         tempEnableTurboQuant = configuration.enableTurboQuant ?? false
         tempEnableDiskCache = configuration.enableDiskCache ?? false
+        tempShowInferenceStats = configuration.showInferenceStats ?? false
         tempCacheMemoryPercent = {
             let pct = configuration.cacheMemoryPercent ?? 0.30
             return pct == 0.30 ? "" : String(format: "%.0f", pct * 100)
@@ -849,6 +863,7 @@ struct ConfigurationView: View {
         // Save VMLXRuntime cache stack settings
         configuration.enableTurboQuant = tempEnableTurboQuant
         configuration.enableDiskCache = tempEnableDiskCache
+        configuration.showInferenceStats = tempShowInferenceStats
         let trimmedMemPct = tempCacheMemoryPercent.trimmingCharacters(in: .whitespacesAndNewlines)
         if let pctVal = Float(trimmedMemPct) {
             configuration.cacheMemoryPercent = pctVal / 100.0

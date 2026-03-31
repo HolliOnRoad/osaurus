@@ -37,6 +37,10 @@ actor VMLXServiceBridge: ToolCapableService {
 
     private let service: VMLXService
 
+    /// Global topP default from ServerConfiguration, updated via applyRuntimeConfig().
+    /// Used as fallback when no per-request topP override is set.
+    private var globalTopP: Float = 0.9
+
     init(service: VMLXService = .shared) {
         self.service = service
     }
@@ -73,13 +77,17 @@ actor VMLXServiceBridge: ToolCapableService {
         let cfg = await RuntimeConfig.snapshot()
         let serverCfg = await ServerController.sharedConfiguration()
 
+        // Store global topP for use in toSamplingParams() fallback
+        self.globalTopP = cfg.topP
+
         await service.applyUserConfig(
             kvBits: cfg.kvBits,
             kvGroupSize: cfg.kvGroup,
             maxContextLength: cfg.maxKV,
             prefillStepSize: cfg.prefillStep,
             enableDiskCache: serverCfg?.enableDiskCache ?? false,
-            enableTurboQuant: serverCfg?.enableTurboQuant ?? false
+            enableTurboQuant: serverCfg?.enableTurboQuant ?? false,
+            cacheMemoryPercent: serverCfg?.cacheMemoryPercent
         )
     }
 
@@ -139,8 +147,9 @@ actor VMLXServiceBridge: ToolCapableService {
         requestedModel: String?
     ) async throws -> String {
         try await ensureModelLoaded(requestedModel: requestedModel)
+        await applyRuntimeConfig()  // Refresh settings on every request
         let vmlxMessages = messages.map { $0.toVMLX() }
-        let params = parameters.toSamplingParams()
+        let params = parameters.toSamplingParams(globalTopP: self.globalTopP)
         return try await service.generateOneShot(
             messages: vmlxMessages,
             params: params,
@@ -155,8 +164,9 @@ actor VMLXServiceBridge: ToolCapableService {
         stopSequences: [String]
     ) async throws -> AsyncThrowingStream<String, Error> {
         try await ensureModelLoaded(requestedModel: requestedModel)
+        await applyRuntimeConfig()  // Refresh settings on every request
         let vmlxMessages = messages.map { $0.toVMLX() }
-        var params = parameters.toSamplingParams()
+        var params = parameters.toSamplingParams(globalTopP: self.globalTopP)
         params.stop = stopSequences
         return try await service.streamDeltas(
             messages: vmlxMessages,
@@ -177,8 +187,9 @@ actor VMLXServiceBridge: ToolCapableService {
         requestedModel: String?
     ) async throws -> String {
         try await ensureModelLoaded(requestedModel: requestedModel)
+        await applyRuntimeConfig()
         let vmlxMessages = messages.map { $0.toVMLX() }
-        var params = parameters.toSamplingParams()
+        var params = parameters.toSamplingParams(globalTopP: self.globalTopP)
         params.stop = stopSequences
         let vmlxTools = tools.map { $0.toVMLX() }
         let vmlxChoice = toolChoice?.toVMLXString()
@@ -201,8 +212,9 @@ actor VMLXServiceBridge: ToolCapableService {
         requestedModel: String?
     ) async throws -> AsyncThrowingStream<String, Error> {
         try await ensureModelLoaded(requestedModel: requestedModel)
+        await applyRuntimeConfig()
         let vmlxMessages = messages.map { $0.toVMLX() }
-        var params = parameters.toSamplingParams()
+        var params = parameters.toSamplingParams(globalTopP: self.globalTopP)
         params.stop = stopSequences
         let vmlxTools = tools.map { $0.toVMLX() }
         let vmlxChoice = toolChoice?.toVMLXString()
@@ -324,11 +336,12 @@ extension VMLXChatMessage {
 
 extension GenerationParameters {
     /// Convert Osaurus GenerationParameters to VMLXRuntime's SamplingParams.
-    func toSamplingParams() -> SamplingParams {
+    /// topP: uses per-request override if set, otherwise falls back to globalTopP.
+    func toSamplingParams(globalTopP: Float = 0.9) -> SamplingParams {
         SamplingParams(
             maxTokens: maxTokens,
             temperature: temperature ?? 0.7,
-            topP: topPOverride ?? 0.9,
+            topP: topPOverride ?? globalTopP,
             repetitionPenalty: repetitionPenalty ?? 1.0,
             enableThinking: !isThinkingDisabled
         )

@@ -15,22 +15,43 @@ public struct TurboQuantEncoder: Sendable {
     // MARK: - Key Encoding
 
     /// Encode float16 keys to compressed format.
+    /// Default number of sink tokens to preserve at full precision.
+    public static let defaultSinkTokens = 4
+
     /// - Parameters:
     ///   - keys: Float16 key tensor, shape [batch, heads, tokens, dim]
     ///   - bits: Codebook index bits (3-8). Determines codebook size = 2^bits.
     ///   - seed: Random seed for reproducible codebook generation
-    /// - Returns: EncodedKeys with packed indices, QJL signs, and norms
+    ///   - sinkTokens: Number of leading tokens to keep at full precision (default 4).
+    ///     These "attention sinks" (BOS/system prompt) are stored as float alongside
+    ///     the compressed remainder. Set to 0 to compress everything.
+    /// - Returns: EncodedKeys with packed indices, QJL signs, norms, and sink data
     public static func encodeKeys(
         keys: MLXArray,
         bits: Int = 3,
-        seed: Int = 42
+        seed: Int = 42,
+        sinkTokens: Int = defaultSinkTokens
     ) -> EncodedKeys {
         let shape = keys.shape  // [batch, heads, tokens, head_dim]
-        let headDim = shape[shape.count - 1]
-        let numVectors = shape.dropLast().reduce(1, *)  // batch * heads * tokens
+        let seqLen = shape[2]
 
-        // Work in float32 for numerical stability
-        let flat = keys.asType(.float32).reshaped([numVectors, headDim])
+        // Extract sink tokens (first N) as float — preserved at full precision
+        let sinkData: MLXArray?
+        let compressKeys: MLXArray
+        if sinkTokens > 0 && seqLen > sinkTokens {
+            sinkData = keys[.ellipsis, 0..<sinkTokens, 0...]
+            compressKeys = keys[.ellipsis, sinkTokens..., 0...]
+        } else {
+            sinkData = nil
+            compressKeys = keys
+        }
+
+        let compressShape = compressKeys.shape
+        let headDim = compressShape[compressShape.count - 1]
+        let numVectors = compressShape.dropLast().reduce(1, *)
+
+        // Work in float32 for numerical stability (compress only non-sink tokens)
+        let flat = compressKeys.asType(.float32).reshaped([numVectors, headDim])
 
         // Compute per-vector L2 norms: [numVectors]
         let norms = (flat * flat).sum(axis: -1).sqrt()
@@ -85,8 +106,10 @@ public struct TurboQuantEncoder: Sendable {
             qjlPacked: signBits.reshaped([-1]),
             residualNorms: residualNorms.reshaped([-1]),
             vectorNorms: norms.asType(.float16).reshaped([-1]),
-            shape: shape,
-            indexBits: bits
+            shape: compressShape,  // Shape of compressed portion (excludes sink tokens)
+            indexBits: bits,
+            seed: seed,
+            sinkData: sinkData
         )
     }
 
@@ -97,14 +120,29 @@ public struct TurboQuantEncoder: Sendable {
     public static func encodeValues(
         values: MLXArray,
         bits: Int = 3,
-        seed: Int = 42
+        seed: Int = 42,
+        sinkTokens: Int = defaultSinkTokens
     ) -> EncodedValues {
         let shape = values.shape  // [batch, heads, tokens, head_dim]
-        let headDim = shape[shape.count - 1]
-        let numVectors = shape.dropLast().reduce(1, *)
+        let seqLen = shape[2]
+
+        // Extract sink tokens as float
+        let sinkData: MLXArray?
+        let compressValues: MLXArray
+        if sinkTokens > 0 && seqLen > sinkTokens {
+            sinkData = values[.ellipsis, 0..<sinkTokens, 0...]
+            compressValues = values[.ellipsis, sinkTokens..., 0...]
+        } else {
+            sinkData = nil
+            compressValues = values
+        }
+
+        let compressShape = compressValues.shape
+        let headDim = compressShape[compressShape.count - 1]
+        let numVectors = compressShape.dropLast().reduce(1, *)
 
         // Work in float32
-        let flat = values.asType(.float32).reshaped([numVectors, headDim])
+        let flat = compressValues.asType(.float32).reshaped([numVectors, headDim])
 
         // Per-vector norms
         let norms = (flat * flat).sum(axis: -1).sqrt()
@@ -127,8 +165,10 @@ public struct TurboQuantEncoder: Sendable {
         return EncodedValues(
             indicesPacked: packedIndices.reshaped([-1]),
             vectorNorms: norms.asType(.float16).reshaped([-1]),
-            shape: shape,
-            indexBits: bits
+            shape: compressShape,
+            indexBits: bits,
+            seed: seed,
+            sinkData: sinkData
         )
     }
 
@@ -162,8 +202,15 @@ public struct TurboQuantEncoder: Sendable {
         let norms = encoded.vectorNorms.asType(.float32)
         let scaled = signedVectors * norms.expandedDimensions(axis: -1)
 
-        // Reshape back to original shape and convert to float16
-        return scaled.reshaped(encoded.shape).asType(.float16)
+        // Reshape back to compressed shape and convert to float16
+        var decoded = scaled.reshaped(encoded.shape).asType(.float16)
+
+        // Prepend sink tokens if present
+        if let sink = encoded.sinkData {
+            decoded = concatenated([sink, decoded], axis: 2)
+        }
+
+        return decoded
     }
 
     // MARK: - Value Decoding
@@ -187,6 +234,13 @@ public struct TurboQuantEncoder: Sendable {
         let norms = encoded.vectorNorms.asType(.float32)
         let scaled = codebookVectors * norms.expandedDimensions(axis: -1)
 
-        return scaled.reshaped(encoded.shape).asType(.float16)
+        var decoded = scaled.reshaped(encoded.shape).asType(.float16)
+
+        // Prepend sink tokens if present
+        if let sink = encoded.sinkData {
+            decoded = concatenated([sink, decoded], axis: 2)
+        }
+
+        return decoded
     }
 }

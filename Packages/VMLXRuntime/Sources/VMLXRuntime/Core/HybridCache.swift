@@ -64,6 +64,7 @@ public struct HybridCache: @unchecked Sendable {
     }
 
     /// All attention layer entries (KVCacheLayer values).
+    /// Compressed attention layers are NOT included — use decompressedAttentionLayers instead.
     public var attentionLayers: [KVCacheLayer] {
         layers.compactMap { entry in
             if case .attention(let kv) = entry { return kv }
@@ -108,6 +109,16 @@ public struct HybridCache: @unchecked Sendable {
                 for s in ssm.state {
                     s.eval()
                 }
+            case .compressedAttention(let ek, let ev, _):
+                // Eval compressed arrays so they're materialized for storage
+                ek.indicesPacked.eval()
+                ek.qjlPacked.eval()
+                ek.residualNorms.eval()
+                ek.vectorNorms.eval()
+                ek.sinkData?.eval()
+                ev.indicesPacked.eval()
+                ev.vectorNorms.eval()
+                ev.sinkData?.eval()
             }
         }
     }

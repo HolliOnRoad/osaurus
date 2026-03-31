@@ -185,4 +185,19 @@ public final class VMLXModelContainer: @unchecked Sendable {
     public func newCache() -> [VMLXKVCache] {
         nativeModel.newCache()
     }
+
+    /// Create fresh caches with KV quantization applied.
+    /// Replaces VMLXKVCacheSimple with VMLXQuantizedKVCache when kvBits < 16.
+    /// SSM caches (VMLXMambaCache) are not affected — SSM state is not quantizable.
+    public func newCache(kvBits: Int?, kvGroupSize: Int) -> [VMLXKVCache] {
+        let baseCaches = nativeModel.newCache()
+        guard let bits = kvBits, bits < 16 else { return baseCaches }
+
+        return baseCaches.map { cache in
+            if cache is VMLXKVCacheSimple {
+                return VMLXQuantizedKVCache(bits: bits, groupSize: kvGroupSize)
+            }
+            return cache  // SSM caches unchanged
+        }
+    }
 }

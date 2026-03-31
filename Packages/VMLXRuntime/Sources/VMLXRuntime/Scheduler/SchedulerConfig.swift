@@ -123,7 +123,7 @@ public struct SchedulerConfig: Sendable {
         cacheMemoryMB: Int? = nil,
         cacheMemoryPercent: Float = 0.30,
         cacheTTLMinutes: Float = 0,
-        usePagedCache: Bool = false,
+        usePagedCache: Bool = true,
         pagedCacheBlockSize: Int = 64,
         maxCacheBlocks: Int = 1000,
         kvCacheQuantization: String = "none",

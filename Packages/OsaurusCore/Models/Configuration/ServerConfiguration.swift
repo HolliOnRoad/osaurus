@@ -74,6 +74,9 @@ public struct ServerConfiguration: Codable, Equatable, Sendable {
     /// Fraction of RAM for memory cache (0.1–0.6, nil = default 0.30)
     public var cacheMemoryPercent: Float?
 
+    /// Show inference stats (TTFT, tok/s) below assistant messages in chat
+    public var showInferenceStats: Bool?
+
     private enum CodingKeys: String, CodingKey {
         case port
         case exposeToNetwork
@@ -93,6 +96,7 @@ public struct ServerConfiguration: Codable, Equatable, Sendable {
         case enableTurboQuant
         case enableDiskCache
         case cacheMemoryPercent
+        case showInferenceStats
     }
 
     public init(from decoder: Decoder) throws {
@@ -128,6 +132,7 @@ public struct ServerConfiguration: Codable, Equatable, Sendable {
         self.enableTurboQuant = try container.decodeIfPresent(Bool.self, forKey: .enableTurboQuant)
         self.enableDiskCache = try container.decodeIfPresent(Bool.self, forKey: .enableDiskCache)
         self.cacheMemoryPercent = try container.decodeIfPresent(Float.self, forKey: .cacheMemoryPercent)
+        self.showInferenceStats = try container.decodeIfPresent(Bool.self, forKey: .showInferenceStats)
     }
 
     public init(
@@ -148,7 +153,8 @@ public struct ServerConfiguration: Codable, Equatable, Sendable {
         modelEvictionPolicy: ModelEvictionPolicy = .strictSingleModel,
         enableTurboQuant: Bool? = nil,
         enableDiskCache: Bool? = nil,
-        cacheMemoryPercent: Float? = nil
+        cacheMemoryPercent: Float? = nil,
+        showInferenceStats: Bool? = nil
     ) {
         self.port = port
         self.exposeToNetwork = exposeToNetwork
@@ -168,6 +174,7 @@ public struct ServerConfiguration: Codable, Equatable, Sendable {
         self.enableTurboQuant = enableTurboQuant
         self.enableDiskCache = enableDiskCache
         self.cacheMemoryPercent = cacheMemoryPercent
+        self.showInferenceStats = showInferenceStats
     }
 
     /// Default configuration

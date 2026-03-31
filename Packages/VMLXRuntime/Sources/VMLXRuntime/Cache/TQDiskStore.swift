@@ -16,6 +16,7 @@ public enum TQMetadataKeys {
     public static func keyDim(_ i: Int) -> String { "__tq_\(i)_key_dim__" }
     public static func valueDim(_ i: Int) -> String { "__tq_\(i)_value_dim__" }
     public static func sinkTokens(_ i: Int) -> String { "__tq_\(i)_sink_tokens__" }
+    public static func seed(_ i: Int) -> String { "__tq_\(i)_seed__" }
 }
 
 /// Tensor keys for TQ-native safetensors format.
@@ -87,6 +88,7 @@ public struct TQDiskStore: Sendable {
             metadata[TQMetadataKeys.cvShape(i)] = ev.shape.description
             metadata[TQMetadataKeys.cvBits(i)] = "\(ev.indexBits)"
             metadata[TQMetadataKeys.offset(i)] = "\(offsets[i])"
+            metadata[TQMetadataKeys.seed(i)] = "\(ek.seed)"
         }
 
         return TQSerializedCache(tensors: tensors, metadata: metadata)
@@ -124,6 +126,7 @@ public struct TQDiskStore: Sendable {
             let ckBits = Int(metadata[TQMetadataKeys.ckBits(i)] ?? "3") ?? 3
             let cvBits = Int(metadata[TQMetadataKeys.cvBits(i)] ?? "3") ?? 3
             let offset = Int(metadata[TQMetadataKeys.offset(i)] ?? "0") ?? 0
+            let seed = Int(metadata[TQMetadataKeys.seed(i)] ?? "42") ?? 42
 
             // Parse shape from string representation
             let ckShape = _parseShape(metadata[TQMetadataKeys.ckShape(i)] ?? "[]")
@@ -135,14 +138,16 @@ public struct TQDiskStore: Sendable {
                 residualNorms: ckResNorms,
                 vectorNorms: ckVecNorms,
                 shape: ckShape,
-                indexBits: ckBits
+                indexBits: ckBits,
+                seed: seed
             ))
 
             values.append(EncodedValues(
                 indicesPacked: cvIndices,
                 vectorNorms: cvVecNorms,
                 shape: cvShape,
-                indexBits: cvBits
+                indexBits: cvBits,
+                seed: seed
             ))
 
             offsets.append(offset)

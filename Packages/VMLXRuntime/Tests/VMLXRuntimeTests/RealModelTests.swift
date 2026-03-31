@@ -419,7 +419,7 @@ struct QwenJANGTests {
 
         let result = coordinator.fetch(tokens: [1, 2, 3])
         switch result {
-        case .hit(let cached, let remaining, let detail):
+        case .hit(let cached, let remaining, let detail, _):
             #expect(remaining.isEmpty)
             #expect(cached.layerCount == 32)
             print("Cache coordinator HIT: \(cached.layerCount) layers, detail=\(detail)")

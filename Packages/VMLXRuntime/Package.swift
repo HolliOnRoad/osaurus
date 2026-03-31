@@ -23,6 +23,11 @@ let package = Package(
                 .product(name: "Hub", package: "swift-transformers"),
             ]
         ),
+        .executableTarget(
+            name: "VMLXSmokeTest",
+            dependencies: ["VMLXRuntime"],
+            path: "Sources/VMLXSmokeTest"
+        ),
         .testTarget(
             name: "VMLXRuntimeTests",
             dependencies: ["VMLXRuntime"]

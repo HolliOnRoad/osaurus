@@ -51,6 +51,12 @@ public struct ModelFamilyConfig: Sendable {
     /// Default context window size.
     public let defaultContextWindow: Int
 
+    /// Whether the chat template natively injects <think> when thinking is enabled.
+    /// When true, the model's output starts INSIDE the think block — no <think> tag
+    /// appears in the generated text. The engine must treat all text before </think>
+    /// as reasoning content.
+    public let thinkInTemplate: Bool
+
     /// Whether TurboQuant is recommended for this model.
     public let recommendTQ: Bool
 
@@ -64,6 +70,7 @@ public struct ModelFamilyConfig: Sendable {
         supportsVision: Bool = false,
         isHybrid: Bool = false,
         hybridPattern: String? = nil,
+        thinkInTemplate: Bool = false,
         defaultContextWindow: Int = 8192,
         recommendTQ: Bool = true,
         defaultStopTokens: [String] = []
@@ -74,6 +81,7 @@ public struct ModelFamilyConfig: Sendable {
         self.supportsVision = supportsVision
         self.isHybrid = isHybrid
         self.hybridPattern = hybridPattern
+        self.thinkInTemplate = thinkInTemplate
         self.defaultContextWindow = defaultContextWindow
         self.recommendTQ = recommendTQ
         self.defaultStopTokens = defaultStopTokens
@@ -88,12 +96,14 @@ public struct ModelConfigRegistry: Sendable {
     public static let configs: [ModelFamilyConfig] = [
         // Qwen family
         ModelFamilyConfig(family: "qwen3", toolCallFormat: .qwen, reasoningFormat: .qwen3,
+                         thinkInTemplate: true,
                          defaultContextWindow: 32768, defaultStopTokens: ["<|endoftext|>", "<|im_end|>"]),
         ModelFamilyConfig(family: "qwen2.5-vl", toolCallFormat: .qwen, supportsVision: true,
                          defaultContextWindow: 32768, defaultStopTokens: ["<|endoftext|>", "<|im_end|>"]),
         ModelFamilyConfig(family: "qwen2.5", toolCallFormat: .qwen,
                          defaultContextWindow: 32768, defaultStopTokens: ["<|endoftext|>", "<|im_end|>"]),
         ModelFamilyConfig(family: "qwq", toolCallFormat: .qwen, reasoningFormat: .qwen3,
+                         thinkInTemplate: true,
                          defaultContextWindow: 32768, defaultStopTokens: ["<|endoftext|>", "<|im_end|>"]),
 
         // Llama family
@@ -151,7 +161,8 @@ public struct ModelConfigRegistry: Sendable {
                          defaultContextWindow: 32768),
 
         // MiniMax
-        ModelFamilyConfig(family: "minimax", toolCallFormat: .minimax,
+        ModelFamilyConfig(family: "minimax", toolCallFormat: .minimax, reasoningFormat: .qwen3,
+                         thinkInTemplate: true,
                          defaultContextWindow: 32768),
 
         // Jamba (hybrid SSM)

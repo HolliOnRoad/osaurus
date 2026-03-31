@@ -22,10 +22,9 @@ final class BlockMemoizer {
     private var lastPendingToolName: String?
     private var lastPendingToolArgSize = 0
     private var lastVersion = -1
-    /// Must match `streamingTurnId` for the fast path — `generateBlocks` depends on it for typing / prefill UI.
-    private var lastStreamingTurnId: UUID?
-    private let streamingMaxBlocks = 80
-    private let nonStreamingMaxBlocks = 400
+    private var lastIsStreaming = false
+    private var lastHasStats = false
+    private let maxBlocks = 80
 
     /// Maps each block's turnId to its visual group's header turnId.
     /// Updated alongside blocks in `blocks(from:...)`.
@@ -36,7 +35,8 @@ final class BlockMemoizer {
         streamingTurnId: UUID?,
         agentName: String,
         version: Int = 0,
-        thinkingEnabled: Bool = false
+        thinkingEnabled: Bool = false,
+        showInferenceStats: Bool = false
     ) -> [ContentBlock] {
         let count = turns.count
         let lastId = turns.last?.id
@@ -44,16 +44,18 @@ final class BlockMemoizer {
         let thinkingLen = turns.last?.thinkingLength ?? 0
         let pendingToolName = turns.last?.pendingToolName
         let pendingToolArgSize = turns.last?.pendingToolArgSize ?? 0
+        let hasStats = turns.last?.generationStats != nil
+        let isStreaming = streamingTurnId != nil
 
-        // Fast path: nothing changed (including which turn is streaming — drives typing indicator / placeholders).
+        // Fast path: nothing changed (including streaming state and stats)
         if count == lastCount && lastId == lastTurnId
             && contentLen == lastContentLen && thinkingLen == lastThinkingLen
             && pendingToolName == lastPendingToolName
             && pendingToolArgSize == lastPendingToolArgSize
             && version == lastVersion && !cached.isEmpty
-            && streamingTurnId == lastStreamingTurnId
+            && isStreaming == lastIsStreaming && hasStats == lastHasStats
         {
-            return limited(streaming: streamingTurnId != nil)
+            return limited(streaming: isStreaming)
         }
 
         // Incremental: only last turn's content changed during streaming
@@ -70,7 +72,6 @@ final class BlockMemoizer {
 
         let blocks: [ContentBlock]
 
-        let wasIncremental: Bool
         if canIncrement {
             // Last turn's content changed during streaming.
             blocks = regenerateFromTurn(
@@ -80,7 +81,6 @@ final class BlockMemoizer {
                 agentName: agentName,
                 thinkingEnabled: thinkingEnabled
             )
-            wasIncremental = true
         } else if canAppend {
             // Regenerate from the previous last turn onwards — it may have been
             // modified (e.g. tool calls added) before the new turns were appended.
@@ -89,18 +89,18 @@ final class BlockMemoizer {
                 in: turns,
                 streamingTurnId: streamingTurnId,
                 agentName: agentName,
-                thinkingEnabled: thinkingEnabled
+                thinkingEnabled: thinkingEnabled,
+                showInferenceStats: showInferenceStats
             )
-            wasIncremental = false
         } else {
             // Full rebuild (first load, reset, or structural change)
             blocks = ContentBlock.generateBlocks(
                 from: turns,
                 streamingTurnId: streamingTurnId,
                 agentName: agentName,
-                thinkingEnabled: thinkingEnabled
+                thinkingEnabled: thinkingEnabled,
+                showInferenceStats: showInferenceStats
             )
-            wasIncremental = false
         }
 
         // Update cache state
@@ -112,18 +112,11 @@ final class BlockMemoizer {
         lastPendingToolName = pendingToolName
         lastPendingToolArgSize = pendingToolArgSize
         lastVersion = version
-        lastStreamingTurnId = streamingTurnId
+        lastIsStreaming = isStreaming
+        lastHasStats = hasStats
+        cachedGroupHeaderMap = Self.buildGroupHeaderMap(from: cached)
 
-        // incremental path: only rebuild the suffix portion of the map; preserve stable prefix
-        if wasIncremental, let prefixEnd = blocks.firstIndex(where: { $0.turnId == turns[count - 1].id }) {
-            let suffixBlocks = Array(blocks.suffix(from: prefixEnd))
-            let suffixMap = Self.buildGroupHeaderMap(from: suffixBlocks)
-            cachedGroupHeaderMap.merge(suffixMap) { _, new in new }
-        } else {
-            cachedGroupHeaderMap = Self.buildGroupHeaderMap(from: cached)
-        }
-
-        return limited(streaming: streamingTurnId != nil)
+        return limited(streaming: isStreaming)
     }
 
     // MARK: - Private Helpers
@@ -137,18 +130,18 @@ final class BlockMemoizer {
         in turns: [ChatTurn],
         streamingTurnId: UUID?,
         agentName: String,
-        thinkingEnabled: Bool = false
+        thinkingEnabled: Bool = false,
+        showInferenceStats: Bool = false
     ) -> [ContentBlock] {
         let turnId = turns[turnIndex].id
 
-        // Guard: if the turn ID is not in the cache, the cache is stale.
-        // Fall back to full rebuild rather than mixing stale and fresh blocks.
         guard let prefixEnd = cached.firstIndex(where: { $0.turnId == turnId }) else {
             return ContentBlock.generateBlocks(
                 from: turns,
                 streamingTurnId: streamingTurnId,
                 agentName: agentName,
-                thinkingEnabled: thinkingEnabled
+                thinkingEnabled: thinkingEnabled,
+                showInferenceStats: showInferenceStats
             )
         }
 
@@ -165,23 +158,19 @@ final class BlockMemoizer {
             streamingTurnId: streamingTurnId,
             agentName: agentName,
             previousTurn: previousTurn,
-            thinkingEnabled: thinkingEnabled
+            thinkingEnabled: thinkingEnabled,
+            showInferenceStats: showInferenceStats
         )
 
         return stablePrefix + freshBlocks
     }
 
     private func limited(streaming: Bool) -> [ContentBlock] {
-        // synthetic stress thread for profiling — must not truncate (see MockChatData)
-        if ProcessInfo.processInfo.environment["USE_MOCK_CHAT_DATA"] == "1" {
-            return cached
-        }
-        // during streaming, cap tightly to prevent layout thrash on every delta.
-        // use a smooth transition: once streaming ends the cap rises gradually so
-        // the table doesn't get a sudden burst of new rows all at once.
-        let target = streaming ? streamingMaxBlocks : nonStreamingMaxBlocks
-        guard cached.count > target else { return cached }
-        return Array(cached.suffix(target))
+        // Tight cap during streaming to prevent layout thrash on every delta.
+        // Generous cap otherwise so users can still scroll back through history
+        // while bounding pathological layout cost in very long conversations.
+        let limit = streaming ? maxBlocks : maxBlocks * 5
+        return cached.count > limit ? Array(cached.suffix(limit)) : cached
     }
 
     func clear() {
@@ -194,7 +183,6 @@ final class BlockMemoizer {
         lastPendingToolName = nil
         lastPendingToolArgSize = 0
         lastVersion = -1
-        lastStreamingTurnId = nil
     }
 
     // MARK: - Group Header Map

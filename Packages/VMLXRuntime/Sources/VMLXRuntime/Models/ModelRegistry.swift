@@ -61,6 +61,7 @@ public struct VMLXModelRegistry {
     private static let unsupportedTypes: Set<String> = [
         "mistral3",         // Mistral Small 4 — FP8 quantization + fused gate_up_proj
         "mistral4",         // Mistral 4 text — FP8
+        "nemotron_h",       // Nemotron-H — Mamba2 SSM (different from GatedDeltaNet, needs dedicated model class)
     ]
 
     /// Load a native model from a directory.
@@ -83,9 +84,18 @@ public struct VMLXModelRegistry {
 
         // Reject unsupported models with a clear error
         if unsupportedTypes.contains(modelType) {
+            let reason: String
+            switch modelType {
+            case "mistral3", "mistral4":
+                reason = "MLA attention (kv_a_proj/kv_b_proj) + MoE architecture requires a dedicated model implementation"
+            case "nemotron_h":
+                reason = "Mamba2 SSM architecture requires a dedicated model implementation (different from GatedDeltaNet)"
+            default:
+                reason = "architecture not yet supported"
+            }
             throw ModelLoaderError.unsupportedArchitecture(
-                "\(modelType) uses FP8 quantization which is not yet supported. "
-                + "Supported formats: JANG (2/4/6/8-bit), MLX (4/8-bit standard quantization)."
+                "\(modelType): \(reason). "
+                + "Supported: Qwen3.5 (hybrid SSM), standard transformers (Llama/Qwen2/Qwen3/Gemma/etc.), MoE (MiniMax)."
             )
         }
 

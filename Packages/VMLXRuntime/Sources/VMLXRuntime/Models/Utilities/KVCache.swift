@@ -146,6 +146,133 @@ public class VMLXKVCacheSimple: VMLXBaseKVCache {
     }
 }
 
+// MARK: - Quantized KV Cache
+
+/// KV cache that quantizes keys/values to q4 or q8 during update, dequantizes on read.
+/// Reduces GPU memory during inference at the cost of minor quality loss.
+/// Uses MLX's built-in quantize/dequantize (group quantization, symmetric).
+///
+/// This is separate from TurboQuant (which compresses for storage after prefill).
+/// QuantizedKVCache reduces memory DURING the forward pass.
+///
+/// Usage: container.newCache() returns VMLXQuantizedKVCache when kvCacheQuantization != "none".
+public class VMLXQuantizedKVCache: VMLXBaseKVCache {
+
+    /// Quantized storage
+    private var quantizedKeys: MLXArray?
+    private var quantizedValues: MLXArray?
+    private var keyScales: MLXArray?
+    private var keyBiases: MLXArray?
+    private var valueScales: MLXArray?
+    private var valueBiases: MLXArray?
+
+    /// Quantization parameters
+    public let bits: Int
+    public let groupSize: Int
+
+    /// Step size for pre-allocation
+    public var step = 256
+
+    public init(bits: Int = 4, groupSize: Int = 64) {
+        self.bits = bits
+        self.groupSize = groupSize
+        super.init()
+    }
+
+    public override func innerState() -> [MLXArray] {
+        // Return dequantized state for evaluation
+        let s = self.state
+        return s
+    }
+
+    public override func update(keys: MLXArray, values: MLXArray) -> (MLXArray, MLXArray) {
+        // Quantize new keys/values along head_dim (last axis)
+        let (qk, sk, bk) = quantized(keys, groupSize: groupSize, bits: bits)
+        let (qv, sv, bv) = quantized(values, groupSize: groupSize, bits: bits)
+
+        if let existingQK = quantizedKeys {
+            // Concatenate quantized data along sequence dimension (axis 2)
+            // Last axis is packed head_dim — concat on axis 2 is safe
+            quantizedKeys = concatenated([existingQK, qk], axis: 2)
+            quantizedValues = concatenated([quantizedValues!, qv], axis: 2)
+            keyScales = concatenated([keyScales!, sk], axis: 2)
+            valueScales = concatenated([valueScales!, sv], axis: 2)
+            if let existingBK = keyBiases, let newBK = bk {
+                keyBiases = concatenated([existingBK, newBK], axis: 2)
+            }
+            if let existingBV = valueBiases, let newBV = bv {
+                valueBiases = concatenated([existingBV, newBV], axis: 2)
+            }
+        } else {
+            quantizedKeys = qk
+            quantizedValues = qv
+            keyScales = sk
+            keyBiases = bk
+            valueScales = sv
+            valueBiases = bv
+        }
+
+        offset += keys.dim(2)
+
+        // Dequantize for SDPA (attention needs float keys/values)
+        let dequantizedKeys = dequantized(
+            quantizedKeys!, scales: keyScales!, biases: keyBiases,
+            groupSize: groupSize, bits: bits
+        )
+        let dequantizedValues = dequantized(
+            quantizedValues!, scales: valueScales!, biases: valueBiases,
+            groupSize: groupSize, bits: bits
+        )
+
+        return (dequantizedKeys, dequantizedValues)
+    }
+
+    public override var state: [MLXArray] {
+        get {
+            guard let qk = quantizedKeys, let qv = quantizedValues,
+                  let sk = keyScales, let sv = valueScales else { return [] }
+            let dk = dequantized(qk, scales: sk, biases: keyBiases, groupSize: groupSize, bits: bits)
+            let dv = dequantized(qv, scales: sv, biases: valueBiases, groupSize: groupSize, bits: bits)
+            return [dk, dv]
+        }
+        set {
+            if newValue.count >= 2 {
+                let (qk, sk, bk) = quantized(newValue[0], groupSize: groupSize, bits: bits)
+                let (qv, sv, bv) = quantized(newValue[1], groupSize: groupSize, bits: bits)
+                quantizedKeys = qk
+                quantizedValues = qv
+                keyScales = sk
+                keyBiases = bk
+                valueScales = sv
+                valueBiases = bv
+                offset = newValue[0].dim(2)
+            }
+        }
+    }
+
+    public override var isTrimmable: Bool { true }
+
+    @discardableResult
+    public override func trim(_ n: Int) -> Int {
+        let trimmed = min(offset, n)
+        offset -= trimmed
+        return trimmed
+    }
+
+    public override func copy() -> any VMLXKVCache {
+        let new = VMLXQuantizedKVCache(bits: bits, groupSize: groupSize)
+        new.step = self.step
+        new.quantizedKeys = quantizedKeys
+        new.quantizedValues = quantizedValues
+        new.keyScales = keyScales
+        new.keyBiases = keyBiases
+        new.valueScales = valueScales
+        new.valueBiases = valueBiases
+        new.offset = self.offset
+        return new
+    }
+}
+
 // MARK: - Arrays Cache (for SSM state)
 
 /// Base cache for array-based state storage (SSM models).

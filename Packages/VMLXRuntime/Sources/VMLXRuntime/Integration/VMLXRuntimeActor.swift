@@ -21,7 +21,9 @@ public enum VMLXEvent: Sendable {
     case tokens(String)
     case thinking(String)
     case toolInvocation(name: String, argsJSON: String, callId: String)
-    case usage(promptTokens: Int, completionTokens: Int, cachedTokens: Int)
+    case usage(promptTokens: Int, completionTokens: Int, cachedTokens: Int,
+               ttft: Double, prefillToksPerSec: Double, decodeToksPerSec: Double,
+               cacheDetail: String?)
 }
 
 // MARK: - Power Management
@@ -113,7 +115,9 @@ public actor VMLXRuntimeActor {
         prefillStepSize: Int? = nil,
         enableDiskCache: Bool = false,
         diskCacheDir: URL? = nil,
-        enableTurboQuant: Bool = false
+        enableTurboQuant: Bool = false,
+        cacheMemoryPercent: Float? = nil,
+        usePagedCache: Bool? = nil
     ) {
         if let bits = kvBits, bits < 16 {
             scheduler.config.kvCacheQuantization = "q\(bits)"
@@ -141,6 +145,12 @@ public actor VMLXRuntimeActor {
                 .appendingPathComponent(modelHash)
         }
         scheduler.config.enableTurboQuant = enableTurboQuant
+        if let memPercent = cacheMemoryPercent {
+            scheduler.config.cacheMemoryPercent = memPercent
+        }
+        if let paged = usePagedCache {
+            scheduler.config.usePagedCache = paged
+        }
 
         // Rebuild CacheCoordinator so changed settings (disk cache, memory budget, etc.)
         // take effect. The coordinator is built from config at Scheduler.init; without
@@ -189,9 +199,15 @@ public actor VMLXRuntimeActor {
         self.lastLoadedModelPath = path
         self.powerState = .active
 
-        // 4b. Wire SSM re-deriver
-        if let ssmCache = scheduler.cache.ssmStateCache {
+        // 4b. Wire SSM re-deriver for hybrid models with SSM layers.
+        // The re-deriver runs full forward pass to extract SSM state when the
+        // SSM companion cache entry has been evicted. Uses VMLXModelContainer
+        // directly for the forward pass.
+        // Primary path: CacheCoordinator.store() saves SSM companion after generation.
+        // Re-deriver path: targeted re-derivation when SSM evicted (partialHit).
+        if container.isHybrid, let ssmCache = scheduler.cache.ssmStateCache {
             let reDeriver = SSMReDeriver(ssmCache: ssmCache)
+            await reDeriver.setModel(container)
             self.ssmReDeriver = reDeriver
         } else {
             self.ssmReDeriver = nil
@@ -397,9 +413,6 @@ public actor VMLXRuntimeActor {
 
         let promptTokenCount = tokens.count
         let maxTokens = samplingParams.maxTokens
-        let temperature = samplingParams.temperature
-        let topP = samplingParams.topP
-        _ = samplingParams.repetitionPenalty  // TODO: implement repetition penalty
         let stopSequences = samplingParams.stop
         let eosTokenIds = container.eosTokenIds
         let stopTokenIds = Set(samplingParams.stopTokenIds)
@@ -407,14 +420,24 @@ public actor VMLXRuntimeActor {
         return AsyncThrowingStream { continuation in
             let task = Task { @Sendable in
                 do {
+                    let requestStart = CFAbsoluteTimeGetCurrent()
+                    var ttftTime: Double = 0
+                    var firstTokenEmitted = false
+                    var cacheDetailStr: String? = nil
+
                     var accumulator = StreamAccumulator(
                         toolParser: toolParser,
                         reasoningParser: reasoningParser,
                         stopSequences: stopSequences
                     )
 
-                    // Check CacheCoordinator for cached KV state from previous turns
-                    let cache = container.newCache()
+                    // Check CacheCoordinator for cached KV state from previous turns.
+                    // Apply KV quantization (q4/q8) if configured — reduces GPU memory
+                    // during inference. Separate from TurboQuant (post-prefill compression).
+                    let kvBitsStr = self.scheduler.config.kvCacheQuantization
+                    let kvBits: Int? = kvBitsStr.hasPrefix("q") ? Int(kvBitsStr.dropFirst()) : nil
+                    let kvGroupSize = self.scheduler.config.kvCacheGroupSize
+                    let cache = container.newCache(kvBits: kvBits, kvGroupSize: kvGroupSize)
                     var inputTokens: MLXArray
                     var cachedTokenCount = 0
 
@@ -422,6 +445,7 @@ public actor VMLXRuntimeActor {
                     switch fetchResult {
                     case .hit(let cachedHybrid, let remaining, let detail, let ssmCheckpoint)
                         where cachedHybrid.layerCount == cache.count:
+                        cacheDetailStr = "\(detail)"
                         NSLog("[Gen] Cache HIT: \(cachedHybrid.layerCount) layers, \(remaining.count) remaining tokens, detail=\(detail)")
                         // Restore cached KV state into the VMLXKVCache objects
                         for (i, entry) in cachedHybrid.layers.enumerated() {
@@ -430,6 +454,13 @@ public actor VMLXRuntimeActor {
                             case .attention(let kv):
                                 if let kvSimple = cache[i] as? VMLXKVCacheSimple {
                                     kvSimple.state = [kv.keys, kv.values]
+                                }
+                            case .compressedAttention(let ek, let ev, _):
+                                // Decompress TurboQuant to float16 and load into KV cache
+                                if let kvSimple = cache[i] as? VMLXKVCacheSimple {
+                                    let decodedKeys = TurboQuantEncoder.decodeKeys(ek, seed: ek.seed)
+                                    let decodedValues = TurboQuantEncoder.decodeValues(ev, seed: ev.seed)
+                                    kvSimple.state = [decodedKeys, decodedValues]
                                 }
                             case .ssm(let ssm):
                                 if let mambaCache = cache[i] as? VMLXMambaCache {
@@ -477,9 +508,15 @@ public actor VMLXRuntimeActor {
                         if container.isHybrid {
                             // Hybrid model: SSM companion missing. SSM state is path-dependent —
                             // can't use KV cache without matching SSM state.
-                            // Discard attention cache, full prefill.
-                            // (Matches Python VMLX: "no SSM companion, full prefill")
-                            NSLog("[Gen] Cache PARTIAL HIT (hybrid, SSM missing): discarding KV, full prefill \(tokens.count) tokens")
+                            // Safe fallback: discard attention cache, full prefill.
+                            // The forward pass re-derives SSM state as a side effect.
+                            // After generation, CacheCoordinator.store() will save SSM companion
+                            // for the next turn (self-healing).
+                            //
+                            // Future optimization (SSMReDeriver): background re-derivation to
+                            // avoid redundant attention recomputation. Requires ModelForwardPass
+                            // protocol update to accept [VMLXKVCache] instead of [MLXArray].
+                            NSLog("[Gen] Cache PARTIAL HIT (hybrid, SSM missing): full prefill \(tokens.count) tokens (SSM will be stored after)")
                             inputTokens = MLXArray(tokens.map { Int32($0) })
                         } else {
                             // Non-hybrid: no SSM layers, so partial hit = prefix hit.
@@ -487,10 +524,19 @@ public actor VMLXRuntimeActor {
                             NSLog("[Gen] Cache PARTIAL HIT (non-hybrid): \(attentionCache.layerCount) layers, \(remaining.count) remaining, detail=\(detail)")
                             for (i, entry) in attentionCache.layers.enumerated() {
                                 guard i < cache.count else { break }
-                                if case .attention(let kv) = entry {
+                                switch entry {
+                                case .attention(let kv):
                                     if let kvSimple = cache[i] as? VMLXKVCacheSimple {
                                         kvSimple.state = [kv.keys, kv.values]
                                     }
+                                case .compressedAttention(let ek, let ev, _):
+                                    if let kvSimple = cache[i] as? VMLXKVCacheSimple {
+                                        let decodedKeys = TurboQuantEncoder.decodeKeys(ek, seed: ek.seed)
+                                        let decodedValues = TurboQuantEncoder.decodeValues(ev, seed: ev.seed)
+                                        kvSimple.state = [decodedKeys, decodedValues]
+                                    }
+                                default:
+                                    break  // SSM layers handled separately
                                 }
                             }
                             let genSuffix = genPromptLen > 0
@@ -518,7 +564,6 @@ public actor VMLXRuntimeActor {
                     var generatedTokenCount = 0
                     var thinkingTokenCount = 0
                     var insideThinking = enableThinking
-                    var thinkTagInjected = false
                     let thinkingBudget = maxTokens / 2  // Cap thinking at half of maxTokens
 
                     // Prefill: process input tokens in chunks (matches Python mlx-lm).
@@ -544,13 +589,12 @@ public actor VMLXRuntimeActor {
                     let prefillLogits = container.forward(
                         inputTokens.expandedDimensions(axis: 0), cache: cache)
 
-                    var y: MLXArray
-                    if temperature == 0 {
-                        y = prefillLogits[0, -1].argMax()
-                    } else {
-                        y = MLXRandom.categorical(
-                            (prefillLogits[0, -1] / temperature).expandedDimensions(axis: 0))
-                    }
+                    // Sample first token using Sampler (supports top-p, top-k, min-p,
+                    // repetition penalty — not just temperature).
+                    // Decode loop uses simple temperature+categorical for speed.
+                    let firstTokenId = Sampler.sample(
+                        logits: prefillLogits[0, -1], params: samplingParams)
+                    var y = MLXArray(Int32(firstTokenId))
 
                     // SSM companion extraction happens in the post-generation store block below
                     // (CacheCoordinator.store automatically extracts and stores SSM layers
@@ -560,6 +604,17 @@ public actor VMLXRuntimeActor {
                     // Pipeline: build graph for NEXT token while GPU evaluates CURRENT token.
                     // asyncEval starts GPU work, then CPU does decode/yield concurrently.
                     // For MiniMax 122B: ~30ms GPU, ~10ms CPU → effective max(30,10) = 30ms vs 40ms sequential.
+
+                    // For models where the chat template injects <think> natively
+                    // (thinkInTemplate=true), the model's output starts INSIDE the think
+                    // block — no <think> tag in the generated tokens. Inject it into
+                    // the output stream so the UI's StreamingDeltaProcessor enters
+                    // thinking mode. Models that output <think> themselves (thinkInTemplate=false)
+                    // don't need this — the tag arrives naturally in the token stream.
+                    let thinkInTemplate = container.familyConfig.thinkInTemplate
+                    if enableThinking && insideThinking && thinkInTemplate {
+                        continuation.yield(.tokens("<think>\n"))
+                    }
 
                     // Kick off first token eval
                     var nextY: MLXArray? = nil
@@ -571,14 +626,19 @@ public actor VMLXRuntimeActor {
 
                         // Start computing NEXT token (GPU works on this while we process current)
                         if _step < maxTokens - 1 {
-                            // Build graph for next token using current y (not yet materialized on CPU,
-                            // but MLX graph can reference it). y[None] adds batch dim (1 op vs 2).
+                            // Double-buffered: build graph for NEXT token while GPU evaluates CURRENT.
+                            // CRITICAL: keep this minimal — no sort/softmax/cumsum here.
+                            // Top-p and repetition penalty are too expensive for the hot loop
+                            // (sort on 248K vocab = ~10ms overhead per token).
+                            // Temperature + categorical is sufficient for decode quality.
                             let stepLogits = container.forward(y.reshaped(1, 1), cache: cache)
-                            if temperature == 0 {
+                            if samplingParams.isGreedy {
                                 nextY = stepLogits[0, -1].argMax()
                             } else {
-                                nextY = MLXRandom.categorical(
-                                    (stepLogits[0, -1] / temperature).expandedDimensions(axis: 0))
+                                let scaled = samplingParams.temperature > 0
+                                    ? stepLogits[0, -1] / samplingParams.temperature
+                                    : stepLogits[0, -1]
+                                nextY = MLXRandom.categorical(scaled.expandedDimensions(axis: 0))
                             }
                             asyncEval([nextY!])
                         }
@@ -623,13 +683,19 @@ public actor VMLXRuntimeActor {
 
                         text = text.replacingOccurrences(of: "\u{FFFD}", with: "")
 
-                        if enableThinking && !thinkTagInjected {
-                            thinkTagInjected = true
-                            continuation.yield(.tokens("<think>\n"))
-                        }
+                        // Think tag injection is handled by:
+                        // 1. The model's chat template (outputs <think> natively)
+                        // 2. Osaurus's StreamingMiddleware (PrependThinkTagMiddleware
+                        //    for models that need it, e.g., Qwen3.5 4B/9B/27B)
+                        // Do NOT inject here — causes triple <think> tags.
 
                         let events = accumulator.process(text: text, tokenIds: [currentToken])
                         for event in events {
+                            // Capture TTFT on first token/thinking output
+                            if !firstTokenEmitted {
+                                ttftTime = CFAbsoluteTimeGetCurrent() - requestStart
+                                firstTokenEmitted = true
+                            }
                             switch event {
                             case .tokens(let t):
                                 continuation.yield(.tokens(t))
@@ -690,13 +756,33 @@ public actor VMLXRuntimeActor {
                             // SSM state at the end of prefill contains info from all prompt tokens.
                         }
 
+                        // Build layer entries. When TurboQuant is enabled, compress
+                        // attention layers to 3-bit format for ~5x memory savings.
+                        // Critical layers get higher precision (4-bit) via TurboQuantConfig.
+                        // SSM layers are never compressed (no KV data).
+                        let tqEnabled = self.scheduler.config.enableTurboQuant
+                        let tqConfig = container.turboQuantConfig
+                        let totalLayers = cache.count
+
                         var layers: [LayerCacheEntry] = []
-                        for c in cache {
+                        for (layerIdx, c) in cache.enumerated() {
                             if let mc = c as? VMLXMambaCache {
                                 layers.append(.ssm(SSMStateLayer(state: mc.state)))
                             } else if let kvc = c as? VMLXKVCacheSimple {
                                 let s = kvc.state
-                                if s.count == 2 {
+                                guard s.count == 2 else { continue }
+
+                                if tqEnabled, let tq = tqConfig,
+                                   let kBits = tq.keyBits(forLayer: layerIdx, totalLayers: totalLayers),
+                                   let vBits = tq.valueBits(forLayer: layerIdx, totalLayers: totalLayers) {
+                                    // Compress this attention layer via TurboQuant
+                                    let ek = TurboQuantEncoder.encodeKeys(
+                                        keys: s[0], bits: kBits, seed: tq.seed)
+                                    let ev = TurboQuantEncoder.encodeValues(
+                                        values: s[1], bits: vBits, seed: tq.seed)
+                                    layers.append(.compressedAttention(ek, ev, kvc.offset))
+                                } else {
+                                    // No TurboQuant for this layer — store as float
                                     layers.append(.attention(KVCacheLayer(
                                         keys: s[0], values: s[1], offset: kvc.offset)))
                                 }
@@ -710,11 +796,25 @@ public actor VMLXRuntimeActor {
                         }
                     }
 
-                    // Emit usage
+                    // Compute timing stats
+                    let totalElapsed = CFAbsoluteTimeGetCurrent() - requestStart
+                    let decodeElapsed = CFAbsoluteTimeGetCurrent() - _genStart
+                    let prefillElapsed = max(0.001, totalElapsed - decodeElapsed)
+                    let prefillTokenCount = max(1, promptTokenCount - cachedTokenCount)
+                    let prefillTPS = Double(prefillTokenCount) / prefillElapsed
+                    let decodeTPS = generatedTokenCount > 0
+                        ? Double(generatedTokenCount) / decodeElapsed : 0
+
+                    // Emit usage with timing
+                    _vmlxLog2("[Gen] Stats: ttft=\(String(format:"%.3f",ttftTime))s pp=\(String(format:"%.1f",prefillTPS))t/s tg=\(String(format:"%.1f",decodeTPS))t/s prompt=\(promptTokenCount) gen=\(generatedTokenCount) cached=\(cachedTokenCount)")
                     continuation.yield(.usage(
                         promptTokens: promptTokenCount,
                         completionTokens: generatedTokenCount,
-                        cachedTokens: cachedTokenCount
+                        cachedTokens: cachedTokenCount,
+                        ttft: ttftTime,
+                        prefillToksPerSec: prefillTPS,
+                        decodeToksPerSec: decodeTPS,
+                        cacheDetail: cacheDetailStr
                     ))
 
                     continuation.finish()

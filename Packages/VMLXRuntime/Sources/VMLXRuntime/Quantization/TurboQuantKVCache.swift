@@ -178,12 +178,22 @@ public final class TurboQuantKVCache: @unchecked Sendable {
     }
 
     /// Estimated memory usage in bytes.
+    /// Includes all live buffers: float fill data, compressed data,
+    /// decoded buffers, and float windows for decode-phase tokens.
     public var estimatedBytes: Int {
         var total = 0
+        // Fill phase buffers
         if let k = _floatKeys { total += k.nbytes }
         if let v = _floatValues { total += v.nbytes }
+        // Compressed data
         if let ck = compressedKeys { total += ck.estimatedBytes }
         if let cv = compressedValues { total += cv.estimatedBytes }
+        // Decoded buffers (populated after compress())
+        if let dk = _decodedKeyBuffer { total += dk.nbytes }
+        if let dv = _decodedValueBuffer { total += dv.nbytes }
+        // Float windows (decode-phase tokens)
+        if let wk = _floatWindowKeys { total += wk.nbytes }
+        if let wv = _floatWindowValues { total += wv.nbytes }
         return total
     }
 

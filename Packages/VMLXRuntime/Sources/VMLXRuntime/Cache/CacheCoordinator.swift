@@ -172,10 +172,13 @@ public final class CacheCoordinator: @unchecked Sendable {
             }
         }
 
-        // Layer 3: Disk cache (L2 SSD) — load tensors from safetensors
+        // Layer 3: Disk cache (L2 SSD) — load tensors from safetensors.
+        // Disk cache uses exact token hash (no prefix matching).
+        // Cache store uses storeTokens = cacheKeyTokens.dropLast(1), so we must
+        // try both the full key and the N-1 key to find disk entries.
         if let diskCache = diskCache {
+            // Try exact match first (e.g., if stored by external tool)
             if let cache = diskCache.fetchCache(tokens: tokens) {
-                // L2→L1 promotion: load from disk into memory cache for faster future hits
                 if let memoryCache = memoryCache {
                     _ = memoryCache.store(tokens: tokens, cache: cache)
                 }
@@ -186,6 +189,26 @@ public final class CacheCoordinator: @unchecked Sendable {
                     )
                 }
                 return .hit(cache: cache, remainingTokens: [], detail: .disk)
+            }
+
+            // Try N-1 match (standard store path uses cacheKeyTokens.dropLast(1))
+            if tokens.count > 1 {
+                let truncatedTokens = Array(tokens.dropLast(1))
+                if let cache = diskCache.fetchCache(tokens: truncatedTokens) {
+                    // L2→L1 promotion: store with truncated key so memory cache
+                    // prefix matching works correctly (remaining = [lastToken])
+                    if let memoryCache = memoryCache {
+                        _ = memoryCache.store(tokens: truncatedTokens, cache: cache)
+                    }
+                    let remaining = [tokens.last!]
+                    if isHybrid {
+                        return _resolveHybridFetch(
+                            cache: cache, remaining: remaining,
+                            tokens: tokens, tokenHash: hash, detail: .disk
+                        )
+                    }
+                    return .hit(cache: cache, remainingTokens: remaining, detail: .disk)
+                }
             }
         }
 
@@ -261,6 +284,13 @@ public final class CacheCoordinator: @unchecked Sendable {
                 case .attention(let kv):
                     keySlices.append(kv.keys)
                     valueSlices.append(kv.values)
+                case .compressedAttention(let ek, let ev, _):
+                    // Decompress TurboQuant block back to float for reconstruction.
+                    // This happens on cache fetch — decode once, concat with other blocks.
+                    let decodedKeys = TurboQuantEncoder.decodeKeys(ek, seed: ek.seed)
+                    let decodedValues = TurboQuantEncoder.decodeValues(ev, seed: ev.seed)
+                    keySlices.append(decodedKeys)
+                    valueSlices.append(decodedValues)
                 case .ssm(let ssm):
                     // Only use SSM from the LAST block (cumulative state)
                     if blockIdx == blocks.count - 1 {
@@ -346,6 +376,21 @@ public final class CacheCoordinator: @unchecked Sendable {
 
         let numBlocks = (tokens.count + blockSize - 1) / blockSize
 
+        // Pre-decompress all compressed layers ONCE before the block loop.
+        // Without this, each block iteration re-decodes the full sequence from codebook
+        // (e.g., 3 blocks × 8 layers = 24 decompressions instead of 8).
+        let floatLayers: [LayerCacheEntry] = cache.layers.map { entry in
+            switch entry {
+            case .compressedAttention(let ek, let ev, _):
+                let decodedKeys = TurboQuantEncoder.decodeKeys(ek, seed: ek.seed)
+                let decodedValues = TurboQuantEncoder.decodeValues(ev, seed: ev.seed)
+                let offset = decodedKeys.dim(2)
+                return .attention(KVCacheLayer(keys: decodedKeys, values: decodedValues, offset: offset))
+            default:
+                return entry  // .attention and .ssm pass through unchanged
+            }
+        }
+
         var parentHash: BlockHash? = nil
 
         for blockIdx in 0..<numBlocks {
@@ -360,33 +405,27 @@ public final class CacheCoordinator: @unchecked Sendable {
 
             // Check dedup: does a block with this hash already exist?
             if let existing = pagedCache.findCachedBlock(hash: blockHash) {
-                // Block reuse — but check cumulative SSM state (Bug 2 from Python VMLX).
-                // If this is the last block and the existing block doesn't have SSM data,
-                // we need a new block with cumulative state. Skip reuse.
                 if isLastBlock && isHybrid && _blockLacksCumulativeSSM(existing) {
                     // Fall through to allocate new block with SSM data
                 } else {
-                    // Increment ref count via forkBlock (thread-safe, under lock)
                     pagedCache.forkBlock(existing, hash: blockHash)
                     parentHash = blockHash
-                    continue  // Reuse existing block
+                    continue
                 }
             }
 
-            // Allocate new block
             guard let block = pagedCache.allocateBlock() else {
-                break  // No free blocks available
+                break
             }
 
             block.tokenCount = blockTokens.count
             block.blockHash = blockHash
 
-            // Slice per-layer data for this block's token range
+            // Slice pre-decompressed float data for this block's token range
             var blockData: [LayerCacheEntry?] = []
-            for entry in cache.layers {
+            for entry in floatLayers {
                 switch entry {
                 case .attention(let kv):
-                    // Slice KV to this block's range
                     let slicedKeys = kv.keys[.ellipsis, tokenStart..<tokenEnd, 0...]
                     let slicedValues = kv.values[.ellipsis, tokenStart..<tokenEnd, 0...]
                     let sliceOffset = tokenEnd - tokenStart
@@ -395,18 +434,18 @@ public final class CacheCoordinator: @unchecked Sendable {
 
                 case .ssm(let ssm):
                     if isLastBlock {
-                        // Store cumulative SSM state in the last block only
                         blockData.append(.ssm(ssm))
                     } else {
-                        // Non-last blocks: mark SSM position as skip (nil)
                         blockData.append(nil)
                     }
+
+                case .compressedAttention:
+                    break  // Already converted to .attention above — should never reach here
                 }
             }
 
             block.cacheData = blockData
 
-            // Register in hash map for future dedup
             pagedCache.markCached(block: block, hash: blockHash)
 
             parentHash = blockHash
