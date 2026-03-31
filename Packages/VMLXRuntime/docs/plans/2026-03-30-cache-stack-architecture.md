@@ -363,10 +363,25 @@ Each item builds on the previous. Do not skip ahead.
 23. [ ] Test: verify 5x memory reduction, no quality degradation
 
 ### Phase 6: SSM Async Re-Derivation (advanced -- thinking models)
-24. [ ] Wire SSMReDeriver actor into generation loop
-25. [ ] Implement async path: generate with KV-only while SSM re-derives
-26. [ ] Handle thinking model constraint (must be sync for reasoning)
-27. [ ] Test: verify reasoning quality with re-derived SSM state
+24. [ ] Add cache return to ModelForwardPass protocol
+25. [ ] Extract SSM states from VMLXMambaCache after forward pass in re-deriver
+26. [ ] Wire SSMReDeriver in VMLXRuntimeActor.loadModel()
+27. [ ] Call requestReDerive() on .partialHit (hybrid + SSM missing)
+28. [ ] Sync path: block until SSM state ready (mandatory for thinking models)
+29. [ ] Async path: generate with KV-only, inject SSM when ready (non-thinking only)
+30. [ ] Test: verify reasoning quality with re-derived SSM state
+
+### Phase 7: Settings Integration + Edge Cases
+31. [ ] Fix applyUserConfig timing: call BEFORE model load, not after
+32. [ ] Auto-configure disk cache directory (~/.osaurus/cache/<model_hash>/)
+33. [ ] Enable paged cache by default (or add UI toggle)
+34. [ ] Verify KV bits propagates to quantized cache construction
+35. [ ] Verify memory budget slider affects MemoryCache
+36. [ ] MLA head count validation in paged cache reconstruction (Mistral 4 future)
+37. [ ] Test: each model type x each cache setting combination
+38. [ ] Test: change settings mid-session, verify effect on next generation
+
+**Detailed plan for Phases 5-7:** docs/plans/2026-03-30-phase5-6-7-remaining.md
 
 ---
 
