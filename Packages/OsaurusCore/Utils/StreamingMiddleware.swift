@@ -64,6 +64,61 @@ final class PrependThinkTagMiddleware: StreamingMiddleware {
     }
 }
 
+// MARK: - Channel Tag Middleware (GPT-OSS)
+
+/// Transforms GPT-OSS `<|channel|>analysis<|message|>` / `<|channel|>reply<|message|>`
+/// into standard `<think>` / `</think>` tags that StreamingDeltaProcessor handles.
+/// Buffers token-by-token input to detect multi-token channel tags.
+@MainActor
+final class ChannelTagMiddleware: StreamingMiddleware {
+    private var buffer = ""
+
+    private static let analysisTag = "<|channel|>analysis<|message|>"
+    private static let replyTag = "<|channel|>reply<|message|>"
+    private static let tagPrefix = "<|"
+
+    func process(_ delta: String) -> String {
+        buffer += delta
+
+        // Check for complete channel tags and replace with think tags
+        var output = ""
+        while !buffer.isEmpty {
+            if let range = buffer.range(of: Self.analysisTag) {
+                // Emit everything before the tag, then emit <think>
+                output += buffer[..<range.lowerBound]
+                output += "<think>"
+                buffer = String(buffer[range.upperBound...])
+            } else if let range = buffer.range(of: Self.replyTag) {
+                // Emit everything before the tag, then emit </think>
+                output += buffer[..<range.lowerBound]
+                output += "</think>"
+                buffer = String(buffer[range.upperBound...])
+            } else if buffer.contains(Self.tagPrefix) {
+                // Might be a partial channel tag — check if it could complete
+                if let prefixRange = buffer.range(of: Self.tagPrefix, options: .backwards) {
+                    let suffix = String(buffer[prefixRange.lowerBound...])
+                    // Check if either full tag starts with this suffix
+                    if Self.analysisTag.hasPrefix(suffix) || Self.replyTag.hasPrefix(suffix) {
+                        // Partial tag — emit everything before it, keep suffix buffered
+                        output += buffer[..<prefixRange.lowerBound]
+                        buffer = suffix
+                        break
+                    }
+                }
+                // Not a channel tag prefix — emit all
+                output += buffer
+                buffer = ""
+            } else {
+                // No channel tag markers — emit all
+                output += buffer
+                buffer = ""
+            }
+        }
+
+        return output
+    }
+}
+
 // MARK: - Resolver
 
 enum StreamingMiddlewareResolver {
@@ -75,10 +130,12 @@ enum StreamingMiddlewareResolver {
         let thinkingDisabled = modelOptions["disableThinking"]?.boolValue == true
         let id = modelId.lowercased()
 
-        // PrependThinkTagMiddleware is for models that output </think> but NOT <think>.
-        // VMLX Qwen3.5 models output <think> natively via the chat template,
-        // so they do NOT need the middleware. Only enable for non-VMLX edge cases
-        // (e.g., remote GLM-flash API that strips the opening tag).
+        // GPT-OSS: transform <|channel|>analysis/reply tags to <think>/</ think>
+        if !thinkingDisabled && (id.contains("gpt-oss") || id.contains("gpt_oss")) {
+            return ChannelTagMiddleware()
+        }
+
+        // PrependThinkTagMiddleware: for models that output </think> but NOT <think>
         let needsPrependThink =
             !thinkingDisabled
             && (id.contains("glm") && id.contains("flash"))

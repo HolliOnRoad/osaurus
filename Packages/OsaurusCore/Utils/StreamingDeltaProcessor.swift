@@ -232,58 +232,29 @@ final class StreamingDeltaProcessor {
     private static let openPartials = ["<think", "<thin", "<thi"]
     private static let closePartials = ["</think", "</thin", "</thi"]
 
-    /// GPT-OSS channel tags for reasoning.
-    /// `<|channel|>analysis<|message|>` = thinking, `<|channel|>reply<|message|>` = content.
-    private static let channelAnalysis = "<|channel|>analysis<|message|>"
-    private static let channelReply = "<|channel|>reply<|message|>"
-    private static let channelPrefix = "<|channel|>"
-
     private func parseAndRoute(_ text: inout String) {
+        // GPT-OSS <|channel|> tags are handled by ChannelTagMiddleware
+        // BEFORE reaching this parser. By the time text arrives here,
+        // channel tags have been transformed to standard <think>/</ think>.
         while !text.isEmpty {
             if isInsideThinking {
-                // Check for end-of-thinking markers:
-                // Standard: </think>
-                // GPT-OSS: <|channel|>reply<|message|>
                 if let closeRange = text.range(of: "</think>") {
                     appendThinking(String(text[..<closeRange.lowerBound]))
                     text = String(text[closeRange.upperBound...])
-                    isInsideThinking = false
-                    syncToTurn()
-                } else if let replyRange = text.range(of: Self.channelReply) {
-                    // GPT-OSS: analysis ended, reply starts
-                    appendThinking(String(text[..<replyRange.lowerBound]))
-                    text = String(text[replyRange.upperBound...])
                     isInsideThinking = false
                     syncToTurn()
                 } else if let partial = Self.closePartials.first(where: { text.hasSuffix($0) }) {
                     appendThinking(String(text.dropLast(partial.count)))
                     pendingTagBuffer = String(text.suffix(partial.count))
                     text = ""
-                } else if text.hasSuffix("<|channel|>") || text.hasSuffix("<|channel|>r")
-                            || text.hasSuffix("<|channel|>re") || text.hasSuffix("<|channel|>rep") {
-                    // Partial GPT-OSS reply tag — buffer it
-                    let partialLen = text.hasSuffix("<|channel|>rep") ? 14
-                        : text.hasSuffix("<|channel|>re") ? 13
-                        : text.hasSuffix("<|channel|>r") ? 12 : 11
-                    appendThinking(String(text.dropLast(partialLen)))
-                    pendingTagBuffer = String(text.suffix(partialLen))
-                    text = ""
                 } else {
                     appendThinking(text)
                     text = ""
                 }
             } else {
-                // Check for start-of-thinking markers:
-                // Standard: <think>
-                // GPT-OSS: <|channel|>analysis<|message|>
                 if let openRange = text.range(of: "<think>") {
                     appendContent(String(text[..<openRange.lowerBound]))
                     text = String(text[openRange.upperBound...])
-                    isInsideThinking = true
-                } else if let analysisRange = text.range(of: Self.channelAnalysis) {
-                    // GPT-OSS: analysis channel starts thinking
-                    appendContent(String(text[..<analysisRange.lowerBound]))
-                    text = String(text[analysisRange.upperBound...])
                     isInsideThinking = true
                 } else if let partial = Self.openPartials.first(where: { text.hasSuffix($0) }) {
                     appendContent(String(text.dropLast(partial.count)))

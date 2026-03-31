@@ -171,16 +171,41 @@ actor VMLXServiceBridge: ToolCapableService {
         stopSequences: [String]
     ) async throws -> AsyncThrowingStream<String, Error> {
         try await ensureModelLoaded(requestedModel: requestedModel)
-        await applyRuntimeConfig()  // Refresh settings on every request
+        await applyRuntimeConfig()
         let vmlxMessages = messages.map { $0.toVMLX() }
         var params = parameters.toSamplingParams(globalTopP: self.globalTopP)
         params.stop = stopSequences
-        return try await service.streamDeltas(
+
+        // Show prefill progress indicator (same as MLXService)
+        let tokenCount = vmlxMessages.reduce(0) { $0 + $1.textContent.count / 4 }
+        InferenceProgressManager.shared.prefillWillStartAsync(tokenCount: tokenCount)
+
+        let innerStream = try await service.streamDeltas(
             messages: vmlxMessages,
             params: params,
             requestedModel: requestedModel,
             stopSequences: stopSequences
         )
+
+        // Wrap stream: clear prefill indicator on first delta
+        return AsyncThrowingStream { continuation in
+            Task {
+                var first = true
+                do {
+                    for try await delta in innerStream {
+                        if first {
+                            InferenceProgressManager.shared.prefillDidFinishAsync()
+                            first = false
+                        }
+                        continuation.yield(delta)
+                    }
+                    continuation.finish()
+                } catch {
+                    InferenceProgressManager.shared.prefillDidFinishAsync()
+                    continuation.finish(throwing: error)
+                }
+            }
+        }
     }
 
     // MARK: - ToolCapableService
