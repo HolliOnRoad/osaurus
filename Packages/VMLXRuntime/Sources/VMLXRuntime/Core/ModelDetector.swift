@@ -523,7 +523,18 @@ public struct ModelDetector: Sendable {
             }
         }
 
-        return models
+        // Deduplicate: same model can appear in multiple directories or HF snapshots.
+        // Keep first occurrence (priority order: HF cache, then custom dirs).
+        var seen = Set<String>()
+        var unique: [DetectedModel] = []
+        for model in models {
+            let key = model.name.lowercased()
+            if !seen.contains(key) {
+                seen.insert(key)
+                unique.append(model)
+            }
+        }
+        return unique
     }
 
     // MARK: - Private Helpers
