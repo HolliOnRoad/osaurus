@@ -284,7 +284,7 @@ final class NemotronHAttention: Module {
         _qProj.wrappedValue = Linear(config.hiddenSize, numHeads * headDim, bias: false)
         _kProj.wrappedValue = Linear(config.hiddenSize, numKVHeads * headDim, bias: false)
         _vProj.wrappedValue = Linear(config.hiddenSize, numKVHeads * headDim, bias: false)
-        _oProj.wrappedValue = Linear(config.hiddenSize, config.hiddenSize, bias: false)
+        _oProj.wrappedValue = Linear(numHeads * headDim, config.hiddenSize, bias: false)
 
         self.rope = RoPE(
             dimensions: headDim,
@@ -541,16 +541,8 @@ public class NemotronHModel: Module {
         let attnCache = firstAttnIdx.flatMap { cache?[$0] as? VMLXKVCacheSimple }
         let mask = vmlxCreateAttentionMask(h: h, cache: attnCache)
 
-        let hop = config.hybridOverridePattern
         for (i, layer) in layers.enumerated() {
-            let lt = i < hop.count ? String(hop[hop.index(hop.startIndex, offsetBy: i)]) : "?"
-            let line = "[NemotronH] Layer \(i)/\(layers.count) type=\(lt)\n"
-            if let fh = FileHandle(forWritingAtPath: "/tmp/vmlx_debug.log") {
-                fh.seekToEndOfFile(); fh.write(line.data(using: .utf8)!); fh.closeFile()
-            }
             h = layer(h, mask: mask, cache: cache?[i])
-            MLX.eval(h)
-            Memory.clearCache()
         }
 
         h = normF(h)
