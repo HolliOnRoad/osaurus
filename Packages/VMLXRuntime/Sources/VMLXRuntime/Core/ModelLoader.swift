@@ -100,17 +100,40 @@ public struct ModelLoader: Sendable {
     /// 2. Runs `ModelDetector.detect(at:)` for JANG/hybrid/family metadata
     /// 3. Loads tokenizer via swift-transformers
     public static func load(from path: URL) async throws -> LoadedModel {
-        // 1. Detect model properties (JANG, hybrid, family, etc.)
+        func _log(_ msg: String) {
+            let line = "[\(Date())] \(msg)\n"
+            if let fh = FileHandle(forWritingAtPath: "/tmp/vmlx_debug.log") {
+                fh.seekToEndOfFile(); fh.write(line.data(using: .utf8)!); fh.closeFile()
+            }
+        }
+        Self._vmlxLog("[ModelLoader] Step 1: detect at \(path.lastPathComponent)")
         let detected = try ModelDetector.detect(at: path)
+        Self._vmlxLog("[ModelLoader] Step 1 done: \(detected.name) hybrid=\(detected.isHybrid)")
 
-        // 2. Load config.json for VMLXRuntime metadata
+        Self._vmlxLog("[ModelLoader] Step 2: load config")
         let config = try _loadConfig(at: path)
+        Self._vmlxLog("[ModelLoader] Step 2 done: model_type=\(config["model_type"] ?? "?")")
 
-        // 3. Load the native model (creates architecture, loads weights)
-        let (nativeModel, _) = try VMLXModelRegistry.loadModel(from: path)
+        Self._vmlxLog("[ModelLoader] Step 3: load model + weights")
+        let nativeModel: any VMLXNativeModel & Module
+        do {
+            let (m, _) = try VMLXModelRegistry.loadModel(from: path)
+            nativeModel = m
+            Self._vmlxLog("[ModelLoader] Step 3 done: vocab=\(nativeModel.vocabularySize)")
+        } catch {
+            Self._vmlxLog("[ModelLoader] Step 3 FAILED: \(error)")
+            throw error
+        }
 
-        // 4. Load tokenizer
-        let tokenizer = try await _loadTokenizer(at: path)
+        Self._vmlxLog("[ModelLoader] Step 4: load tokenizer")
+        let tokenizer: any Tokenizer
+        do {
+            tokenizer = try await _loadTokenizer(at: path)
+            Self._vmlxLog("[ModelLoader] Step 4 done")
+        } catch {
+            Self._vmlxLog("[ModelLoader] Step 4 FAILED: \(error)")
+            throw error
+        }
 
         return LoadedModel(
             nativeModel: nativeModel,
@@ -143,6 +166,13 @@ public struct ModelLoader: Sendable {
         return json
     }
 
+    private static func _vmlxLog(_ msg: String) {
+        let line = "[\(Date())] \(msg)\n"
+        if let fh = FileHandle(forWritingAtPath: "/tmp/vmlx_debug.log") {
+            fh.seekToEndOfFile(); fh.write(line.data(using: .utf8)!); fh.closeFile()
+        }
+    }
+
     private static func _loadTokenizer(at path: URL) async throws -> any Tokenizer {
         let tokenizerURL = path.appendingPathComponent("tokenizer.json")
 
@@ -150,22 +180,23 @@ public struct ModelLoader: Sendable {
             throw ModelLoaderError.tokenizerNotFound(path.path)
         }
 
-        // Try AutoTokenizer.from(modelFolder:) first.
-        // Falls back to loading tokenizer.json + tokenizer_config.json directly
-        // for models where LanguageModelConfigurationFromHub fails (e.g., Mistral
-        // with "TokenizersBackend" class or missing expected Hub metadata files).
         do {
             return try await AutoTokenizer.from(modelFolder: path)
         } catch {
+            _vmlxLog("[ModelLoader] AutoTokenizer failed: \(error). Trying direct JSON...")
             let tokData = try Data(contentsOf: tokenizerURL)
             let tokConfigURL = path.appendingPathComponent("tokenizer_config.json")
             let tokConfigData = FileManager.default.fileExists(atPath: tokConfigURL.path)
                 ? try Data(contentsOf: tokConfigURL) : "{}".data(using: .utf8)!
+
             guard let configDict = try JSONSerialization.jsonObject(with: tokConfigData) as? [NSString: Any],
                   let dataDict = try JSONSerialization.jsonObject(with: tokData) as? [NSString: Any]
             else {
+                _vmlxLog("[ModelLoader] JSON parse failed for tokenizer")
                 throw ModelLoaderError.tokenizerNotFound("Failed to parse tokenizer JSON at \(path.path)")
             }
+
+            _vmlxLog("[ModelLoader] Creating tokenizer from JSON dicts...")
             return try AutoTokenizer.from(
                 tokenizerConfig: Config(configDict),
                 tokenizerData: Config(dataDict)

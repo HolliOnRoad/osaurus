@@ -89,6 +89,40 @@ public struct Mistral4TextConfiguration: Codable, Sendable {
         case tieWordEmbeddings = "tie_word_embeddings"
     }
 
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        modelType = try c.decodeIfPresent(String.self, forKey: .modelType) ?? "mistral4"
+        vocabSize = try c.decodeIfPresent(Int.self, forKey: .vocabSize) ?? 131072
+        hiddenSize = try c.decodeIfPresent(Int.self, forKey: .hiddenSize) ?? 4096
+        intermediateSize = try c.decodeIfPresent(Int.self, forKey: .intermediateSize) ?? 12288
+        moeIntermediateSize = try c.decodeIfPresent(Int.self, forKey: .moeIntermediateSize) ?? 2048
+        numHiddenLayers = try c.decodeIfPresent(Int.self, forKey: .numHiddenLayers) ?? 36
+        numAttentionHeads = try c.decodeIfPresent(Int.self, forKey: .numAttentionHeads) ?? 32
+        numKeyValueHeads = try c.decodeIfPresent(Int.self, forKey: .numKeyValueHeads) ?? 32
+        nSharedExperts = try c.decodeIfPresent(Int.self, forKey: .nSharedExperts)
+        nRoutedExperts = try c.decodeIfPresent(Int.self, forKey: .nRoutedExperts) ?? 128
+        numExpertsPerTok = try c.decodeIfPresent(Int.self, forKey: .numExpertsPerTok) ?? 4
+        routedScalingFactor = try c.decodeIfPresent(Float.self, forKey: .routedScalingFactor) ?? 1.0
+        kvLoraRank = try c.decodeIfPresent(Int.self, forKey: .kvLoraRank) ?? 256
+        qLoraRank = try c.decodeIfPresent(Int.self, forKey: .qLoraRank)
+        qkRopeHeadDim = try c.decodeIfPresent(Int.self, forKey: .qkRopeHeadDim) ?? 64
+        vHeadDim = try c.decodeIfPresent(Int.self, forKey: .vHeadDim) ?? 128
+        qkNopeHeadDim = try c.decodeIfPresent(Int.self, forKey: .qkNopeHeadDim) ?? 64
+        headDim = try c.decodeIfPresent(Int.self, forKey: .headDim) ?? 128
+        nGroup = try c.decodeIfPresent(Int.self, forKey: .nGroup) ?? 1
+        topkGroup = try c.decodeIfPresent(Int.self, forKey: .topkGroup) ?? 1
+        firstKDenseReplace = try c.decodeIfPresent(Int.self, forKey: .firstKDenseReplace) ?? 0
+        moeLayerFreq = try c.decodeIfPresent(Int.self, forKey: .moeLayerFreq) ?? 1
+        maxPositionEmbeddings = try c.decodeIfPresent(Int.self, forKey: .maxPositionEmbeddings) ?? 1048576
+        rmsNormEps = try c.decodeIfPresent(Float.self, forKey: .rmsNormEps) ?? 1e-6
+        ropeTheta = try c.decodeIfPresent(Float.self, forKey: .ropeTheta) ?? 10000.0
+        ropeScaling = try c.decodeIfPresent([String: StringOrNumber].self, forKey: .ropeScaling)
+        ropeParameters = try c.decodeIfPresent([String: StringOrNumber].self, forKey: .ropeParameters)
+        attentionBias = try c.decodeIfPresent(Bool.self, forKey: .attentionBias) ?? false
+        normTopkProb = try c.decodeIfPresent(Bool.self, forKey: .normTopkProb) ?? true
+        tieWordEmbeddings = try c.decodeIfPresent(Bool.self, forKey: .tieWordEmbeddings) ?? false
+    }
+
     /// Total Q/K head dimension (nope + rope).
     var qHeadDim: Int { qkNopeHeadDim + qkRopeHeadDim }
 
