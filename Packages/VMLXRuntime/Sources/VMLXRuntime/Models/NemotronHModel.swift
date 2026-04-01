@@ -39,6 +39,9 @@ public struct NemotronHConfiguration: Codable, Sendable {
     var numExpertsPerTok: Int = 6
     var routedScalingFactor: Float = 2.5
     var nGroups: Int = 8
+    var nGroup: Int = 1          // MoE group routing (different from nGroups which is for Mamba)
+    var topkGroup: Int = 1       // MoE top groups to keep
+    var attentionBias: Bool = false
     var normEps: Float = 1e-5
     var ropeTheta: Float = 10000.0
     var maxPositionEmbeddings: Int = 262144
@@ -74,6 +77,9 @@ public struct NemotronHConfiguration: Codable, Sendable {
         case numExpertsPerTok = "num_experts_per_tok"
         case routedScalingFactor = "routed_scaling_factor"
         case nGroups = "n_groups"
+        case nGroup = "n_group"
+        case topkGroup = "topk_group"
+        case attentionBias = "attention_bias"
         case normEps = "norm_eps"
         case ropeTheta = "rope_theta"
         case maxPositionEmbeddings = "max_position_embeddings"
@@ -194,7 +200,7 @@ final class NemotronHMamba2Mixer: Module {
             ALog: aLog,              // [heads]
             B: bMat,                 // [B, S, groups, stateSize]
             C: cMat,                 // [B, S, groups, stateSize]
-            D: D,                    // [heads]
+            D: D.asType(xPart.dtype), // [heads] — cast to input dtype (Python: self.D.astype(hidden_states.dtype))
             dt: dtRaw,               // [B, S, heads]
             dtBias: dtBias,          // [heads]
             state: ssmState,         // [B, groups, headDim, stateSize] or nil
@@ -210,9 +216,10 @@ final class NemotronHMamba2Mixer: Module {
         let gated = silu(zReshaped) * yAll
 
         // MambaRMSNormGated: group-wise RMSNorm then multiply by learned weight.
-        // Unflatten last dim into groups of head_dim, normalize each group independently.
+        // group_size = intermediate_size / n_groups (Python nemotron_h.py:116)
+        let groupSize = (mambaNumHeads * mambaHeadDim) / nGroups
         let flat = gated.reshaped(batchSize, S, -1)
-        let grouped = flat.reshaped(batchSize * S, -1, mambaHeadDim)
+        let grouped = flat.reshaped(batchSize * S, -1, groupSize)
         let normed = MLXFast.rmsNorm(grouped, weight: MLXArray.mlxNone, eps: config.normEps)
         let normFlat = normed.reshaped(batchSize, S, -1)
         let normWeighted = norm.weight * normFlat
@@ -242,11 +249,10 @@ final class NemotronHAttention: Module {
         self.headDim = config.headDim
         self.scale = pow(Float(headDim), -0.5)
 
-        let hasBias = config.hybridOverridePattern.isEmpty  // attention_bias from config
-        _qProj.wrappedValue = Linear(config.hiddenSize, numHeads * headDim, bias: hasBias)
-        _kProj.wrappedValue = Linear(config.hiddenSize, numKVHeads * headDim, bias: hasBias)
-        _vProj.wrappedValue = Linear(config.hiddenSize, numKVHeads * headDim, bias: hasBias)
-        _oProj.wrappedValue = Linear(numHeads * headDim, config.hiddenSize, bias: hasBias)
+        _qProj.wrappedValue = Linear(config.hiddenSize, numHeads * headDim, bias: config.attentionBias)
+        _kProj.wrappedValue = Linear(config.hiddenSize, numKVHeads * headDim, bias: config.attentionBias)
+        _vProj.wrappedValue = Linear(config.hiddenSize, numKVHeads * headDim, bias: config.attentionBias)
+        _oProj.wrappedValue = Linear(numHeads * headDim, config.hiddenSize, bias: config.attentionBias)
 
         // NemotronH attention has NO RoPE — positions come from SSM blocks
         self.rope = RoPE(
@@ -326,38 +332,35 @@ final class NemotronHMoE: Module {
 
     func callAsFunction(_ x: MLXArray) -> MLXArray {
         let origShape = x.shape
-        var flat = x.reshaped(-1, origShape.last!)
+        let flat = x.reshaped(-1, origShape.last!)
 
-        // Latent projection (120B Super variant)
-        let latentInput: MLXArray
-        if let proj = fc1LatentProj {
-            latentInput = proj(flat)
-        } else {
-            latentInput = flat
-        }
-
-        // Gate routing: sigmoid activation (NemotronH uses sigmoid, NOT softmax)
-        var scores = sigmoid(gate(latentInput.asType(.float32)))
+        // Gate routes on FULL hidden state BEFORE any latent projection
+        // (Python: inds, scores = self.gate(x) — gate sees full hidden_size)
+        var scores = sigmoid(gate(flat.asType(.float32)))
         scores = scores + eCorrBias
 
         let k = numExpertsPerTok
         let allIndices = argPartition(scores, kth: scores.dim(-1) - k, axis: -1)
         let topIndices = allIndices[0..., (-k)...]
         let topScores = takeAlong(scores, topIndices, axis: -1)
-        // Normalize top-k scores
-        let weights = topScores / topScores.sum(axis: -1, keepDims: true)
-
-        // Routed experts
-        let expertOut = switchMlp(latentInput, indices: topIndices)
+        let weights = topScores / (topScores.sum(axis: -1, keepDims: true) + 1e-20)
         let scaledWeights = weights * routedScalingFactor
+
+        // Latent projection AFTER gate (120B Super: compress for experts)
+        let expertInput: MLXArray
+        if let proj = fc1LatentProj {
+            expertInput = proj(flat)
+        } else {
+            expertInput = flat
+        }
+
+        let expertOut = switchMlp(expertInput, indices: topIndices)
         var routedOut = (expertOut * scaledWeights.expandedDimensions(axis: -1)).sum(axis: 1)
 
-        // Latent back-projection (120B Super variant)
         if let proj = fc2LatentProj {
             routedOut = proj(routedOut)
         }
 
-        // Shared expert (operates on original hidden dim)
         let sharedOut = sharedExperts(flat)
 
         return (routedOut + sharedOut).reshaped(origShape)

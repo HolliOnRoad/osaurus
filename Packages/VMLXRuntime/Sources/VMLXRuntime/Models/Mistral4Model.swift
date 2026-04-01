@@ -245,7 +245,7 @@ class Mistral4YarnRoPE: Module, OffsetLayer, ArrayOffsetLayer {
             x = _mscale * x
         }
         return MLXFast.RoPE(
-            x, dimensions: dimensions, traditional: true,  // interleaved RoPE: rope_interleave=True maps to traditional=True in MLX
+            x, dimensions: dimensions, traditional: false,  // interleaved RoPE: Mistral 4 uses traditional=False (GPT-NeoX style)
             base: nil, scale: 1.0, offset: offset, freqs: _freqs
         )
     }
@@ -256,7 +256,7 @@ class Mistral4YarnRoPE: Module, OffsetLayer, ArrayOffsetLayer {
             x = _mscale * x
         }
         return MLXFast.RoPE(
-            x, dimensions: dimensions, traditional: true,
+            x, dimensions: dimensions, traditional: false,
             base: nil, scale: 1.0, offset: offset, freqs: _freqs
         )
     }
