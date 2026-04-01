@@ -151,111 +151,65 @@ final class NemotronHMamba2Mixer: Module {
     }
 
     func callAsFunction(_ x: MLXArray, cache: VMLXMambaCache? = nil) -> MLXArray {
-        let B = x.dim(0)
+        let batchSize = x.dim(0)
         let S = x.dim(1)
 
-        // Project input: [B, S, hiddenSize] → [B, S, inProjSize]
+        // Project: [B, S, hidden] → [B, S, z + xBC + dt]
         let projected = inProj(x)
 
-        // Split into z (gate), xBC (conv input), dt (time step)
         let zSize = mambaNumHeads * mambaHeadDim
-        let xBCSize = convDim  // x + B + C
+        let xBCSize = convDim
         let dtSize = mambaNumHeads
 
         let z = projected[0..., 0..., ..<zSize]
         let xBC = projected[0..., 0..., zSize..<(zSize + xBCSize)]
-        let dt = projected[0..., 0..., (zSize + xBCSize)..<(zSize + xBCSize + dtSize)]
+        let dtRaw = projected[0..., 0..., (zSize + xBCSize)..<(zSize + xBCSize + dtSize)]
 
         // Conv1d with causal state
         let convState: MLXArray
         if let cached = cache?[0] {
             convState = cached
         } else {
-            convState = MLXArray.zeros([B, config.convKernel - 1, convDim], dtype: x.dtype)
+            convState = MLXArray.zeros([batchSize, config.convKernel - 1, convDim], dtype: x.dtype)
         }
-
         let convInput = concatenated([convState, xBC], axis: 1)
         if let cache {
             cache[0] = convInput[0..., (-(config.convKernel - 1))...]
         }
-
         let convOut = silu(conv1d(convInput))
-        // convOut: [B, S, convDim]
 
-        // Split conv output into x, B_mat, C_mat
+        // Split conv output: x [B,S,heads,headDim], B [B,S,groups,stateSize], C [B,S,groups,stateSize]
         let xSize = mambaNumHeads * mambaHeadDim
         let bcSize = nGroups * ssmStateSize
-        let xPart = convOut[0..., 0..., ..<xSize]
-            .reshaped(B, S, mambaNumHeads, mambaHeadDim)
-        let bMat = convOut[0..., 0..., xSize..<(xSize + bcSize)]
-            .reshaped(B, S, nGroups, ssmStateSize)
-        let cMat = convOut[0..., 0..., (xSize + bcSize)...]
-            .reshaped(B, S, nGroups, ssmStateSize)
+        let xPart = convOut[0..., 0..., ..<xSize].reshaped(batchSize, S, mambaNumHeads, mambaHeadDim)
+        let bMat = convOut[0..., 0..., xSize..<(xSize + bcSize)].reshaped(batchSize, S, nGroups, ssmStateSize)
+        let cMat = convOut[0..., 0..., (xSize + bcSize)...].reshaped(batchSize, S, nGroups, ssmStateSize)
 
-        // Time step: softplus(dt + dt_bias)
-        let dtSoft = log(1.0 + exp(dt + dtBias))
-            .reshaped(B, S, mambaNumHeads, 1)
+        // SSM state from cache
+        let ssmState: MLXArray? = cache?[1]
 
-        // A: negative exp of A_log (decay)
-        let A = -exp(aLog).reshaped(1, 1, mambaNumHeads, 1)
-
-        // Discrete A: exp(A * dt)
-        let dA = exp(A * dtSoft)  // [B, S, heads, 1]
-
-        // Expand B/C for grouped heads: nGroups → mambaNumHeads
-        let headsPerGroup = mambaNumHeads / nGroups
-        let bExpanded: MLXArray
-        let cExpanded: MLXArray
-        if headsPerGroup > 1 {
-            // Repeat each group headsPerGroup times along axis 2
-            // [B, S, nGroups, stateSize] → [B, S, mambaNumHeads, stateSize]
-            bExpanded = MLX.repeated(bMat, count: headsPerGroup, axis: 2)
-            cExpanded = MLX.repeated(cMat, count: headsPerGroup, axis: 2)
-        } else {
-            bExpanded = bMat
-            cExpanded = cMat
-        }
-
-        // SSM scan (sequential per timestep)
-        var ssmState: MLXArray
-        if let cached = cache?[1] {
-            ssmState = cached  // [B, heads, headDim, stateSize]
-        } else {
-            ssmState = MLXArray.zeros([B, mambaNumHeads, mambaHeadDim, ssmStateSize], dtype: x.dtype)
-        }
-
-        var outputs: [MLXArray] = []
-        for t in 0..<S {
-            // Slice timestep t: [B, 1, dim] → [B, dim]
-            let xt = xPart[0..., t..<(t+1), 0..., 0...].squeezed(axis: 1)    // [B, heads, headDim]
-            let bt = bExpanded[0..., t..<(t+1), 0..., 0...].squeezed(axis: 1) // [B, heads, stateSize]
-            let ct = cExpanded[0..., t..<(t+1), 0..., 0...].squeezed(axis: 1) // [B, heads, stateSize]
-            let dAt = dA[0..., t..<(t+1), 0..., 0...].squeezed(axis: 1)       // [B, heads, 1]
-
-            // state[b,h,d,n] = dA[b,h,1] * state[b,h,d,n] + x[b,h,d] * B[b,h,n]
-            // outer product: [B,h,d,1] * [B,h,1,n] → [B,h,d,n]
-            let xOuter = xt.expandedDimensions(axis: -1)  // [B, h, d, 1]
-            let bOuter = bt.expandedDimensions(axis: -2)   // [B, h, 1, n]
-            ssmState = dAt.expandedDimensions(axis: -1) * ssmState + xOuter * bOuter
-
-            // y[b,h,d] = sum_n(state[b,h,d,n] * C[b,h,n]) + D[h] * x[b,h,d]
-            let cOuter = ct.expandedDimensions(axis: -2)   // [B, h, 1, n]
-            let y = (ssmState * cOuter).sum(axis: -1) + D.reshaped(1, mambaNumHeads, 1) * xt
-            outputs.append(y.expandedDimensions(axis: 1))  // [B, 1, heads, headDim]
-        }
+        // Use SSD parallel scan (prefill) or Metal kernel (single-token decode)
+        let (yAll, nextState) = vmlxSSMUpdate(
+            hiddenStates: xPart,     // [B, S, heads, headDim]
+            ALog: aLog,              // [heads]
+            B: bMat,                 // [B, S, groups, stateSize]
+            C: cMat,                 // [B, S, groups, stateSize]
+            D: D,                    // [heads]
+            dt: dtRaw,               // [B, S, heads]
+            dtBias: dtBias,          // [heads]
+            state: ssmState,         // [B, groups, headDim, stateSize] or nil
+            timeStepLimit: (config.timeStepMin, config.timeStepMax)
+        )
 
         if let cache {
-            cache[1] = ssmState
+            cache[1] = nextState
         }
 
-        let yAll = concatenated(outputs, axis: 1)  // [B, S, heads, headDim]
-
         // Gate with z and normalize
-        let zReshaped = z.reshaped(B, S, mambaNumHeads, mambaHeadDim)
+        let zReshaped = z.reshaped(batchSize, S, mambaNumHeads, mambaHeadDim)
         let gated = yAll * silu(zReshaped)
 
-        // Output projection
-        let normed = norm(gated.reshaped(B, S, -1))
+        let normed = norm(gated.reshaped(batchSize, S, -1))
         return outProj(normed)
     }
 }
