@@ -307,10 +307,18 @@ public struct ModelDetector: Sendable {
             layerTypes = nil
         }
 
-        // SSM detection: jang_config.json OR config.json layer_types containing non-attention layers
+        // SSM detection: jang_config.json OR config.json layer_types OR hybrid_override_pattern
         var hasSSM = jangArch?.hasSSM ?? false
         if !hasSSM, let lt = layerTypes {
             hasSSM = lt.contains { $0 != "full_attention" }
+        }
+        // Nemotron-H: hybrid_override_pattern with 'M' (Mamba) layers
+        if !hasSSM {
+            let hop = hfConfig?["hybrid_override_pattern"] as? String
+                ?? (hfConfig?["text_config"] as? [String: Any])?["hybrid_override_pattern"] as? String
+            if let hop, hop.contains("M") {
+                hasSSM = true
+            }
         }
 
         // MoE detection

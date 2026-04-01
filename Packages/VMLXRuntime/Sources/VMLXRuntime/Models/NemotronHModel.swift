@@ -321,22 +321,22 @@ final class NemotronHAttention: Module {
 // MARK: - MoE MLP
 
 final class NemotronHMoE: Module {
-    let nRoutedExperts: Int
     let numExpertsPerTok: Int
     let routedScalingFactor: Float
-    let normTopkProb: Bool
 
-    @ModuleInfo(key: "gate") var gate: NemotronHMoEGate
+    // Gate: Linear auto-quantized by vmlxLoadWeights. Weight path = mixer.gate.weight/scales/biases.
+    // QuantizedLinear.callAsFunction dequantizes on the fly — routing stays precise.
+    @ModuleInfo(key: "gate") var gate: Linear
+    @ModuleInfo(key: "gate.e_score_correction_bias") var eCorrBias: MLXArray
     @ModuleInfo(key: "switch_mlp") var switchMlp: NemotronHSwitchMLP
     @ModuleInfo(key: "shared_experts") var sharedExperts: NemotronHSharedExpert
 
     init(_ config: NemotronHConfiguration) {
-        self.nRoutedExperts = config.nRoutedExperts
         self.numExpertsPerTok = config.numExpertsPerTok
         self.routedScalingFactor = config.routedScalingFactor
-        self.normTopkProb = config.normTopkProb
 
-        _gate.wrappedValue = NemotronHMoEGate(config)
+        _gate.wrappedValue = Linear(config.hiddenSize, config.nRoutedExperts, bias: false)
+        _eCorrBias.wrappedValue = MLXArray.zeros([config.nRoutedExperts])
         _switchMlp.wrappedValue = NemotronHSwitchMLP(config)
         _sharedExperts.wrappedValue = NemotronHSharedExpert(config)
 
@@ -347,11 +347,17 @@ final class NemotronHMoE: Module {
         let origShape = x.shape
         let flat = x.reshaped(-1, origShape.last!)
 
-        // Gate routing
-        let (indices, weights) = gate(flat)
+        // Gate routing in float32 for precision
+        var scores = gate(flat.asType(.float32))
+        scores = scores + eCorrBias
 
-        // Routed experts (ReLU² activation, up_proj + down_proj only)
-        let expertOut = switchMlp(flat, indices: indices)
+        let k = numExpertsPerTok
+        let topIndices = argPartition(scores, kth: scores.dim(-1) - k, axis: -1)[0..., (-k)...]
+        let topScores = take(scores, topIndices, axis: -1)
+        let weights = softmax(topScores, axis: -1, precise: true)
+
+        // Routed experts
+        let expertOut = switchMlp(flat, indices: topIndices)
         let scaledWeights = weights * routedScalingFactor
         let routedOut = (expertOut * scaledWeights.expandedDimensions(axis: -1)).sum(axis: 1)
 
@@ -359,45 +365,6 @@ final class NemotronHMoE: Module {
         let sharedOut = sharedExperts(flat)
 
         return (routedOut + sharedOut).reshaped(origShape)
-    }
-}
-
-/// MoE gate with e_score_correction_bias.
-final class NemotronHMoEGate: Module {
-    let numExpertsPerTok: Int
-    let normTopkProb: Bool
-
-    @ModuleInfo var weight: MLXArray
-    @ModuleInfo(key: "e_score_correction_bias") var eCorrBias: MLXArray
-
-    init(_ config: NemotronHConfiguration) {
-        self.numExpertsPerTok = config.numExpertsPerTok
-        self.normTopkProb = config.normTopkProb
-        _weight.wrappedValue = MLXArray.zeros([config.nRoutedExperts, config.hiddenSize])
-        _eCorrBias.wrappedValue = MLXArray.zeros([config.nRoutedExperts])
-
-        super.init()
-    }
-
-    func callAsFunction(_ x: MLXArray) -> (indices: MLXArray, weights: MLXArray) {
-        // Router scores with correction bias
-        var scores = matmul(x.asType(.float32), weight.transposed())
-        scores = scores + eCorrBias
-
-        // Top-k selection
-        let k = numExpertsPerTok
-        let topIndices = argPartition(scores, kth: scores.dim(-1) - k, axis: -1)[0..., (-k)...]
-        let topScores = take(scores, topIndices, axis: -1)
-
-        // Softmax normalization on selected experts
-        let weights = softmax(topScores, axis: -1, precise: true)
-
-        return (topIndices, weights)
-    }
-
-    /// Keep gate weight as float (not quantized) for routing precision.
-    func toQuantized(groupSize _: Int, bits _: Int) -> Module {
-        self
     }
 }
 
