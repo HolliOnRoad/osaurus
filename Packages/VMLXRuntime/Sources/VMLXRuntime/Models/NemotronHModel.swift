@@ -323,36 +323,50 @@ final class NemotronHAttention: Module {
 final class NemotronHMoE: Module {
     let numExpertsPerTok: Int
     let routedScalingFactor: Float
+    let hasLatentProj: Bool
 
-    // Gate is a Linear — its weight path is "gate.weight" which matches safetensors key.
-    // vmlxLoadWeights auto-quantizes it to QuantizedLinear when .scales exist.
     @ModuleInfo(key: "gate") var gate: Linear
     @ModuleInfo(key: "switch_mlp") var switchMlp: NemotronHSwitchMLP
     @ModuleInfo(key: "shared_experts") var sharedExperts: NemotronHSharedExpert
-
-    // e_score_correction_bias lives at gate.e_score_correction_bias in weights.
-    // sanitize() remaps it to e_score_correction_bias (on the MoE module) since
-    // gate is a Linear and can't hold child parameters.
     @ModuleInfo(key: "e_score_correction_bias") var eCorrBias: MLXArray
+
+    // Latent projections (Nemotron-3-Super 120B only, not Cascade 30B)
+    @ModuleInfo(key: "fc1_latent_proj") var fc1LatentProj: Linear?
+    @ModuleInfo(key: "fc2_latent_proj") var fc2LatentProj: Linear?
 
     init(_ config: NemotronHConfiguration) {
         self.numExpertsPerTok = config.numExpertsPerTok
         self.routedScalingFactor = config.routedScalingFactor
+        // Latent proj exists when moeIntermediateSize != intermediateSize
+        self.hasLatentProj = config.moeIntermediateSize != config.intermediateSize
 
         _gate.wrappedValue = Linear(config.hiddenSize, config.nRoutedExperts, bias: false)
         _eCorrBias.wrappedValue = MLXArray.zeros([config.nRoutedExperts])
         _switchMlp.wrappedValue = NemotronHSwitchMLP(config)
         _sharedExperts.wrappedValue = NemotronHSharedExpert(config)
 
+        if hasLatentProj {
+            _fc1LatentProj.wrappedValue = Linear(config.hiddenSize, config.moeIntermediateSize, bias: false)
+            _fc2LatentProj.wrappedValue = Linear(config.moeIntermediateSize, config.hiddenSize, bias: false)
+        }
+
         super.init()
     }
 
     func callAsFunction(_ x: MLXArray) -> MLXArray {
         let origShape = x.shape
-        let flat = x.reshaped(-1, origShape.last!)
+        var flat = x.reshaped(-1, origShape.last!)
+
+        // Latent projection (120B Super variant)
+        let latentInput: MLXArray
+        if let proj = fc1LatentProj {
+            latentInput = proj(flat)
+        } else {
+            latentInput = flat
+        }
 
         // Gate routing in float32 for precision
-        var scores = gate(flat.asType(.float32))
+        var scores = gate(latentInput.asType(.float32))
         scores = scores + eCorrBias
 
         let k = numExpertsPerTok
@@ -361,11 +375,16 @@ final class NemotronHMoE: Module {
         let weights = softmax(topScores, axis: -1, precise: true)
 
         // Routed experts
-        let expertOut = switchMlp(flat, indices: topIndices)
+        let expertOut = switchMlp(latentInput, indices: topIndices)
         let scaledWeights = weights * routedScalingFactor
-        let routedOut = (expertOut * scaledWeights.expandedDimensions(axis: -1)).sum(axis: 1)
+        var routedOut = (expertOut * scaledWeights.expandedDimensions(axis: -1)).sum(axis: 1)
 
-        // Shared expert
+        // Latent back-projection (120B Super variant)
+        if let proj = fc2LatentProj {
+            routedOut = proj(routedOut)
+        }
+
+        // Shared expert (operates on original hidden dim)
         let sharedOut = sharedExperts(flat)
 
         return (routedOut + sharedOut).reshaped(origShape)
@@ -564,8 +583,9 @@ extension NemotronHModel: VMLXSanitizable {
                 newKey = newKey.replacingOccurrences(of: ".mixer.gate.e_score_correction_bias",
                                                      with: ".mixer.e_score_correction_bias")
             }
-            // Skip vision weights
+            // Skip vision weights and multi-token prediction training artifacts
             if newKey.hasPrefix("vision_") || newKey.contains(".vision.") { continue }
+            if newKey.hasPrefix("mtp.") || newKey.contains(".mtp.") { continue }
             newWeights[newKey] = value
         }
         return newWeights
