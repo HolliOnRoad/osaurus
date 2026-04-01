@@ -722,6 +722,7 @@ public actor VMLXRuntimeActor {
 
                     if needSSMSnapshot {
                         // Phase 1: prefill tokens[0..<storeTokensCount]
+                        let _p1Start = CFAbsoluteTimeGetCurrent()
                         _chunkedPrefill(0, storeTokensCount)
 
                         // Capture SSM state at EXACT storeTokens boundary
@@ -731,9 +732,13 @@ public actor VMLXRuntimeActor {
                         }
                         _vmlxLog2("[Gen] SSM snapshot: \(prefillSSMSnapshot!.count) layers at offset \(storeTokensCount)/\(totalPrefillTokens)")
 
+                        _vmlxLog2("[Gen] Phase 1 done: \(String(format: "%.1f", (CFAbsoluteTimeGetCurrent()-_p1Start)*1000))ms for \(storeTokensCount) tokens")
+
                         // Phase 2: prefill remaining tokens (last cacheKey + genPrompt suffix)
                         if storeTokensCount < totalPrefillTokens - 1 {
+                            let _p2Start = CFAbsoluteTimeGetCurrent()
                             _chunkedPrefill(storeTokensCount, totalPrefillTokens - 1)
+                            _vmlxLog2("[Gen] Phase 2 done: \(String(format: "%.1f", (CFAbsoluteTimeGetCurrent()-_p2Start)*1000))ms for \(totalPrefillTokens - 1 - storeTokensCount) tokens")
                         }
                     } else {
                         // Standard single-phase prefill
