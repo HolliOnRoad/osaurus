@@ -379,8 +379,10 @@ final class NemotronHMoE: Module {
         scores = scores + eCorrBias
 
         let k = numExpertsPerTok
-        let topIndices = argPartition(scores, kth: scores.dim(-1) - k, axis: -1)[0..., (-k)...]
-        let topScores = take(scores, topIndices, axis: -1)
+        let allIndices = argPartition(scores, kth: scores.dim(-1) - k, axis: -1)
+        let topIndices = allIndices[0..., (-k)...]
+        // Gather top-k scores using the selected indices
+        let topScores = takeAlong(scores, topIndices, axis: -1)
         let weights = softmax(topScores, axis: -1, precise: true)
 
         // Routed experts
@@ -539,11 +541,22 @@ public class NemotronHModel: Module {
         let attnCache = firstAttnIdx.flatMap { cache?[$0] as? VMLXKVCacheSimple }
         let mask = vmlxCreateAttentionMask(h: h, cache: attnCache)
 
+        let hop = config.hybridOverridePattern
         for (i, layer) in layers.enumerated() {
+            let lt = i < hop.count ? String(hop[hop.index(hop.startIndex, offsetBy: i)]) : "?"
+            if i < 5 {
+                let line = "[NemotronH] Layer \(i)/\(layers.count) type=\(lt) h=\(h.shape)\n"
+                if let fh = FileHandle(forWritingAtPath: "/tmp/vmlx_debug.log") {
+                    fh.seekToEndOfFile(); fh.write(line.data(using: .utf8)!); fh.closeFile()
+                }
+            }
             h = layer(h, mask: mask, cache: cache?[i])
-            // Materialize per-layer to catch errors early and free intermediates
-            if i < 3 || i % 10 == 0 {
-                MLX.eval(h)
+            MLX.eval(h)
+            if i < 5 {
+                let line = "[NemotronH] Layer \(i) DONE h=\(h.shape)\n"
+                if let fh = FileHandle(forWritingAtPath: "/tmp/vmlx_debug.log") {
+                    fh.seekToEndOfFile(); fh.write(line.data(using: .utf8)!); fh.closeFile()
+                }
             }
         }
 
