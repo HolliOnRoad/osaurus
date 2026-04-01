@@ -720,31 +720,21 @@ public actor VMLXRuntimeActor {
                         }
                     }
 
-                    if needSSMSnapshot {
-                        // Phase 1: prefill tokens[0..<storeTokensCount]
-                        let _p1Start = CFAbsoluteTimeGetCurrent()
-                        _chunkedPrefill(0, storeTokensCount)
+                    // Single-pass prefill for all models (including hybrid SSM).
+                    // SSM snapshot is captured AFTER full prefill — slightly less precise
+                    // than mid-prefill capture but avoids the expensive two-phase state
+                    // propagation that causes 100s+ hangs on Mamba2/SSD models.
+                    if totalPrefillTokens > 1 {
+                        _chunkedPrefill(0, totalPrefillTokens - 1)
+                    }
 
-                        // Capture SSM state at EXACT storeTokens boundary
+                    // Capture SSM snapshot after prefill for hybrid cache storage
+                    if needSSMSnapshot {
                         prefillSSMSnapshot = cache.compactMap { c -> [MLXArray]? in
                             guard let mamba = c as? VMLXMambaCache else { return nil }
                             return mamba.state.map { $0[.ellipsis] }
                         }
-                        _vmlxLog2("[Gen] SSM snapshot: \(prefillSSMSnapshot!.count) layers at offset \(storeTokensCount)/\(totalPrefillTokens)")
-
-                        _vmlxLog2("[Gen] Phase 1 done: \(String(format: "%.1f", (CFAbsoluteTimeGetCurrent()-_p1Start)*1000))ms for \(storeTokensCount) tokens")
-
-                        // Phase 2: prefill remaining tokens (last cacheKey + genPrompt suffix)
-                        if storeTokensCount < totalPrefillTokens - 1 {
-                            let _p2Start = CFAbsoluteTimeGetCurrent()
-                            _chunkedPrefill(storeTokensCount, totalPrefillTokens - 1)
-                            _vmlxLog2("[Gen] Phase 2 done: \(String(format: "%.1f", (CFAbsoluteTimeGetCurrent()-_p2Start)*1000))ms for \(totalPrefillTokens - 1 - storeTokensCount) tokens")
-                        }
-                    } else {
-                        // Standard single-phase prefill
-                        if totalPrefillTokens > 1 {
-                            _chunkedPrefill(0, totalPrefillTokens - 1)
-                        }
+                        _vmlxLog2("[Gen] SSM snapshot: \(prefillSSMSnapshot!.count) layers (post-prefill)")
                     }
 
                     // Final token → logits for first generated token
