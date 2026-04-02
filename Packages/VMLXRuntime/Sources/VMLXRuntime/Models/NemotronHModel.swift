@@ -589,7 +589,15 @@ extension NemotronHModel: VMLXSanitizable {
             // Skip vision weights and multi-token prediction training artifacts
             if newKey.hasPrefix("vision_") || newKey.contains(".vision.") { continue }
             if newKey.hasPrefix("mtp.") || newKey.contains(".mtp.") { continue }
-            newWeights[newKey] = value
+
+            // Conv1d weight: HF stores as [outCh, 1, kernelSize] for depthwise,
+            // but MLX Conv1d expects [outCh, kernelSize, inCh/groups].
+            // Transpose axes 1 and 2 for correct convolution.
+            var fixedValue = value
+            if newKey.hasSuffix("conv1d.weight") && value.ndim == 3 && value.dim(1) == 1 {
+                fixedValue = value.transposed(0, 2, 1)
+            }
+            newWeights[newKey] = fixedValue
         }
         return newWeights
     }

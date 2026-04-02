@@ -203,7 +203,7 @@ final class Gemma4Router: Module {
 
         let topKIndices = argPartition(probs, kth: numExperts - topK, axis: -1)[
             .ellipsis, (numExperts - topK)...]
-        let topKWeights = take(probs, topKIndices, axis: -1)
+        let topKWeights = takeAlong(probs, topKIndices, axis: -1)
         let weightSum = topKWeights.sum(axis: -1, keepDims: true)
         let normalizedWeights = topKWeights / (weightSum + 1e-8)
 
@@ -238,6 +238,7 @@ final class Gemma4DecoderLayer: Module {
             numExperts: config.numExperts,
             activation: { geluApproximate($0) },
             isSilu: false,
+            isGelu: true,
             bias: false
         )
         _router.wrappedValue = Gemma4Router(config)
@@ -256,23 +257,33 @@ final class Gemma4DecoderLayer: Module {
     }
 
     func callAsFunction(_ x: MLXArray, mask: MLXFast.ScaledDotProductAttentionMaskMode, cache: VMLXKVCache?) -> MLXArray {
-        let scalar = layerScalar.asType(x.dtype)
         var h = x
 
-        // Attention
+        // 1. Attention block
         let attnOut = selfAttn(inputLayernorm(h), mask: mask, cache: cache)
-        h = h + postAttentionLayernorm(attnOut) * scalar
+        h = h + postAttentionLayernorm(attnOut)
 
-        // Dense MLP
+        // 2. Feedforward: dense MLP and MoE are PARALLEL branches
+        let residual = h
         let mlpOut = mlp(preFeedforwardLayernorm(h))
-        h = h + postFeedforwardLayernorm(mlpOut) * scalar
 
-        // MoE
-        let moeIn = preFeedforwardLayernorm2(h)
-        let (expertIndices, expertWeights) = router(moeIn)
+        // Path 1: dense MLP → post_feedforward_layernorm_1
+        let path1 = postFeedforwardLayernorm1(mlpOut)
+
+        // Path 2: router on residual → experts → post_feedforward_layernorm_2
+        let flatResidual = residual.reshaped(-1, residual.dim(-1))
+        let (expertIndices, expertWeights) = router(flatResidual)
+        let moeIn = preFeedforwardLayernorm2(flatResidual)
         let moeOut = switchMLP(moeIn, expertIndices)
         let weightedMoeOut = (moeOut * expertWeights.expandedDimensions(axis: -1)).sum(axis: -2)
-        h = h + postFeedforwardLayernorm2(weightedMoeOut) * scalar
+        let path2 = postFeedforwardLayernorm2(weightedMoeOut.reshaped(residual.shape))
+
+        // Combine parallel paths → post_feedforward_layernorm → residual add
+        let combined = postFeedforwardLayernorm(path1 + path2)
+        h = residual + combined
+
+        // layer_scalar applied to entire layer delta
+        h = h * layerScalar.asType(h.dtype)
 
         return h
     }
