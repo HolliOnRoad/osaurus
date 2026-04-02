@@ -316,6 +316,36 @@ struct JangLoaderTests {
         #expect(tq?.isMLA == true)
     }
 
+    @Test("buildTQConfig keeps Nemotron H and Cascade KV split")
+    func buildTQConfigNemotronPattern() {
+        let config = JangConfig(
+            quantization: JangQuantization(bitWidthsUsed: [2, 4, 6])
+        )
+
+        let pattern = parseHybridPattern("MEMEM*")
+        let tq = JangLoader.buildTQConfig(from: config, layerPattern: pattern)
+
+        #expect(tq != nil)
+        #expect(tq?.keyBits(forLayer: 0, totalLayers: 6) == nil)  // Mamba / SSM
+        #expect(tq?.keyBits(forLayer: 1, totalLayers: 6) == nil)  // Expert-only
+        #expect(tq?.keyBits(forLayer: 5, totalLayers: 6) != nil)  // Attention
+    }
+
+    @Test("buildTQConfig keeps Qwen 3.5 linear-vs-full attention split")
+    func buildTQConfigQwenPattern() {
+        let config = JangConfig(
+            quantization: JangQuantization(bitWidthsUsed: [2, 4, 6])
+        )
+
+        let pattern: [LayerType] = [.ssm, .ssm, .ssm, .attention, .ssm, .ssm, .ssm, .attention]
+        let tq = JangLoader.buildTQConfig(from: config, layerPattern: pattern)
+
+        #expect(tq != nil)
+        #expect(tq?.keyBits(forLayer: 0, totalLayers: 8) == nil)   // linear attention / SSM
+        #expect(tq?.keyBits(forLayer: 3, totalLayers: 8) != nil)   // full attention
+        #expect(tq?.keyBits(forLayer: 4, totalLayers: 8) == nil)   // linear attention / SSM
+    }
+
     // MARK: - Errors
 
     @Test("Config not found error")

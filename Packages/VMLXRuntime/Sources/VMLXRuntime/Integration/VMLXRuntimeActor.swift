@@ -562,11 +562,28 @@ public actor VMLXRuntimeActor {
                     let kvBitsStr = self.scheduler.config.kvCacheQuantization
                     let kvBits: Int? = kvBitsStr.hasPrefix("q") ? Int(kvBitsStr.dropFirst()) : nil
                     let kvGroupSize = self.scheduler.config.kvCacheGroupSize
-                    let tqEnabled = self.scheduler.config.enableTurboQuant
+                    let tqConfig = self.scheduler.config.enableTurboQuant ? container.turboQuantConfig : nil
+                    let tqEnabled = tqConfig != nil
                     _vmlxLog2("[Gen] Config: kvQuant=\(kvBitsStr) tq=\(tqEnabled) hybrid=\(container.isHybrid)")
                     let cache = container.newCache(kvBits: kvBits, kvGroupSize: kvGroupSize)
                     var inputTokens = MLXArray()
                     var cachedTokenCount = 0
+                    var restoredStoreBoundary = 0
+                    var fetchedHybridForStore: HybridCache? = nil
+
+                    func _makeTQState(
+                        encodedKeys: EncodedKeys,
+                        encodedValues: EncodedValues
+                    ) -> TurboQuantEncoder.EncoderState {
+                        let dim = encodedKeys.shape.last ?? 128
+                        let keyBits = encodedKeys.indexBits + 1
+                        return TurboQuantEncoder.EncoderState(
+                            dim: dim,
+                            keyBits: keyBits,
+                            valueBits: encodedValues.indexBits,
+                            seed: encodedKeys.seed
+                        )
+                    }
 
                     func _makeTQState(for cachedHybrid: HybridCache) -> TurboQuantEncoder.EncoderState? {
                         guard
@@ -574,19 +591,11 @@ public actor VMLXRuntimeActor {
                                 if case .compressedAttention = $0 { return true }
                                 return false
                             }),
-                            case .compressedAttention(let ek, _, _) = firstTQ
+                            case .compressedAttention(let ek, let ev, _) = firstTQ
                         else {
                             return nil
                         }
-
-                        let dim = ek.shape.last ?? 128
-                        let keyBits = ek.indexBits + 1
-                        return TurboQuantEncoder.EncoderState(
-                            dim: dim,
-                            keyBits: keyBits,
-                            valueBits: ek.indexBits,
-                            seed: ek.seed
-                        )
+                        return _makeTQState(encodedKeys: ek, encodedValues: ev)
                     }
 
                     @discardableResult
@@ -666,6 +675,26 @@ public actor VMLXRuntimeActor {
                         }
                     }
 
+                    func _compressedPrefixEntry(
+                        layerIndex: Int,
+                        boundary: Int,
+                        from cachedHybrid: HybridCache?
+                    ) -> LayerCacheEntry? {
+                        guard boundary > 0,
+                              let cachedHybrid,
+                              layerIndex < cachedHybrid.layers.count else {
+                            return nil
+                        }
+                        guard case .compressedAttention(let encodedKeys, let encodedValues, _) = cachedHybrid.layers[layerIndex] else {
+                            return nil
+                        }
+                        return TurboQuantLayerCache.sliceCompressedAttention(
+                            encodedKeys,
+                            encodedValues,
+                            range: 0..<boundary
+                        )
+                    }
+
                     _vmlxLog2("[Gen] Fetch cache: \(cacheKeyTokens.count) cacheKeyTokens, \(tokens.count) total tokens, genPromptLen=\(genPromptLen)")
                     let fetchResult = self.scheduler.cache.fetch(tokens: cacheKeyTokens)
                     switch fetchResult {
@@ -704,6 +733,8 @@ public actor VMLXRuntimeActor {
 
                         if canUseHit {
                             let restoredLayers = _restoreCachedHybrid(cachedHybrid)
+                            restoredStoreBoundary = restoredBoundary
+                            fetchedHybridForStore = cachedHybrid
                             // Log cache state after restore for debugging
                             let cacheType = cache.first.map { String(describing: type(of: $0)) } ?? "unknown"
                             let restoredOffset = (cache.first as? VMLXBaseKVCache)?.offset ?? -1
@@ -776,6 +807,8 @@ public actor VMLXRuntimeActor {
                                     ) {
                                         let restoredLayers = _restoreCachedHybrid(attentionCache)
                                         let injectedLayers = _injectSSMCheckpoint(checkpoint)
+                                        restoredStoreBoundary = recoveryBoundary
+                                        fetchedHybridForStore = attentionCache
                                         eval(cache)
                                         Memory.clearCache()
 
@@ -803,6 +836,10 @@ public actor VMLXRuntimeActor {
                             // Restore attention KV and prefill only remaining + gen_prompt_len.
                             _vmlxLog2("[Gen] Cache PARTIAL HIT (non-hybrid): \(attentionCache.layerCount) layers, \(remaining.count) remaining, detail=\(detail)")
                             _ = _restoreCachedHybrid(attentionCache)
+                            restoredStoreBoundary = remaining.isEmpty
+                                ? max(0, cacheKeyTokens.count - 1)
+                                : cacheKeyTokens.count - remaining.count
+                            fetchedHybridForStore = attentionCache
                             if remaining.isEmpty {
                                 _configureCachedPrefixState(
                                     restoredBoundary: max(0, cacheKeyTokens.count - 1),
@@ -910,7 +947,7 @@ public actor VMLXRuntimeActor {
                     // cache store. Storing TQ-decoded (lossy) data across turns causes quality
                     // degradation because the lossy reconstruction compounds through layers.
                     var preTQCacheSnapshot: [(keys: MLXArray, values: MLXArray)]? = nil
-                    if tqEnabled && cachedTokenCount == 0 {
+                    if let tqConfig, tqEnabled && cachedTokenCount == 0 {
                         // Snapshot original float KV for cross-turn storage
                         var snapshot: [(keys: MLXArray, values: MLXArray)] = []
                         for c in cache {
@@ -930,20 +967,31 @@ public actor VMLXRuntimeActor {
                         // Now compress in-place for memory reduction during decode
                         let tqStart = CFAbsoluteTimeGetCurrent()
                         var tqLayers = 0
-                        for c in cache {
+                        for (layerIdx, c) in cache.enumerated() {
                             guard let kvBase = c as? VMLXBaseKVCache,
-                                  !(c is VMLXMambaCache),
-                                  kvBase.offset > TurboQuantEncoder.defaultSinkTokens else { continue }
+                                  !(c is VMLXMambaCache) else { continue }
                             let s = kvBase.state
                             guard s.count == 2 else { continue }
                             let keys = s[0]
                             let values = s[1]
-                            let dim = keys.dim(keys.ndim - 1)
-                            let state = TurboQuantEncoder.EncoderState(dim: dim, keyBits: 3, valueBits: 3, seed: 42)
-                            let ek = TurboQuantEncoder.encodeKeys(keys, state: state)
-                            let ev = TurboQuantEncoder.encodeValues(values, state: state)
-                            let dk = TurboQuantEncoder.decodeKeys(ek, state: state)
-                            let dv = TurboQuantEncoder.decodeValues(ev, state: state)
+                            guard let encodedEntry = TurboQuantLayerCache.encodeAttentionLayer(
+                                keys: keys,
+                                values: values,
+                                config: tqConfig,
+                                layerIndex: layerIdx,
+                                totalLayers: cache.count
+                            ) else {
+                                continue
+                            }
+                            guard case .compressedAttention(let encodedKeys, let encodedValues, _) = encodedEntry else {
+                                continue
+                            }
+                            let state = _makeTQState(
+                                encodedKeys: encodedKeys,
+                                encodedValues: encodedValues
+                            )
+                            let dk = TurboQuantEncoder.decodeKeys(encodedKeys, state: state)
+                            let dv = TurboQuantEncoder.decodeValues(encodedValues, state: state)
                             eval(dk, dv)
                             kvBase.state = [dk, dv]
                             tqLayers += 1
@@ -1189,27 +1237,81 @@ public actor VMLXRuntimeActor {
                             } else if let kvBase = c as? VMLXBaseKVCache {
                                 // Use pre-TQ original float if available, otherwise current state.
                                 // preTQCacheSnapshot is indexed by layerIdx (same order as cache array).
-                                let s: [MLXArray]
+                                let sourceState: [MLXArray]
                                 if let snapshot = preTQCacheSnapshot,
                                    layerIdx < snapshot.count,
                                    snapshot[layerIdx].keys.ndim > 0 {
-                                    s = [snapshot[layerIdx].keys, snapshot[layerIdx].values]
+                                    sourceState = [snapshot[layerIdx].keys, snapshot[layerIdx].values]
                                 } else {
-                                    s = kvBase.state
+                                    sourceState = kvBase.state
                                 }
-                                guard s.count == 2 else { continue }
-                                // Trim to storeTokens length (snapshot has full prefill tokens)
+                                guard sourceState.count == 2 else { continue }
+
+                                // Trim to storeTokens length (snapshot has full prefill tokens).
                                 let storeKeys: MLXArray
                                 let storeValues: MLXArray
-                                if s[0].dim(2) > targetOffset {
-                                    storeKeys = s[0][.ellipsis, ..<targetOffset, 0...]
-                                    storeValues = s[1][.ellipsis, ..<targetOffset, 0...]
+                                if sourceState[0].dim(2) > targetOffset {
+                                    storeKeys = sourceState[0][.ellipsis, ..<targetOffset, 0...]
+                                    storeValues = sourceState[1][.ellipsis, ..<targetOffset, 0...]
                                 } else {
-                                    storeKeys = s[0]
-                                    storeValues = s[1]
+                                    storeKeys = sourceState[0]
+                                    storeValues = sourceState[1]
                                 }
-                                layers.append(.attention(KVCacheLayer(
-                                    keys: storeKeys, values: storeValues, offset: targetOffset)))
+                                let floatEntry = LayerCacheEntry.attention(KVCacheLayer(
+                                    keys: storeKeys,
+                                    values: storeValues,
+                                    offset: targetOffset
+                                ))
+
+                                guard let tqConfig else {
+                                    layers.append(floatEntry)
+                                    continue
+                                }
+
+                                let reusableBoundary = min(restoredStoreBoundary, targetOffset)
+                                let prefixEntry = _compressedPrefixEntry(
+                                    layerIndex: layerIdx,
+                                    boundary: reusableBoundary,
+                                    from: fetchedHybridForStore
+                                )
+                                let prefixTokens: Int
+                                if case .compressedAttention(_, _, let offset)? = prefixEntry {
+                                    prefixTokens = offset
+                                } else {
+                                    prefixTokens = 0
+                                }
+
+                                if prefixTokens >= targetOffset, let prefixEntry {
+                                    layers.append(prefixEntry)
+                                    continue
+                                }
+
+                                let tailStart = prefixTokens
+                                guard tailStart < targetOffset else {
+                                    layers.append(floatEntry)
+                                    continue
+                                }
+
+                                let tailKeys = storeKeys[.ellipsis, tailStart..<targetOffset, 0...]
+                                let tailValues = storeValues[.ellipsis, tailStart..<targetOffset, 0...]
+                                let tailEntry = TurboQuantLayerCache.encodeAttentionLayer(
+                                    keys: tailKeys,
+                                    values: tailValues,
+                                    config: tqConfig,
+                                    layerIndex: layerIdx,
+                                    totalLayers: cache.count,
+                                    sinkTokens: tailStart == 0 ? TurboQuantEncoder.defaultSinkTokens : 0
+                                )
+
+                                if let prefixEntry,
+                                   let tailEntry,
+                                   let mergedEntry = TurboQuantLayerCache.mergeCompressedAttention([prefixEntry, tailEntry]) {
+                                    layers.append(mergedEntry)
+                                } else if let tailEntry {
+                                    layers.append(tailEntry)
+                                } else {
+                                    layers.append(floatEntry)
+                                }
                             }
                         }
                         if !layers.isEmpty {

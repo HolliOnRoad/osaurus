@@ -46,7 +46,7 @@ Replace Osaurus's `mlx-swift-lm` backend with a native Swift inference engine th
 |------|--------|
 | NemotronH | Native model class landed and recent fixes corrected Mamba2 scan, MoE routing, latent projections, and attention projection dimensions |
 | Mistral Small 4 | Native MLA + MoE path landed and recent fixes corrected config decoding and inference alignment with Python reference |
-| TurboQuant | Swift encode/decode and runtime compression path exist, but the cross-turn caching story is still conservative to avoid quality drift |
+| TurboQuant | Swift encode/decode and cache-store/fetch preservation path exist; the live runtime still uses a decode-once float cache after prefill rather than a persistent `TurboQuantKVCache` object |
 
 ### Important Current Caveats
 
@@ -54,6 +54,7 @@ Replace Osaurus's `mlx-swift-lm` backend with a native Swift inference engine th
 - Hybrid partial hits now attempt boundary-aligned SSM re-derive when attention KV exists but the matching SSM companion state is missing. The current request still full-prefills when re-derive is pending or unavailable.
 - `SSMReDeriver` is now on the live VMLX hybrid recovery path, but it is still fallback-heavy for large or unavailable checkpoints.
 - Hybrid prefill currently uses single-phase prefill plus a post-prefill SSM snapshot. Earlier two-phase checkpointing plans were backed out from the hot path after SSD/Mamba2 hangs.
+- VMLX paged cache is still a block-level prefix reconstruction layer, not a live paged runtime KV allocator.
 - Vision preprocessing and embedding cache exist; full vision encoder inference is still pending.
 - MiniMax tokenizer incompatibilities still block trustworthy text generation quality.
 - Qwen 3.5 35B JANG still needs a deeper MoE-path optimization pass. Adaptive prefill chunking is in, but the quantized expert prefill path remains the current bottleneck.
@@ -69,19 +70,24 @@ Replace Osaurus's `mlx-swift-lm` backend with a native Swift inference engine th
 - Disk L2 safetensors cache with SQLite index
 - SSM companion cache for hybrid models
 - `gen_prompt_len` stripping so cache keys ignore assistant-generation suffix tokens
+- When paged cache is off, prefix cache is now populated even if the memory tier is on
+- Paged cache and disk cache can now preserve `.compressedAttention` entries on the normal reuse path instead of always degrading them to float
 
 ### Hybrid SSM Behavior
 
 - Hybrid caches are represented explicitly as mixed `.attention` and `.ssm` layers
 - SSM state is treated as path-dependent and non-truncatable
 - Prefix-style reuse is safe only when the KV and SSM sides agree on the same boundary
-- If only attention KV is found for a hybrid request, the runtime currently chooses correctness and re-prefills
+- Hybrid exact-hit replay and hybrid partial-hit reuse now attempt boundary-aligned SSM re-derive before falling back
+- The current request still full-prefills when the needed SSM checkpoint is unavailable or only arrives asynchronously
 
 ### TurboQuant Reality
 
 - Swift implementations exist for `TurboQuantEncoder`, `TurboQuantKVCache`, `EncodedKeys`, `EncodedValues`, and `TQDiskStore`
-- The runtime can compress post-prefill KV, decode once back into float buffers, and use that for lower-memory decode
-- Cross-turn cache store currently preserves original float KV snapshots instead of storing lossy TQ-decoded KV as the main reuse path
+- TurboQuant policy is now resolved from `TurboQuantConfig`, so hybrid JANG models keep the rule "KV only, never SSM"
+- The live runtime can compress post-prefill KV, decode once back into float buffers, and use that for lower-memory decode
+- Cross-turn cache store/fetch can now preserve `.compressedAttention` through paged, memory, prefix, and disk reuse paths, including cache-hit turns that extend an already-restored prefix
+- `TurboQuantKVCache` and `TQDiskStore` still are not the active hot-path cache representation, so the runtime is not yet a fully persistent compressed-KV system
 
 ---
 

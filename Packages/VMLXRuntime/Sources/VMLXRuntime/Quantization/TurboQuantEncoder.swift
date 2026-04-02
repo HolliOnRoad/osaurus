@@ -298,3 +298,298 @@ public struct TurboQuantEncoder: Sendable {
         return decodeValues(encoded, state: state)
     }
 }
+
+/// Helpers for preserving TurboQuant-compressed KV through cache store/fetch paths.
+enum TurboQuantLayerCache {
+
+    static func totalTokenCount(for encoded: EncodedKeys) -> Int {
+        encoded.sinkCount + (encoded.shape.count > 2 ? encoded.shape[2] : 0)
+    }
+
+    static func encodeAttentionLayer(
+        keys: MLXArray,
+        values: MLXArray,
+        config: TurboQuantConfig,
+        layerIndex: Int,
+        totalLayers: Int,
+        sinkTokens: Int? = nil
+    ) -> LayerCacheEntry? {
+        guard let keyBits = config.keyBits(forLayer: layerIndex, totalLayers: totalLayers),
+              let valueBits = config.valueBits(forLayer: layerIndex, totalLayers: totalLayers),
+              keys.ndim == 4,
+              values.ndim == 4 else {
+            return nil
+        }
+
+        let keyDim = keys.dim(keys.ndim - 1)
+        let valueDim = values.dim(values.ndim - 1)
+        guard keyDim == valueDim else {
+            // MLA-style asymmetric KV dimensions still need a dedicated path.
+            return nil
+        }
+
+        let state = TurboQuantEncoder.EncoderState(
+            dim: keyDim,
+            keyBits: keyBits,
+            valueBits: valueBits,
+            seed: config.seed
+        )
+        let preservedSinkTokens = max(0, sinkTokens ?? TurboQuantEncoder.defaultSinkTokens)
+        let encodedKeys = TurboQuantEncoder.encodeKeys(
+            keys,
+            state: state,
+            sinkTokens: preservedSinkTokens
+        )
+        let encodedValues = TurboQuantEncoder.encodeValues(
+            values,
+            state: state,
+            sinkTokens: preservedSinkTokens
+        )
+        return .compressedAttention(encodedKeys, encodedValues, keys.dim(2))
+    }
+
+    static func sliceCompressedAttention(
+        _ encodedKeys: EncodedKeys,
+        _ encodedValues: EncodedValues,
+        range: Range<Int>
+    ) -> LayerCacheEntry? {
+        guard let slicedKeys = slice(encodedKeys, range: range),
+              let slicedValues = slice(encodedValues, range: range) else {
+            return nil
+        }
+        return .compressedAttention(slicedKeys, slicedValues, range.count)
+    }
+
+    static func mergeCompressedAttention(_ segments: [LayerCacheEntry]) -> LayerCacheEntry? {
+        let encodedSegments = segments.compactMap { entry -> (EncodedKeys, EncodedValues, Int)? in
+            guard case .compressedAttention(let encodedKeys, let encodedValues, let offset) = entry else {
+                return nil
+            }
+            return (encodedKeys, encodedValues, offset)
+        }
+
+        guard encodedSegments.count == segments.count,
+              let first = encodedSegments.first else {
+            return nil
+        }
+
+        let firstKeys = first.0
+        let firstValues = first.1
+        guard firstKeys.shape.count == 4, firstValues.shape.count == 4 else {
+            return nil
+        }
+
+        let batch = firstKeys.shape[0]
+        let heads = firstKeys.shape[1]
+        let dim = firstKeys.shape[3]
+        let valueDim = firstValues.shape[3]
+
+        var keyIndexVectors: [MLXArray] = []
+        var keyQJLVectors: [MLXArray] = []
+        var keyResiduals: [MLXArray] = []
+        var keyNorms: [MLXArray] = []
+        var valueIndexVectors: [MLXArray] = []
+        var valueNorms: [MLXArray] = []
+        var totalCompressedTokens = 0
+        var totalOffset = 0
+
+        for (segmentIndex, segment) in encodedSegments.enumerated() {
+            let encodedKeys = segment.0
+            let encodedValues = segment.1
+            let offset = segment.2
+
+            guard encodedKeys.shape.count == 4,
+                  encodedValues.shape.count == 4,
+                  encodedKeys.shape[0] == batch,
+                  encodedKeys.shape[1] == heads,
+                  encodedKeys.shape[3] == dim,
+                  encodedValues.shape[0] == batch,
+                  encodedValues.shape[1] == heads,
+                  encodedValues.shape[3] == valueDim,
+                  encodedKeys.indexBits == firstKeys.indexBits,
+                  encodedValues.indexBits == firstValues.indexBits,
+                  encodedKeys.seed == firstKeys.seed,
+                  encodedValues.seed == firstValues.seed else {
+                return nil
+            }
+
+            if segmentIndex > 0 && (encodedKeys.sinkCount > 0 || encodedValues.sinkCount > 0) {
+                return nil
+            }
+
+            let compressedTokenCount = encodedKeys.shape[2]
+            let keyElementCount = encodedKeys.shape.reduce(1, *)
+            let valueElementCount = encodedValues.shape.reduce(1, *)
+
+            if compressedTokenCount > 0 {
+                keyIndexVectors.append(
+                    TQBitPack.unpackBits(
+                        encodedKeys.indicesPacked,
+                        bits: encodedKeys.indexBits,
+                        nElements: keyElementCount
+                    )
+                )
+                keyQJLVectors.append(
+                    TQBitPack.unpackSigns(
+                        encodedKeys.qjlPacked,
+                        nElements: keyElementCount
+                    )
+                )
+                keyResiduals.append(encodedKeys.residualNorms)
+                keyNorms.append(encodedKeys.vectorNorms)
+                valueIndexVectors.append(
+                    TQBitPack.unpackBits(
+                        encodedValues.indicesPacked,
+                        bits: encodedValues.indexBits,
+                        nElements: valueElementCount
+                    )
+                )
+                valueNorms.append(encodedValues.vectorNorms)
+                totalCompressedTokens += compressedTokenCount
+            }
+
+            totalOffset += offset
+        }
+
+        guard totalCompressedTokens > 0 else {
+            return nil
+        }
+
+        let mergedKeys = EncodedKeys(
+            indicesPacked: TQBitPack.packBits(
+                keyIndexVectors.count == 1 ? keyIndexVectors[0] : concatenated(keyIndexVectors, axis: 0),
+                bits: firstKeys.indexBits
+            ),
+            qjlPacked: TQBitPack.packSigns(
+                keyQJLVectors.count == 1 ? keyQJLVectors[0] : concatenated(keyQJLVectors, axis: 0)
+            ),
+            residualNorms: keyResiduals.count == 1 ? keyResiduals[0] : concatenated(keyResiduals, axis: 2),
+            vectorNorms: keyNorms.count == 1 ? keyNorms[0] : concatenated(keyNorms, axis: 2),
+            shape: [batch, heads, totalCompressedTokens, dim],
+            indexBits: firstKeys.indexBits,
+            seed: firstKeys.seed,
+            sinkData: firstKeys.sinkData
+        )
+        let mergedValues = EncodedValues(
+            indicesPacked: TQBitPack.packBits(
+                valueIndexVectors.count == 1 ? valueIndexVectors[0] : concatenated(valueIndexVectors, axis: 0),
+                bits: firstValues.indexBits
+            ),
+            vectorNorms: valueNorms.count == 1 ? valueNorms[0] : concatenated(valueNorms, axis: 2),
+            shape: [batch, heads, totalCompressedTokens, valueDim],
+            indexBits: firstValues.indexBits,
+            seed: firstValues.seed,
+            sinkData: firstValues.sinkData
+        )
+
+        return .compressedAttention(mergedKeys, mergedValues, totalOffset)
+    }
+
+    private static func slice(_ encoded: EncodedKeys, range: Range<Int>) -> EncodedKeys? {
+        guard encoded.shape.count == 4 else {
+            return nil
+        }
+
+        let totalTokens = totalTokenCount(for: encoded)
+        guard !range.isEmpty,
+              range.lowerBound >= 0,
+              range.upperBound <= totalTokens else {
+            return nil
+        }
+
+        let sinkStart = min(range.lowerBound, encoded.sinkCount)
+        let sinkEnd = min(range.upperBound, encoded.sinkCount)
+        let compressedStart = max(range.lowerBound - encoded.sinkCount, 0)
+        let compressedEnd = max(range.upperBound - encoded.sinkCount, 0)
+        let compressedCount = compressedEnd - compressedStart
+
+        guard compressedCount > 0 else {
+            return nil
+        }
+
+        let sinkSlice: MLXArray?
+        if let sinkData = encoded.sinkData, sinkEnd > sinkStart {
+            sinkSlice = sinkData[.ellipsis, sinkStart..<sinkEnd, 0...]
+        } else {
+            sinkSlice = nil
+        }
+
+        let keyElementCount = encoded.shape.reduce(1, *)
+        let unpackedIndices = TQBitPack.unpackBits(
+            encoded.indicesPacked,
+            bits: encoded.indexBits,
+            nElements: keyElementCount
+        ).reshaped(encoded.shape)
+        let unpackedQJL = TQBitPack.unpackSigns(
+            encoded.qjlPacked,
+            nElements: keyElementCount
+        ).reshaped(encoded.shape)
+
+        let slicedShape = [encoded.shape[0], encoded.shape[1], compressedCount, encoded.shape[3]]
+        let slicedIndices = unpackedIndices[.ellipsis, compressedStart..<compressedEnd, 0...]
+        let slicedQJL = unpackedQJL[.ellipsis, compressedStart..<compressedEnd, 0...]
+        let slicedResiduals = encoded.residualNorms[.ellipsis, compressedStart..<compressedEnd, 0...]
+        let slicedNorms = encoded.vectorNorms[.ellipsis, compressedStart..<compressedEnd, 0...]
+
+        return EncodedKeys(
+            indicesPacked: TQBitPack.packBits(slicedIndices.reshaped([-1]), bits: encoded.indexBits),
+            qjlPacked: TQBitPack.packSigns(slicedQJL.reshaped([-1])),
+            residualNorms: slicedResiduals,
+            vectorNorms: slicedNorms,
+            shape: slicedShape,
+            indexBits: encoded.indexBits,
+            seed: encoded.seed,
+            sinkData: sinkSlice
+        )
+    }
+
+    private static func slice(_ encoded: EncodedValues, range: Range<Int>) -> EncodedValues? {
+        guard encoded.shape.count == 4 else {
+            return nil
+        }
+
+        let totalTokens = encoded.sinkCount + encoded.shape[2]
+        guard !range.isEmpty,
+              range.lowerBound >= 0,
+              range.upperBound <= totalTokens else {
+            return nil
+        }
+
+        let sinkStart = min(range.lowerBound, encoded.sinkCount)
+        let sinkEnd = min(range.upperBound, encoded.sinkCount)
+        let compressedStart = max(range.lowerBound - encoded.sinkCount, 0)
+        let compressedEnd = max(range.upperBound - encoded.sinkCount, 0)
+        let compressedCount = compressedEnd - compressedStart
+
+        guard compressedCount > 0 else {
+            return nil
+        }
+
+        let sinkSlice: MLXArray?
+        if let sinkData = encoded.sinkData, sinkEnd > sinkStart {
+            sinkSlice = sinkData[.ellipsis, sinkStart..<sinkEnd, 0...]
+        } else {
+            sinkSlice = nil
+        }
+
+        let valueElementCount = encoded.shape.reduce(1, *)
+        let unpackedIndices = TQBitPack.unpackBits(
+            encoded.indicesPacked,
+            bits: encoded.indexBits,
+            nElements: valueElementCount
+        ).reshaped(encoded.shape)
+
+        let slicedShape = [encoded.shape[0], encoded.shape[1], compressedCount, encoded.shape[3]]
+        let slicedIndices = unpackedIndices[.ellipsis, compressedStart..<compressedEnd, 0...]
+        let slicedNorms = encoded.vectorNorms[.ellipsis, compressedStart..<compressedEnd, 0...]
+
+        return EncodedValues(
+            indicesPacked: TQBitPack.packBits(slicedIndices.reshaped([-1]), bits: encoded.indexBits),
+            vectorNorms: slicedNorms,
+            shape: slicedShape,
+            indexBits: encoded.indexBits,
+            seed: encoded.seed,
+            sinkData: sinkSlice
+        )
+    }
+}

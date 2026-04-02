@@ -59,8 +59,8 @@ public enum CacheFetchResult: Sendable {
 // MARK: - Cache Coordinator
 
 /// Orchestrates all cache layers into a unified fetch/store interface.
-/// Fetch cascade: memory -> prefix -> disk -> MISS
-/// Store cascade: memory + disk + paged hashes + SSM companion
+/// Fetch cascade: paged -> memory -> prefix -> disk -> MISS
+/// Store cascade: paged + memory + prefix + disk + SSM companion
 public final class CacheCoordinator: @unchecked Sendable {
 
     public let config: CacheCoordinatorConfig
@@ -271,7 +271,8 @@ public final class CacheCoordinator: @unchecked Sendable {
         var layers: [LayerCacheEntry] = []
 
         for layerIdx in 0..<numLayers {
-            // Collect KV slices for this layer across all blocks
+            // Collect KV slices for this layer across all blocks.
+            var attentionEntries: [LayerCacheEntry] = []
             var keySlices: [MLXArray] = []
             var valueSlices: [MLXArray] = []
             var lastSSM: SSMStateLayer? = nil
@@ -282,19 +283,40 @@ public final class CacheCoordinator: @unchecked Sendable {
 
                 switch entry {
                 case .attention(let kv):
-                    keySlices.append(kv.keys)
-                    valueSlices.append(kv.values)
-                case .compressedAttention(let ek, let ev, _):
-                    // Decompress TurboQuant block back to float for reconstruction.
-                    // This happens on cache fetch — decode once, concat with other blocks.
-                    let decodedKeys = TurboQuantEncoder.decodeKeys(ek, seed: ek.seed)
-                    let decodedValues = TurboQuantEncoder.decodeValues(ev, seed: ev.seed)
-                    keySlices.append(decodedKeys)
-                    valueSlices.append(decodedValues)
+                    attentionEntries.append(.attention(kv))
+                case .compressedAttention(let ek, let ev, let offset):
+                    attentionEntries.append(.compressedAttention(ek, ev, offset))
                 case .ssm(let ssm):
                     // Only use SSM from the LAST block (cumulative state)
                     if blockIdx == blocks.count - 1 {
                         lastSSM = ssm
+                    }
+                }
+            }
+
+            if !attentionEntries.isEmpty {
+                let allCompressed = attentionEntries.allSatisfy { entry in
+                    if case .compressedAttention = entry { return true }
+                    return false
+                }
+                if allCompressed,
+                   let mergedCompressed = TurboQuantLayerCache.mergeCompressedAttention(attentionEntries) {
+                    layers.append(mergedCompressed)
+                    continue
+                }
+
+                for entry in attentionEntries {
+                    switch entry {
+                    case .attention(let kv):
+                        keySlices.append(kv.keys)
+                        valueSlices.append(kv.values)
+                    case .compressedAttention(let ek, let ev, _):
+                        let decodedKeys = TurboQuantEncoder.decodeKeys(ek, seed: ek.seed)
+                        let decodedValues = TurboQuantEncoder.decodeValues(ev, seed: ev.seed)
+                        keySlices.append(decodedKeys)
+                        valueSlices.append(decodedValues)
+                    case .ssm:
+                        break
                     }
                 }
             }
@@ -339,8 +361,8 @@ public final class CacheCoordinator: @unchecked Sendable {
             _ = memoryCache.store(tokens: tokens, cache: cache)
         }
 
-        // Prefix cache (used only when memory cache is off and paged cache is off)
-        if memoryCache == nil, pagedCache == nil, let prefixCache = prefixCache {
+        // Prefix cache remains useful as a secondary hot tier when paged cache is off.
+        if let prefixCache = prefixCache {
             prefixCache.store(tokens: tokens, cache: cache)
         }
 
@@ -376,21 +398,6 @@ public final class CacheCoordinator: @unchecked Sendable {
 
         let numBlocks = (tokens.count + blockSize - 1) / blockSize
 
-        // Pre-decompress all compressed layers ONCE before the block loop.
-        // Without this, each block iteration re-decodes the full sequence from codebook
-        // (e.g., 3 blocks × 8 layers = 24 decompressions instead of 8).
-        let floatLayers: [LayerCacheEntry] = cache.layers.map { entry in
-            switch entry {
-            case .compressedAttention(let ek, let ev, _):
-                let decodedKeys = TurboQuantEncoder.decodeKeys(ek, seed: ek.seed)
-                let decodedValues = TurboQuantEncoder.decodeValues(ev, seed: ev.seed)
-                let offset = decodedKeys.dim(2)
-                return .attention(KVCacheLayer(keys: decodedKeys, values: decodedValues, offset: offset))
-            default:
-                return entry  // .attention and .ssm pass through unchanged
-            }
-        }
-
         var parentHash: BlockHash? = nil
 
         for blockIdx in 0..<numBlocks {
@@ -421,9 +428,9 @@ public final class CacheCoordinator: @unchecked Sendable {
             block.tokenCount = blockTokens.count
             block.blockHash = blockHash
 
-            // Slice pre-decompressed float data for this block's token range
+            // Slice layer data for this block's token range.
             var blockData: [LayerCacheEntry?] = []
-            for entry in floatLayers {
+            for entry in cache.layers {
                 switch entry {
                 case .attention(let kv):
                     let slicedKeys = kv.keys[.ellipsis, tokenStart..<tokenEnd, 0...]
@@ -439,8 +446,25 @@ public final class CacheCoordinator: @unchecked Sendable {
                         blockData.append(nil)
                     }
 
-                case .compressedAttention:
-                    break  // Already converted to .attention above — should never reach here
+                case .compressedAttention(let ek, let ev, _):
+                    if let slicedCompressed = TurboQuantLayerCache.sliceCompressedAttention(
+                        ek,
+                        ev,
+                        range: tokenStart..<tokenEnd
+                    ) {
+                        blockData.append(slicedCompressed)
+                    } else {
+                        // Sink-only edge case: materialize just this slice to float.
+                        let decodedKeys = TurboQuantEncoder.decodeKeys(ek, seed: ek.seed)
+                        let decodedValues = TurboQuantEncoder.decodeValues(ev, seed: ev.seed)
+                        let slicedKeys = decodedKeys[.ellipsis, tokenStart..<tokenEnd, 0...]
+                        let slicedValues = decodedValues[.ellipsis, tokenStart..<tokenEnd, 0...]
+                        blockData.append(.attention(KVCacheLayer(
+                            keys: slicedKeys,
+                            values: slicedValues,
+                            offset: tokenEnd - tokenStart
+                        )))
+                    }
                 }
             }
 

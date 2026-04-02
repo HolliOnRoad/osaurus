@@ -134,6 +134,27 @@ struct CacheCoordinatorTests {
         }
     }
 
+    @Test("Prefix cache survives when memory tier is cleared")
+    func prefixCacheSurvivesMemoryClear() {
+        let config = CacheCoordinatorConfig(
+            usePagedCache: false,
+            useMemoryAwareCache: true
+        )
+        let coord = CacheCoordinator(config: config)
+        let tokens = [10, 20, 30, 40]
+
+        coord.store(tokens: tokens, cache: makeCache(tokenCount: tokens.count))
+        coord.memoryCache?.clear()
+
+        let result = coord.fetch(tokens: tokens)
+        if case .hit(_, let remaining, let detail, _) = result {
+            #expect(remaining.isEmpty)
+            #expect(detail == .prefix)
+        } else {
+            Issue.record("Expected prefix hit after clearing memory tier")
+        }
+    }
+
     @Test("SSM checkpoint store and fetch")
     func ssmCheckpointRoundtrip() {
         let coord = CacheCoordinator()

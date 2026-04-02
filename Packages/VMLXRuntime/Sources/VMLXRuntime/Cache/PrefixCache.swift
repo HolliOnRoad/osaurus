@@ -47,10 +47,14 @@ public final class PrefixCache: @unchecked Sendable {
 
     /// Clear all cached entries.
     public func clear() {
-        root.children.removeAll()
-        root.cache = nil
-        lruOrder.removeAll()
-        entryCount = 0
+        lock.withLock {
+            root.children.removeAll()
+            root.cache = nil
+            lruOrder.removeAll()
+            entryCount = 0
+            hits = 0
+            misses = 0
+        }
     }
 
     // MARK: - Public API
