@@ -86,5 +86,6 @@
             <sparkle:shortVersionString>0.0.9</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.5</sparkle:minimumSystemVersion>
             <enclosure url="https://github.com/osaurus-ai/osaurus/releases/download/0.15.13/Osaurus-0.0.9.dmg" length="7520848" type="application/octet-stream"/>
-        </item>  </channel>
+        </item>
+  </channel>
 </rss>

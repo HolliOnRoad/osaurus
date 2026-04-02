@@ -132,6 +132,7 @@ mkdir -p public-repo/docs
 EXISTING_ITEMS=""
 if [ -f "public-repo/docs/appcast.xml" ]; then
   EXISTING_ITEMS=$(sed -n '/<item>/,/<\/item>/p' public-repo/docs/appcast.xml | \
+    sed 's/<\/channel>//g; s/<\/rss>//g' | \
     awk -v ver="${VERSION}" '
       /<item>/    { buf=""; inside=1 }
       inside      { buf = buf $0 "\n" }
@@ -149,7 +150,7 @@ fi
   echo '  <channel>'
   echo '    <title>Osaurus</title>'
   printf '%s\n' "$NEW_ITEMS"
-  printf '%s' "$EXISTING_ITEMS"
+  [ -n "$EXISTING_ITEMS" ] && printf '%s\n' "$EXISTING_ITEMS"
   echo '  </channel>'
   echo '</rss>'
 } > updates/appcast.xml
