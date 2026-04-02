@@ -532,7 +532,7 @@ public class NemotronHModel: Module {
 
         let firstAttnIdx = config.hybridOverridePattern.firstIndex(of: "*")
             .map { config.hybridOverridePattern.distance(from: config.hybridOverridePattern.startIndex, to: $0) }
-        let attnCache = firstAttnIdx.flatMap { cache?[$0] as? VMLXKVCacheSimple }
+        let attnCache: VMLXKVCache? = firstAttnIdx.flatMap { cache?[$0] }
         let mask = vmlxCreateAttentionMask(h: h, cache: attnCache)
 
         for (i, layer) in layers.enumerated() {
