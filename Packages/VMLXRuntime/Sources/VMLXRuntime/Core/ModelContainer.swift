@@ -175,6 +175,16 @@ public final class VMLXModelContainer: @unchecked Sendable {
             if let effort = reasoningEffort {
                 context["reasoning_effort"] = effort
             }
+            // Auto-map enable_thinking → reasoning_effort for Mistral 4.
+            // Mistral 4's template uses reasoning_effort ("none"/"high"), not enable_thinking.
+            // Matches Python VMLX server.py behavior.
+            if context["reasoning_effort"] == nil {
+                if enableThinking {
+                    context["reasoning_effort"] = "high"
+                } else {
+                    context["reasoning_effort"] = "none"
+                }
+            }
             return try tokenizer.applyChatTemplate(
                 messages: chatMessages,
                 chatTemplate: nil,
