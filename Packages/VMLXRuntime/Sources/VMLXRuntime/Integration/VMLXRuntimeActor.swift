@@ -1128,8 +1128,16 @@ public actor VMLXRuntimeActor {
                     // Hybrid SSM models (Qwen3.5 GatedDeltaNet) crash during graph tracing —
                     // MLX can't trace through mixed VMLXMambaCache + KV cache state updates.
                     // Pure attention+MoE models (Gemma4, Mistral4, MiniMax, Qwen3.5-MoE) work.
+                    // Compiled forward pass for non-hybrid, non-TQ models (matches Python VMLX --jit).
+                    // Wraps model.__call__ with compile(shapeless:true), fusing hundreds of
+                    // Metal kernel dispatches into a single compiled graph.
+                    //
+                    // Disabled when:
+                    // - Hybrid SSM models: compile can't trace mixed cache types
+                    // - TurboQuant enabled: TQ cache has complex state (QJL, unified buffers,
+                    //   scatter writes) that crashes the compile tracer (EXC_BAD_ACCESS)
                     let _compiledForward: ((@Sendable (MLXArray) -> MLXArray))?
-                    if !container.isHybrid {
+                    if !container.isHybrid && !tqEnabled {
                         let nativeModel = container.nativeModel
                         let modelModule = nativeModel as Module
                         let cacheOutputs: [any Updatable] = cache.map { $0 as any Updatable }
@@ -1140,10 +1148,10 @@ public actor VMLXRuntimeActor {
                         ) { (tokens: MLXArray) -> MLXArray in
                             nativeModel(tokens, cache: cache)
                         }
-                        _vmlxLog2("[Gen] Compiled forward pass enabled (non-hybrid model)")
+                        _vmlxLog2("[Gen] Compiled forward pass enabled (non-hybrid, non-TQ)")
                     } else {
                         _compiledForward = nil
-                        _vmlxLog2("[Gen] Compiled forward pass DISABLED (hybrid SSM model)")
+                        _vmlxLog2("[Gen] Compiled forward pass DISABLED (hybrid=\(container.isHybrid) tq=\(tqEnabled))")
                     }
 
                     // Repetition penalty state: track generated tokens to penalize repeats.
