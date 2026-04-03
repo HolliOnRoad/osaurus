@@ -693,7 +693,7 @@ struct SystemResourceMonitor: View {
     }
 
     private func refreshModelCount() async {
-        cachedModelCount = await MLXService.shared.cachedRuntimeSummaries().count
+        cachedModelCount = await VMLXGateway.shared.count
     }
 
     private func colorForUsage(_ usage: Double) -> Color {

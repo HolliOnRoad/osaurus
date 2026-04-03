@@ -67,9 +67,13 @@ struct MLXModel: Identifiable, Codable {
     }
 
     /// Local directory where this model should be stored.
-    /// Resolves against the current effective models directory unless an
-    /// explicit `rootDirectory` was provided at init (e.g. in tests).
+    /// If the id is an absolute filesystem path, use it directly.
+    /// Otherwise resolves against the models directory.
     var localDirectory: URL {
+        // If id is an absolute path (from local model discovery), use it directly
+        if id.hasPrefix("/") {
+            return URL(fileURLWithPath: id, isDirectory: true)
+        }
         let baseDir = rootDirectory ?? DirectoryPickerService.effectiveModelsDirectory()
         let components = id.split(separator: "/").map(String.init)
         return components.reduce(baseDir) { partial, component in
@@ -96,11 +100,12 @@ struct MLXModel: Identifiable, Codable {
         // Core config
         guard exists("config.json") else { return false }
 
-        // Tokenizer variants
+        // Tokenizer variants (including tokenizer_config.json for JANG models)
         let hasTokenizerJSON = exists("tokenizer.json")
         let hasBPE = exists("merges.txt") && (exists("vocab.json") || exists("vocab.txt"))
         let hasSentencePiece = exists("tokenizer.model") || exists("spiece.model")
-        let hasTokenizerAssets = hasTokenizerJSON || hasBPE || hasSentencePiece
+        let hasTokenizerConfig = exists("tokenizer_config.json")
+        let hasTokenizerAssets = hasTokenizerJSON || hasBPE || hasSentencePiece || hasTokenizerConfig
         guard hasTokenizerAssets else { return false }
 
         // Weights

@@ -8,12 +8,13 @@ CONFIG := Release
 PROJECT := App/osaurus.xcodeproj
 DERIVED := build/DerivedData
 
-.PHONY: help cli app install-cli serve status test clean bench-setup bench-ingest bench-ingest-chunks bench-run bench
+.PHONY: help cli app bundle-python install-cli serve status test clean bench-setup bench-ingest bench-ingest-chunks bench-run bench
 
 help:
 	@echo "Targets:"
 	@echo "  cli            Build CLI ($(SCHEME_CLI)) into $(DERIVED)"
-	@echo "  app            Build app ($(SCHEME_APP)) and embed CLI"
+	@echo "  bundle-python  Build bundled Python runtime for vmlx-engine"
+	@echo "  app            Build app ($(SCHEME_APP)) and embed CLI + Python"
 	@echo "  install-cli    Install/update /usr/local/bin/osaurus symlink"
 	@echo "  serve          Build CLI and start server (use PORT=XXXX, EXPOSE=1)"
 	@echo "  status         Check if server is running"
@@ -29,6 +30,10 @@ cli:
 	@echo "Building CLI ($(SCHEME_CLI))…"
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME_CLI) -configuration $(CONFIG) -derivedDataPath $(DERIVED) build -quiet
 
+bundle-python:
+	@echo "Bundling Python runtime for vmlx-engine…"
+	./scripts/bundle-python.sh
+
 app: cli
 	@echo "Building app ($(SCHEME_APP))…"
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME_APP) -configuration $(CONFIG) -derivedDataPath $(DERIVED) build -quiet
@@ -37,6 +42,13 @@ app: cli
 	mkdir -p "$(DERIVED)/Build/Products/$(CONFIG)/osaurus.app/Contents/Helpers"
 	cp "$(DERIVED)/Build/Products/$(CONFIG)/osaurus-cli" "$(DERIVED)/Build/Products/$(CONFIG)/osaurus.app/Contents/Helpers/osaurus"
 	chmod +x "$(DERIVED)/Build/Products/$(CONFIG)/osaurus.app/Contents/Helpers/osaurus"
+	@echo "Embedding bundled Python + vmlx-engine…"
+	@if [ -d "Resources/bundled-python/python" ]; then \
+		mkdir -p "$(DERIVED)/Build/Products/$(CONFIG)/osaurus.app/Contents/Resources/bundled-python"; \
+		cp -a Resources/bundled-python/python "$(DERIVED)/Build/Products/$(CONFIG)/osaurus.app/Contents/Resources/bundled-python/python"; \
+	else \
+		echo "WARNING: Resources/bundled-python not found. Run 'make bundle-python' first."; \
+	fi
 
 install-cli: cli
 	@echo "Installing CLI symlink…"

@@ -2111,7 +2111,7 @@ final class HTTPHandler: ChannelInboundHandler, Sendable {
                     let prefixHash: String = {
                         let sysContent = enrichedReq.messages.first(where: { $0.role == "system" })?.content ?? ""
                         let toolNames = (enrichedReq.tools ?? []).map { $0.function.name }
-                        return ModelRuntime.computePrefixHash(systemContent: sysContent, toolNames: toolNames)
+                        return PrefixHash.compute(systemContent: sysContent, toolNames: toolNames)
                     }()
                     hop {
                         writerBound.value.writeRole(
@@ -2264,7 +2264,7 @@ final class HTTPHandler: ChannelInboundHandler, Sendable {
                     // Compute prefix hash after enrichment so it matches the cache key
                     let sysContent = enrichedReq.messages.first(where: { $0.role == "system" })?.content ?? ""
                     let toolNames = (enrichedReq.tools ?? []).map { $0.function.name }
-                    resp.prefix_hash = ModelRuntime.computePrefixHash(systemContent: sysContent, toolNames: toolNames)
+                    resp.prefix_hash = PrefixHash.compute(systemContent: sysContent, toolNames: toolNames)
                     let json = try JSONEncoder().encode(resp)
                     var headers: [(String, String)] = [("Content-Type", "application/json")]
                     headers.append(contentsOf: cors)
@@ -2484,7 +2484,7 @@ final class HTTPHandler: ChannelInboundHandler, Sendable {
 
         Task(priority: .userInitiated) {
             // Get local models
-            var models = MLXService.getAvailableModels().map { OpenAIModel(modelName: $0) }
+            var models = VMLXService.getAvailableModels().map { OpenAIModel(modelName: $0) }
             if FoundationModelService.isDefaultModelAvailable() {
                 models.insert(OpenAIModel(modelName: "foundation"), at: 0)
             }
@@ -2539,7 +2539,7 @@ final class HTTPHandler: ChannelInboundHandler, Sendable {
             let now = Date().ISO8601Format()
 
             // Get local models
-            var models = MLXService.getAvailableModels().map { name -> OpenAIModel in
+            var models = VMLXService.getAvailableModels().map { name -> OpenAIModel in
                 var m = OpenAIModel(from: name)
                 m.name = name
                 m.model = name

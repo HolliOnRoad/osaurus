@@ -32,37 +32,37 @@ struct PrefixHashTests {
     // MARK: - computePrefixHash
 
     @Test func hashIsDeterministic() {
-        let h1 = ModelRuntime.computePrefixHash(systemContent: "You are helpful.", toolNames: ["search"])
-        let h2 = ModelRuntime.computePrefixHash(systemContent: "You are helpful.", toolNames: ["search"])
+        let h1 = PrefixHash.compute(systemContent: "You are helpful.", toolNames: ["search"])
+        let h2 = PrefixHash.compute(systemContent: "You are helpful.", toolNames: ["search"])
         #expect(h1 == h2)
     }
 
     @Test func toolOrderDoesNotMatter() {
-        let h1 = ModelRuntime.computePrefixHash(systemContent: "sys", toolNames: ["alpha", "beta", "gamma"])
-        let h2 = ModelRuntime.computePrefixHash(systemContent: "sys", toolNames: ["gamma", "alpha", "beta"])
+        let h1 = PrefixHash.compute(systemContent: "sys", toolNames: ["alpha", "beta", "gamma"])
+        let h2 = PrefixHash.compute(systemContent: "sys", toolNames: ["gamma", "alpha", "beta"])
         #expect(h1 == h2)
     }
 
     @Test func differentContentProducesDifferentHash() {
-        let h1 = ModelRuntime.computePrefixHash(systemContent: "You are helpful.", toolNames: [])
-        let h2 = ModelRuntime.computePrefixHash(systemContent: "You are a pirate.", toolNames: [])
+        let h1 = PrefixHash.compute(systemContent: "You are helpful.", toolNames: [])
+        let h2 = PrefixHash.compute(systemContent: "You are a pirate.", toolNames: [])
         #expect(h1 != h2)
     }
 
     @Test func differentToolsProduceDifferentHash() {
-        let h1 = ModelRuntime.computePrefixHash(systemContent: "sys", toolNames: ["search"])
-        let h2 = ModelRuntime.computePrefixHash(systemContent: "sys", toolNames: ["calculate"])
+        let h1 = PrefixHash.compute(systemContent: "sys", toolNames: ["search"])
+        let h2 = PrefixHash.compute(systemContent: "sys", toolNames: ["calculate"])
         #expect(h1 != h2)
     }
 
     @Test func addingToolChangesHash() {
-        let h1 = ModelRuntime.computePrefixHash(systemContent: "sys", toolNames: ["search"])
-        let h2 = ModelRuntime.computePrefixHash(systemContent: "sys", toolNames: ["search", "browse"])
+        let h1 = PrefixHash.compute(systemContent: "sys", toolNames: ["search"])
+        let h2 = PrefixHash.compute(systemContent: "sys", toolNames: ["search", "browse"])
         #expect(h1 != h2)
     }
 
     @Test func hashFormatIs32HexChars() {
-        let hash = ModelRuntime.computePrefixHash(systemContent: "test", toolNames: ["a", "b"])
+        let hash = PrefixHash.compute(systemContent: "test", toolNames: ["a", "b"])
         #expect(hash.count == 32)
         let hexCharSet = CharacterSet(charactersIn: "0123456789abcdef")
         for char in hash.unicodeScalars {
@@ -71,7 +71,7 @@ struct PrefixHashTests {
     }
 
     @Test func emptyInputsProduceValidHash() {
-        let hash = ModelRuntime.computePrefixHash(systemContent: "", toolNames: [])
+        let hash = PrefixHash.compute(systemContent: "", toolNames: [])
         #expect(hash.count == 32)
         let hexCharSet = CharacterSet(charactersIn: "0123456789abcdef")
         for char in hash.unicodeScalars {
@@ -80,21 +80,21 @@ struct PrefixHashTests {
     }
 
     @Test func emptyToolsVsNoToolsAreSame() {
-        let h1 = ModelRuntime.computePrefixHash(systemContent: "sys", toolNames: [])
-        let h2 = ModelRuntime.computePrefixHash(systemContent: "sys", toolNames: [])
+        let h1 = PrefixHash.compute(systemContent: "sys", toolNames: [])
+        let h2 = PrefixHash.compute(systemContent: "sys", toolNames: [])
         #expect(h1 == h2)
     }
 
     @Test func toolNameWithDelimiterDoesNotCollide() {
         // Ensure that a tool name containing the old delimiter doesn't collide
-        let h1 = ModelRuntime.computePrefixHash(systemContent: "sys", toolNames: ["a,b"])
-        let h2 = ModelRuntime.computePrefixHash(systemContent: "sys", toolNames: ["a", "b"])
+        let h1 = PrefixHash.compute(systemContent: "sys", toolNames: ["a,b"])
+        let h2 = PrefixHash.compute(systemContent: "sys", toolNames: ["a", "b"])
         #expect(h1 != h2)
     }
 
     @Test func systemContentWithDelimiterDoesNotCollide() {
-        let h1 = ModelRuntime.computePrefixHash(systemContent: "a|b", toolNames: [])
-        let h2 = ModelRuntime.computePrefixHash(systemContent: "a", toolNames: ["b"])
+        let h1 = PrefixHash.compute(systemContent: "a|b", toolNames: [])
+        let h2 = PrefixHash.compute(systemContent: "a", toolNames: ["b"])
         #expect(h1 != h2)
     }
 

@@ -124,9 +124,11 @@ struct FloatingInputCard: View {
     @State private var isDragOver = false
     @State private var showModelPicker = false
     @State private var showModelOptionsPicker = false
+    @State private var showParserPicker = false
     @State private var showContextBreakdown = false
     @State private var contextHoverTask: Task<Void, Never>?
     @State private var isSandboxHovered = false
+    @State private var isModelEngineRunning = false
     @State private var sandboxPulseAmount: CGFloat = 1.0
     @State private var sandboxPulseTask: Task<Void, Never>? = nil
     @State private var isClipboardHovered = false
@@ -939,6 +941,11 @@ extension FloatingInputCard {
 
             thinkingToggleChip
 
+            // Parser config chip (tool + reasoning parser per model)
+            if selectedModel != nil {
+                parserConfigChip
+            }
+
             if hasNonThinkingOptions {
                 modelOptionsSelectorChip
             }
@@ -1045,15 +1052,34 @@ extension FloatingInputCard {
         return pickerItems.first { $0.id == id }
     }
 
+    private func checkEngineStatus() {
+        guard let model = selectedModel else {
+            isModelEngineRunning = false
+            return
+        }
+        Task {
+            let running = await VMLXGateway.shared.port(for: model) != nil
+            await MainActor.run { isModelEngineRunning = running }
+        }
+    }
+
+    private func unloadSelectedModel() {
+        guard let model = selectedModel else { return }
+        Task {
+            await VMLXProcessManager.shared.stopEngine(model: model)
+            await MainActor.run { isModelEngineRunning = false }
+        }
+    }
+
     private var modelSelectorChip: some View {
         SelectorChip(isActive: showModelPicker) {
             showModelPicker.toggle()
         } content: {
             HStack(spacing: 6) {
                 Circle()
-                    .fill(Color.green)
+                    .fill(isModelEngineRunning ? Color.green : Color.gray.opacity(0.5))
                     .frame(width: 6, height: 6)
-                    .help("Model ready")
+                    .help(isModelEngineRunning ? "Engine running" : "Engine not loaded")
 
                 // Model name with metadata badges
                 if let option = selectedPickerItem {
@@ -1107,6 +1133,21 @@ extension FloatingInputCard {
                 cachedPickerItems = pickerItems
             }
         }
+        .contextMenu {
+            if isModelEngineRunning {
+                Button("Unload Model") {
+                    unloadSelectedModel()
+                }
+            } else {
+                Text("Model not loaded")
+                    .foregroundColor(.secondary)
+            }
+        }
+        .onAppear { checkEngineStatus() }
+        .onChange(of: selectedModel) { _, _ in checkEngineStatus() }
+        .onChange(of: isStreaming) { _, streaming in
+            if !streaming { checkEngineStatus() }
+        }
     }
 
     // MARK: - Thinking Toggle
@@ -1148,6 +1189,120 @@ extension FloatingInputCard {
         if let model = selectedModel {
             ModelOptionsStore.shared.saveOptions(activeModelOptions, for: model)
         }
+    }
+
+    // MARK: - Parser Config Chip
+
+    private var currentToolParser: String {
+        activeModelOptions["toolParser"]?.stringValue ?? "auto"
+    }
+
+    private var currentReasoningParser: String {
+        activeModelOptions["reasoningParser"]?.stringValue ?? "auto"
+    }
+
+    private var parserSummary: String {
+        let tool = currentToolParser
+        let reasoning = currentReasoningParser
+        if tool == "auto" && reasoning == "auto" { return "Auto" }
+        var parts: [String] = []
+        if tool != "auto" { parts.append("T:\(tool)") }
+        if reasoning != "auto" { parts.append("R:\(reasoning)") }
+        return parts.joined(separator: " ")
+    }
+
+    private var parserConfigChip: some View {
+        SelectorChip(isActive: showParserPicker) {
+            showParserPicker.toggle()
+        } content: {
+            HStack(spacing: 4) {
+                Image(systemName: "wrench.and.screwdriver")
+                    .font(theme.font(size: CGFloat(theme.captionSize) - 2, weight: .medium))
+                    .foregroundColor(theme.tertiaryText)
+                Text(parserSummary)
+                    .font(theme.font(size: CGFloat(theme.captionSize), weight: .medium))
+                    .foregroundColor(theme.secondaryText)
+                    .lineLimit(1)
+            }
+        }
+        .popover(isPresented: $showParserPicker, arrowEdge: .top) {
+            parserPickerContent
+        }
+        .help("Configure tool & reasoning parsers")
+    }
+
+    private var parserPickerContent: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Parser Configuration")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(theme.primaryText)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Tool Call Parser")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(theme.secondaryText)
+                Picker("", selection: Binding(
+                    get: { currentToolParser },
+                    set: { newVal in
+                        activeModelOptions["toolParser"] = .string(newVal)
+                        if let model = selectedModel {
+                            ModelOptionsStore.shared.saveOptions(activeModelOptions, for: model)
+                        }
+                    }
+                )) {
+                    Text("Auto-detect").tag("auto")
+                    Text("None").tag("none")
+                    Divider()
+                    Text("Qwen").tag("qwen")
+                    Text("Llama").tag("llama")
+                    Text("Mistral").tag("mistral")
+                    Text("Hermes").tag("hermes")
+                    Text("DeepSeek").tag("deepseek")
+                    Text("Nemotron").tag("nemotron")
+                    Text("MiniMax").tag("minimax")
+                    Text("Kimi").tag("kimi")
+                    Text("Granite").tag("granite")
+                    Text("Functionary").tag("functionary")
+                    Text("GLM-4.7").tag("glm47")
+                    Text("Step 3.5").tag("step3p5")
+                    Text("xLAM").tag("xlam")
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Reasoning Parser")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(theme.secondaryText)
+                Picker("", selection: Binding(
+                    get: { currentReasoningParser },
+                    set: { newVal in
+                        activeModelOptions["reasoningParser"] = .string(newVal)
+                        if let model = selectedModel {
+                            ModelOptionsStore.shared.saveOptions(activeModelOptions, for: model)
+                        }
+                    }
+                )) {
+                    Text("Auto-detect").tag("auto")
+                    Text("None").tag("none")
+                    Divider()
+                    Text("Qwen 3").tag("qwen3")
+                    Text("DeepSeek R1").tag("deepseek_r1")
+                    Text("Mistral").tag("mistral")
+                    Text("Gemma 4").tag("gemma4")
+                    Text("GPT-OSS / GLM").tag("openai_gptoss")
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+            }
+
+            Text("Saved per model. Auto uses model config detection.")
+                .font(.system(size: 10))
+                .foregroundColor(theme.tertiaryText)
+        }
+        .padding(14)
+        .frame(width: 240)
     }
 
     // MARK: - Model Options Chip

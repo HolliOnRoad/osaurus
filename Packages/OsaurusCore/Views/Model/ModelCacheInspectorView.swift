@@ -2,14 +2,22 @@
 //  ModelCacheInspectorView.swift
 //  osaurus
 //
-//  Popover UI to inspect and manage cached MLX models.
+//  Popover UI to inspect and manage running vmlx engine instances.
 //
 
 import SwiftUI
 
+/// Summary of a running vmlx engine instance (replaces ModelRuntime.ModelCacheSummary)
+struct VMLXInstanceSummary: Sendable {
+    let name: String
+    let port: Int
+    let isCurrent: Bool
+    let bytes: Int64  // 0 — actual weight size not tracked at gateway level
+}
+
 struct ModelCacheInspectorView: View {
     @Environment(\.theme) private var theme
-    @State private var items: [ModelRuntime.ModelCacheSummary] = []
+    @State private var items: [VMLXInstanceSummary] = []
     @State private var isClearingAll = false
     @State private var isRefreshing = false
     @State private var isHoveringRefresh = false
@@ -42,7 +50,7 @@ struct ModelCacheInspectorView: View {
                             .strokeBorder(theme.accentColor.opacity(0.2), lineWidth: 1)
                     )
 
-                    Text("Loaded Models")
+                    Text("Running Engines")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(theme.primaryText)
                 }
@@ -55,13 +63,12 @@ struct ModelCacheInspectorView: View {
             }
 
             if items.isEmpty {
-                // Empty state
                 VStack(spacing: 8) {
                     Image(systemName: "tray")
                         .font(.system(size: 24, weight: .light))
                         .foregroundColor(theme.tertiaryText)
 
-                    Text("No models currently cached.")
+                    Text("No engines currently running.")
                         .font(.system(size: 12))
                         .foregroundColor(theme.secondaryText)
                 }
@@ -74,7 +81,7 @@ struct ModelCacheInspectorView: View {
                             item: item,
                             onUnload: {
                                 Task {
-                                    await MLXService.shared.unloadRuntimeModel(named: item.name)
+                                    await VMLXProcessManager.shared.stopEngine(model: item.name)
                                     await refresh()
                                 }
                             }
@@ -99,7 +106,7 @@ struct ModelCacheInspectorView: View {
                 ClearAllButton(isClearing: isClearingAll) {
                     Task {
                         isClearingAll = true
-                        await MLXService.shared.clearRuntimeCache()
+                        await VMLXProcessManager.shared.stopAll()
                         await refresh()
                         isClearingAll = false
                     }
@@ -109,9 +116,8 @@ struct ModelCacheInspectorView: View {
 
                 Spacer()
 
-                // Model count badge
                 if !items.isEmpty {
-                    Text("\(items.count) model\(items.count == 1 ? "" : "s")")
+                    Text("\(items.count) engine\(items.count == 1 ? "" : "s")")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(theme.secondaryText)
                 }
@@ -124,7 +130,15 @@ struct ModelCacheInspectorView: View {
 
     private func refresh() async {
         isRefreshing = true
-        items = await MLXService.shared.cachedRuntimeSummaries()
+        let instances = await VMLXGateway.shared.allInstances()
+        items = instances.map { inst in
+            VMLXInstanceSummary(
+                name: inst.modelName,
+                port: inst.port,
+                isCurrent: true,
+                bytes: 0
+            )
+        }
         isRefreshing = false
         onRefresh?()
     }
@@ -193,7 +207,7 @@ private struct RefreshButton: View {
 // MARK: - Model Cache Row
 private struct ModelCacheRow: View {
     @Environment(\.theme) private var theme
-    let item: ModelRuntime.ModelCacheSummary
+    let item: VMLXInstanceSummary
     let onUnload: () -> Void
 
     @State private var isHovered = false
@@ -213,7 +227,7 @@ private struct ModelCacheRow: View {
                             Circle()
                                 .fill(theme.successColor)
                                 .frame(width: 5, height: 5)
-                            Text("Active")
+                            Text("Port \(item.port)")
                                 .font(.system(size: 9, weight: .semibold))
                                 .foregroundColor(theme.successColor)
                         }
@@ -229,17 +243,12 @@ private struct ModelCacheRow: View {
                         )
                     }
                 }
-
-                Text(formatBytes(item.bytes))
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(theme.tertiaryText)
             }
 
             Spacer()
 
-            // Unload button
             Button(action: onUnload) {
-                Text("Unload")
+                Text("Stop")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(isUnloadHovered ? theme.errorColor : theme.secondaryText)
                     .padding(.horizontal, 10)
@@ -248,7 +257,6 @@ private struct ModelCacheRow: View {
                         ZStack {
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
                                 .fill(theme.buttonBackground.opacity(isUnloadHovered ? 0.95 : 0.7))
-
                             if isUnloadHovered {
                                 RoundedRectangle(cornerRadius: 6, style: .continuous)
                                     .fill(theme.errorColor.opacity(0.08))
@@ -275,7 +283,6 @@ private struct ModelCacheRow: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(theme.cardBackground.opacity(isHovered ? 0.95 : 0.8))
-
                 if isHovered {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(
@@ -308,15 +315,6 @@ private struct ModelCacheRow: View {
             }
         }
     }
-
-    private func formatBytes(_ bytes: Int64) -> String {
-        if bytes <= 0 { return "~0 MB" }
-        let kb = Double(bytes) / 1024.0
-        let mb = kb / 1024.0
-        let gb = mb / 1024.0
-        if gb >= 1.0 { return String(format: "%.2f GB", gb) }
-        return String(format: "%.1f MB", mb)
-    }
 }
 
 // MARK: - Clear All Button
@@ -335,20 +333,18 @@ private struct ClearAllButton: View {
                         .scaleEffect(0.6)
                         .frame(width: 12, height: 12)
                 } else {
-                    Image(systemName: "trash")
+                    Image(systemName: "stop.circle")
                         .font(.system(size: 11, weight: .medium))
                 }
-                Text("Clear All")
+                Text("Stop All")
                     .font(.system(size: 11, weight: .medium))
             }
             .foregroundColor(isHovered ? .white : theme.errorColor)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(isHovered ? theme.errorColor : theme.errorColor.opacity(0.1))
-                }
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(isHovered ? theme.errorColor : theme.errorColor.opacity(0.1))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 6, style: .continuous)

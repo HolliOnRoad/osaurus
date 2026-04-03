@@ -147,8 +147,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelega
         // All VecturaKit inits run sequentially in one Task to prevent concurrent
         // CoreML model loads that can SIGSEGV on Apple Silicon.
         // Memory DB opens first because MemorySearchService.initialize() needs it
-        // for reverse maps. Registered as startup init task so ModelRuntime can
-        // gate MLX inference until CoreML embedding work finishes.
+        // for reverse maps. Registered as startup init task so vmlx engine can
+        // gate inference until CoreML embedding work finishes.
         let embeddingInitTask = Task {
             var memoryDBOpened = false
             for attempt in 1 ... 3 {
@@ -485,7 +485,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelega
                 await serverController.ensureShutdown()
             }
             await MCPServerManager.shared.stopAll()
-            await ModelRuntime.shared.clearAll()
+            await VMLXProcessManager.shared.stopAll()
             do {
                 try await SandboxManager.shared.stopContainer()
             } catch {

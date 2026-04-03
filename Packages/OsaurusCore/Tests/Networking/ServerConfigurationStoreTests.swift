@@ -24,9 +24,10 @@ struct ServerConfigurationStoreTests {
         #expect(decoded.numberOfThreads == defaults.numberOfThreads)
         #expect(decoded.backlog == defaults.backlog)
         #expect(decoded.genTopP == defaults.genTopP)
-        #expect(decoded.genKVGroupSize == defaults.genKVGroupSize)
-        #expect(decoded.genQuantizedKVStart == defaults.genQuantizedKVStart)
-        #expect(decoded.genPrefillStepSize == nil)
+        #expect(decoded.continuousBatching == defaults.continuousBatching)
+        #expect(decoded.enablePrefixCache == defaults.enablePrefixCache)
+        #expect(decoded.toolCallParser == defaults.toolCallParser)
+        #expect(decoded.reasoningParser == defaults.reasoningParser)
     }
 
     @Test @MainActor func storeRoundTrip_readsWhatWasWritten() async throws {
@@ -47,8 +48,10 @@ struct ServerConfigurationStoreTests {
         config.port = 5555
         config.exposeToNetwork = true
         config.genTopP = 0.7
-        config.genKVBits = 8
-        config.genMaxKVSize = 16384
+        config.continuousBatching = false
+        config.toolCallParser = "qwen"
+        config.reasoningParser = "deepseek_r1"
+        config.enableJIT = true
 
         ServerConfigurationStore.save(config)
         let loaded = ServerConfigurationStore.load()

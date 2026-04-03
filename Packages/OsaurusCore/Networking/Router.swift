@@ -123,7 +123,7 @@ public struct Router {
     }
 
     private func modelsEndpoint() -> (HTTPResponseStatus, [(String, String)], String) {
-        var models = MLXService.getAvailableModels().map { modelName in
+        var models = VMLXService.getAvailableModels().map { modelName in
             OpenAIModel(modelName: modelName)
         }
 
@@ -144,7 +144,7 @@ public struct Router {
 
     private func tagsEndpoint() -> (HTTPResponseStatus, [(String, String)], String) {
         let now = Date().ISO8601Format()
-        var models = MLXService.getAvailableModels().map { modelName in
+        var models = VMLXService.getAvailableModels().map { modelName in
             var model = OpenAIModel(modelName: modelName)
             // Fields for "/tags" compatibility
             model.name = modelName

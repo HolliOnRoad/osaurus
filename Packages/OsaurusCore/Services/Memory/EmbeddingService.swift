@@ -25,7 +25,7 @@ public actor EmbeddingService {
 
     /// Prevents concurrent CoreML (embedding) and MLX (inference) Metal
     /// operations at startup.  AppDelegate registers the startup embedding
-    /// task; ModelRuntime awaits it before the first inference call.
+    /// task; the vmlx engine awaits it before the first inference call.
     private static let startupLock = NSLock()
     private static nonisolated(unsafe) var _startupInitTask: Task<Void, Never>?
 

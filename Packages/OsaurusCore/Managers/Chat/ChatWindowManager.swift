@@ -573,11 +573,9 @@ public final class ChatWindowManager: NSObject, ObservableObject {
         let closedSessionId = windows[id]?.sessionId
         Task {
             if let sid = closedSessionId {
-                await ModelRuntime.shared.invalidateSession(sid.uuidString)
+                // Session invalidation now handled by the Python engine's own cache management
                 PluginHostContext.invalidatePreflightCache(sessionId: sid.uuidString)
             }
-            let active = self.activeLocalModelNames()
-            await ModelRuntime.shared.unloadModelsNotIn(active)
         }
 
         // Sever NSWindow -> NSHostingController link so the SwiftUI view tree

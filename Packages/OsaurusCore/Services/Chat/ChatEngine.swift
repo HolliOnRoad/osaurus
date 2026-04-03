@@ -15,9 +15,9 @@ actor ChatEngine: Sendable, ChatEngineProtocol {
     private var inferenceSource: InferenceSource = .httpAPI
 
     init(
-        services: [ModelService] = [FoundationModelService(), MLXService()],
+        services: [ModelService] = [FoundationModelService(), VMLXService()],
         installedModelsProvider: @escaping @Sendable () -> [String] = {
-            MLXService.getAvailableModels()
+            VMLXService.getAvailableModels()
         },
         source: InferenceSource = .httpAPI
     ) {

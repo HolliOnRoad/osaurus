@@ -33,7 +33,7 @@ public enum CoreModelError: Error, LocalizedError, Equatable {
 public actor CoreModelService {
     public static let shared = CoreModelService()
 
-    private let localServices: [ModelService] = [FoundationModelService(), MLXService.shared]
+    private let localServices: [ModelService] = [FoundationModelService(), VMLXService.shared]
 
     private static let maxRetries = 3
     private static let baseRetryDelayNanoseconds: UInt64 = 1_000_000_000

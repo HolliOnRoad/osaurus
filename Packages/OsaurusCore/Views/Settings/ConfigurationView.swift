@@ -43,12 +43,47 @@ struct ConfigurationView: View {
 
     // Local Inference settings state
     @State private var tempTopP: String = ""
-    @State private var tempKVBits: String = ""
-    @State private var tempKVGroup: String = ""
-    @State private var tempQuantStart: String = ""
-    @State private var tempMaxKV: String = ""
-    @State private var tempPrefillStep: String = ""
     @State private var tempEvictionPolicy: ModelEvictionPolicy = .strictSingleModel
+    // Engine
+    @State private var tempContinuousBatching: Bool = true
+    @State private var tempMaxNumSeqs: String = ""
+    @State private var tempStreamInterval: String = ""
+    // Cache
+    @State private var tempEnablePrefixCache: Bool = true
+    @State private var tempPrefixCacheSize: String = ""
+    @State private var tempCacheMemoryPercent: String = ""
+    @State private var tempCacheMemoryMB: String = ""
+    @State private var tempCacheTTLMinutes: String = ""
+    @State private var tempUsePagedCache: Bool = false
+    @State private var tempPagedCacheBlockSize: String = ""
+    @State private var tempMaxCacheBlocks: String = ""
+    @State private var tempEnableDiskCache: Bool = false
+    @State private var tempDiskCacheMaxGB: String = ""
+    @State private var tempEnableBlockDiskCache: Bool = false
+    @State private var tempBlockDiskCacheMaxGB: String = ""
+    // KV Quantization
+    @State private var tempKVCacheQuantization: String = "none"
+    @State private var tempKVCacheGroupSize: String = ""
+    // Parsers
+    @State private var tempToolCallParser: String = "auto"
+    @State private var tempReasoningParser: String = "auto"
+    // Performance
+    @State private var tempEnableJIT: Bool = false
+    @State private var tempSpeculativeModel: String = ""
+    @State private var tempNumDraftTokens: String = ""
+    @State private var tempEnablePLD: Bool = false
+    // Power
+    @State private var tempIdleSleepMode: String = "none"
+    @State private var tempIdleSleepMinutes: String = ""
+    @State private var tempEnableSoftSleep: Bool = true
+    @State private var tempSoftSleepMinutes: String = ""
+    @State private var tempEnableDeepSleep: Bool = true
+    @State private var tempDeepSleepMinutes: String = ""
+    // Thinking
+    @State private var tempDefaultEnableThinking: String = ""
+    // Default generation params
+    @State private var tempDefaultTemperature: String = ""
+    @State private var tempDefaultTopP: String = ""
 
     // Toast settings state
     @State private var tempToastPosition: ToastPosition = .topRight
@@ -388,33 +423,74 @@ struct ConfigurationView: View {
 
                         // MARK: - Local Inference Section
                         if matchesSearch(
-                            "Local Inference",
-                            "Inference",
-                            "Sampling",
-                            "Top P",
-                            "KV Cache",
-                            "Quantization",
-                            "Prefill",
-                            "Max KV",
-                            "CPU",
-                            "Memory"
+                            "Local Inference", "Inference", "Sampling", "Top P",
+                            "Cache", "Prefix", "Paged", "Disk", "Quantization",
+                            "Parser", "Tool", "Reasoning", "JIT", "Speculative",
+                            "Sleep", "Idle", "Thinking", "Engine", "Batching"
                         ) {
                             SettingsSection(title: "Local Inference", icon: "bolt") {
                                 VStack(alignment: .leading, spacing: 20) {
                                     Text(
-                                        "Tune the local model runtime. These settings only affect models running on this device."
+                                        "Configure the vmlx inference engine. Changes restart the engine."
                                     )
                                     .font(.system(size: 12))
                                     .foregroundColor(theme.secondaryText)
 
-                                    // Sampling
+                                    // MARK: Engine
+                                    SettingsSubsection(label: "Engine") {
+                                        VStack(alignment: .leading, spacing: 12) {
+                                            Toggle("Continuous Batching", isOn: $tempContinuousBatching)
+                                                .font(.system(size: 12))
+                                            Text("Required for prefix cache, paged cache, and concurrent users.")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(theme.tertiaryText)
+                                            SettingsStepperField(
+                                                label: "Max Concurrent Sequences",
+                                                help: "Max simultaneous requests (requires batching)",
+                                                text: $tempMaxNumSeqs,
+                                                range: 1...1024,
+                                                step: 32,
+                                                defaultValue: 256
+                                            )
+                                            SettingsStepperField(
+                                                label: "Stream Interval",
+                                                help: "Tokens per SSE update (1 = every token)",
+                                                text: $tempStreamInterval,
+                                                range: 1...16,
+                                                step: 1,
+                                                defaultValue: 1
+                                            )
+                                        }
+                                    }
+
+                                    SettingsDivider()
+
+                                    // MARK: Sampling
                                     SettingsSubsection(label: "Sampling") {
                                         VStack(alignment: .leading, spacing: 12) {
                                             SettingsSliderField(
                                                 label: "Top P",
                                                 help: "Default sampling diversity (0–1)",
                                                 text: $tempTopP,
-                                                range: 0 ... 1,
+                                                range: 0...1,
+                                                step: 0.05,
+                                                defaultValue: 1.0,
+                                                formatString: "%.2f"
+                                            )
+                                            SettingsSliderField(
+                                                label: "Default Temperature",
+                                                help: "Server-wide default (0–2). Empty = 0.7",
+                                                text: $tempDefaultTemperature,
+                                                range: 0...2,
+                                                step: 0.1,
+                                                defaultValue: 0.7,
+                                                formatString: "%.1f"
+                                            )
+                                            SettingsSliderField(
+                                                label: "Default Top P",
+                                                help: "Server-wide default. Empty = model default",
+                                                text: $tempDefaultTopP,
+                                                range: 0...1,
                                                 step: 0.05,
                                                 defaultValue: 1.0,
                                                 formatString: "%.2f"
@@ -422,50 +498,179 @@ struct ConfigurationView: View {
                                         }
                                     }
 
-                                    // KV Cache Settings
-                                    SettingsSubsection(label: "KV Cache") {
+                                    SettingsDivider()
+
+                                    // MARK: Cache
+                                    SettingsSubsection(label: "Cache") {
                                         VStack(alignment: .leading, spacing: 12) {
-                                            SettingsStepperField(
-                                                label: "Max Context Length",
-                                                help: "Max KV cache size in tokens",
-                                                text: $tempMaxKV,
-                                                range: 1024 ... 131072,
-                                                step: 1024,
-                                                defaultValue: 8192
+                                            Toggle("Prefix Cache", isOn: $tempEnablePrefixCache)
+                                                .font(.system(size: 12))
+                                            Text("Reuse system prompt KV states across turns.")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(theme.tertiaryText)
+                                            if tempEnablePrefixCache {
+                                                SettingsStepperField(
+                                                    label: "Prefix Cache Entries",
+                                                    help: "Max cached prefixes (legacy count mode)",
+                                                    text: $tempPrefixCacheSize,
+                                                    range: 10...1000,
+                                                    step: 10,
+                                                    defaultValue: 100
+                                                )
+                                            }
+
+                                            SettingsSliderField(
+                                                label: "Cache Memory %",
+                                                help: "Fraction of RAM for cache (10%–80%)",
+                                                text: $tempCacheMemoryPercent,
+                                                range: 0.1...0.8,
+                                                step: 0.05,
+                                                defaultValue: 0.30,
+                                                formatString: "%.2f"
                                             )
-                                            DisclosureGroup("Advanced") {
-                                                VStack(alignment: .leading, spacing: 12) {
+
+                                            SettingsStepperField(
+                                                label: "Cache Memory MB",
+                                                help: "Fixed MB budget (overrides %). Empty = auto",
+                                                text: $tempCacheMemoryMB,
+                                                range: 512...65536,
+                                                step: 512,
+                                                defaultValue: 4096
+                                            )
+
+                                            SettingsStepperField(
+                                                label: "Cache TTL (minutes)",
+                                                help: "Evict entries after this many minutes. 0 = never",
+                                                text: $tempCacheTTLMinutes,
+                                                range: 0...1440,
+                                                step: 5,
+                                                defaultValue: 0
+                                            )
+
+                                            SettingsDivider()
+
+                                            Toggle("Paged Cache", isOn: $tempUsePagedCache)
+                                                .font(.system(size: 12))
+                                            Text("Block-based KV cache for better memory utilization.")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(theme.tertiaryText)
+
+                                            if tempUsePagedCache {
+                                                SettingsStepperField(
+                                                    label: "Block Size",
+                                                    help: "Tokens per cache block",
+                                                    text: $tempPagedCacheBlockSize,
+                                                    range: 16...512,
+                                                    step: 16,
+                                                    defaultValue: 64
+                                                )
+                                                SettingsStepperField(
+                                                    label: "Max Blocks",
+                                                    help: "Maximum cache blocks in memory",
+                                                    text: $tempMaxCacheBlocks,
+                                                    range: 100...10000,
+                                                    step: 100,
+                                                    defaultValue: 1000
+                                                )
+                                                Toggle("Block Disk Cache (L2)", isOn: $tempEnableBlockDiskCache)
+                                                    .font(.system(size: 12))
+                                                if tempEnableBlockDiskCache {
                                                     SettingsStepperField(
-                                                        label: "Cache Bits",
-                                                        help: "Quantization bits. Empty disables",
-                                                        text: $tempKVBits,
-                                                        range: 2 ... 8,
+                                                        label: "Block Disk Max GB",
+                                                        help: "Max SSD space for block cache",
+                                                        text: $tempBlockDiskCacheMaxGB,
+                                                        range: 1...100,
                                                         step: 1,
-                                                        defaultValue: 8
+                                                        defaultValue: 10
                                                     )
+                                                }
+                                            }
+
+                                            SettingsDivider()
+
+                                            Toggle("Disk Cache", isOn: $tempEnableDiskCache)
+                                                .font(.system(size: 12))
+                                            Text("Persist prompt KV states to SSD (L2 cache).")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(theme.tertiaryText)
+                                            if tempEnableDiskCache {
+                                                SettingsStepperField(
+                                                    label: "Disk Cache Max GB",
+                                                    help: "Maximum SSD space for prompt cache",
+                                                    text: $tempDiskCacheMaxGB,
+                                                    range: 1...100,
+                                                    step: 1,
+                                                    defaultValue: 10
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    SettingsDivider()
+
+                                    // MARK: KV Quantization
+                                    SettingsSubsection(label: "KV Cache Quantization") {
+                                        VStack(alignment: .leading, spacing: 12) {
+                                            Picker("Quantization", selection: $tempKVCacheQuantization) {
+                                                Text("None (TurboQuant auto)").tag("none")
+                                                Text("Q8 (8-bit, ~2x savings)").tag("q8")
+                                                Text("Q4 (4-bit, ~4x savings)").tag("q4")
+                                            }
+                                            .pickerStyle(.segmented)
+                                            if tempKVCacheQuantization != "none" {
+                                                SettingsStepperField(
+                                                    label: "Group Size",
+                                                    help: "Quantization group size",
+                                                    text: $tempKVCacheGroupSize,
+                                                    range: 16...256,
+                                                    step: 16,
+                                                    defaultValue: 64
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    SettingsDivider()
+
+                                    // Parsers moved to per-model config in chat input bar
+
+                                    // MARK: Performance
+                                    SettingsSubsection(label: "Performance") {
+                                        VStack(alignment: .leading, spacing: 12) {
+                                            Toggle("JIT Compilation", isOn: $tempEnableJIT)
+                                                .font(.system(size: 12))
+                                            Text("Fuse Metal operations for faster inference (one-time warmup).")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(theme.tertiaryText)
+
+                                            Toggle("Prompt Lookup Decoding", isOn: $tempEnablePLD)
+                                                .font(.system(size: 12))
+                                            Text("Speculative acceleration for repetitive output (code, JSON).")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(theme.tertiaryText)
+
+                                            DisclosureGroup("Speculative Decoding") {
+                                                VStack(alignment: .leading, spacing: 12) {
+                                                    VStack(alignment: .leading, spacing: 4) {
+                                                        Text("Draft Model")
+                                                            .font(.system(size: 12, weight: .medium))
+                                                        TextField(
+                                                            "e.g. mlx-community/Llama-3.2-1B-Instruct-4bit",
+                                                            text: $tempSpeculativeModel
+                                                        )
+                                                        .textFieldStyle(.roundedBorder)
+                                                        .font(.system(size: 12))
+                                                        Text("Small model path for speculative decoding")
+                                                            .font(.system(size: 11))
+                                                            .foregroundColor(theme.tertiaryText)
+                                                    }
                                                     SettingsStepperField(
-                                                        label: "Group Size",
-                                                        help: "KV quantization group size",
-                                                        text: $tempKVGroup,
-                                                        range: 1 ... 256,
-                                                        step: 16,
-                                                        defaultValue: 64
-                                                    )
-                                                    SettingsStepperField(
-                                                        label: "Quantized Start",
-                                                        help: "Token offset to begin quantization",
-                                                        text: $tempQuantStart,
-                                                        range: 0 ... 1024,
-                                                        step: 64,
-                                                        defaultValue: 0
-                                                    )
-                                                    SettingsStepperField(
-                                                        label: "Prefill Step",
-                                                        help: "Tokens per prefill chunk",
-                                                        text: $tempPrefillStep,
-                                                        range: 64 ... 2048,
-                                                        step: 64,
-                                                        defaultValue: 512
+                                                        label: "Draft Tokens",
+                                                        help: "Tokens proposed per step (2–5 typical)",
+                                                        text: $tempNumDraftTokens,
+                                                        range: 1...10,
+                                                        step: 1,
+                                                        defaultValue: 3
                                                     )
                                                 }
                                                 .padding(.top, 8)
@@ -475,7 +680,47 @@ struct ConfigurationView: View {
 
                                     SettingsDivider()
 
-                                    // Eviction Policy
+                                    // MARK: Power
+                                    SettingsSubsection(label: "Power Management") {
+                                        VStack(alignment: .leading, spacing: 12) {
+                                            Toggle("Soft Sleep (clear caches, model stays loaded)", isOn: $tempEnableSoftSleep)
+                                                .font(.system(size: 12))
+                                            if tempEnableSoftSleep {
+                                                SettingsStepperField(
+                                                    label: "Soft Sleep After (minutes)",
+                                                    help: "Clear GPU caches after this idle time",
+                                                    text: $tempSoftSleepMinutes,
+                                                    range: 1...480,
+                                                    step: 5,
+                                                    defaultValue: 10
+                                                )
+                                            }
+
+                                            Toggle("Deep Sleep (unload model from memory)", isOn: $tempEnableDeepSleep)
+                                                .font(.system(size: 12))
+                                            if tempEnableDeepSleep {
+                                                SettingsStepperField(
+                                                    label: "Deep Sleep After (minutes)",
+                                                    help: "Unload model after this idle time",
+                                                    text: $tempDeepSleepMinutes,
+                                                    range: 1...480,
+                                                    step: 5,
+                                                    defaultValue: 30
+                                                )
+                                            }
+
+                                            Text("Auto-wakes on next request.")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(theme.tertiaryText)
+                                        }
+                                    }
+
+                                    SettingsDivider()
+
+                                    // Thinking/Reasoning toggle is in the chat UI (per-conversation),
+                                    // not in global settings.
+
+                                    // MARK: Model Management
                                     SettingsSubsection(label: "Model Management") {
                                         VStack(alignment: .leading, spacing: 10) {
                                             Picker("", selection: $tempEvictionPolicy) {
@@ -676,17 +921,48 @@ struct ConfigurationView: View {
 
         let defaults = ServerConfiguration.default
         tempTopP = configuration.genTopP == defaults.genTopP ? "" : String(configuration.genTopP)
-        tempKVBits = configuration.genKVBits.map(String.init) ?? ""
-        tempKVGroup =
-            configuration.genKVGroupSize == defaults.genKVGroupSize
-            ? "" : String(configuration.genKVGroupSize)
-        tempQuantStart =
-            configuration.genQuantizedKVStart == defaults.genQuantizedKVStart
-            ? "" : String(configuration.genQuantizedKVStart)
-        tempMaxKV = configuration.genMaxKVSize.map(String.init) ?? ""
-        tempPrefillStep = configuration.genPrefillStepSize.map(String.init) ?? ""
         tempAllowedOrigins = configuration.allowedOrigins.joined(separator: ", ")
         tempEvictionPolicy = configuration.modelEvictionPolicy
+        // Engine
+        tempContinuousBatching = configuration.continuousBatching
+        tempMaxNumSeqs = configuration.maxNumSeqs == defaults.maxNumSeqs ? "" : String(configuration.maxNumSeqs)
+        tempStreamInterval = configuration.streamInterval == defaults.streamInterval ? "" : String(configuration.streamInterval)
+        // Cache
+        tempEnablePrefixCache = configuration.enablePrefixCache
+        tempPrefixCacheSize = configuration.prefixCacheSize == defaults.prefixCacheSize ? "" : String(configuration.prefixCacheSize)
+        tempCacheMemoryPercent = configuration.cacheMemoryPercent == defaults.cacheMemoryPercent ? "" : String(configuration.cacheMemoryPercent)
+        tempCacheMemoryMB = configuration.cacheMemoryMB.map(String.init) ?? ""
+        tempCacheTTLMinutes = configuration.cacheTTLMinutes == defaults.cacheTTLMinutes ? "" : String(configuration.cacheTTLMinutes)
+        tempUsePagedCache = configuration.usePagedCache
+        tempPagedCacheBlockSize = configuration.pagedCacheBlockSize == defaults.pagedCacheBlockSize ? "" : String(configuration.pagedCacheBlockSize)
+        tempMaxCacheBlocks = configuration.maxCacheBlocks == defaults.maxCacheBlocks ? "" : String(configuration.maxCacheBlocks)
+        tempEnableDiskCache = configuration.enableDiskCache
+        tempDiskCacheMaxGB = configuration.diskCacheMaxGB == defaults.diskCacheMaxGB ? "" : String(configuration.diskCacheMaxGB)
+        tempEnableBlockDiskCache = configuration.enableBlockDiskCache
+        tempBlockDiskCacheMaxGB = configuration.blockDiskCacheMaxGB == defaults.blockDiskCacheMaxGB ? "" : String(configuration.blockDiskCacheMaxGB)
+        // KV Quantization
+        tempKVCacheQuantization = configuration.kvCacheQuantization
+        tempKVCacheGroupSize = configuration.kvCacheGroupSize == defaults.kvCacheGroupSize ? "" : String(configuration.kvCacheGroupSize)
+        // Parsers
+        tempToolCallParser = configuration.toolCallParser
+        tempReasoningParser = configuration.reasoningParser
+        // Performance
+        tempEnableJIT = configuration.enableJIT
+        tempSpeculativeModel = configuration.speculativeModel ?? ""
+        tempNumDraftTokens = configuration.numDraftTokens == defaults.numDraftTokens ? "" : String(configuration.numDraftTokens)
+        tempEnablePLD = configuration.enablePLD
+        // Power
+        tempIdleSleepMode = configuration.idleSleepMode
+        tempIdleSleepMinutes = configuration.idleSleepMinutes == defaults.idleSleepMinutes ? "" : String(configuration.idleSleepMinutes)
+        tempEnableSoftSleep = configuration.enableSoftSleep
+        tempSoftSleepMinutes = configuration.softSleepMinutes == defaults.softSleepMinutes ? "" : String(configuration.softSleepMinutes)
+        tempEnableDeepSleep = configuration.enableDeepSleep
+        tempDeepSleepMinutes = configuration.deepSleepMinutes == defaults.deepSleepMinutes ? "" : String(configuration.deepSleepMinutes)
+        // Thinking
+        tempDefaultEnableThinking = configuration.defaultEnableThinking ?? ""
+        // Default generation params
+        tempDefaultTemperature = configuration.defaultTemperature.map { String($0) } ?? ""
+        tempDefaultTopP = configuration.defaultTopP.map { String($0) } ?? ""
 
         // Load toast configuration
         let toastConfig = ToastConfigurationStore.load()
@@ -734,12 +1010,39 @@ struct ConfigurationView: View {
         tempAgentMaxIterations = ""
 
         tempTopP = ""
-        tempKVBits = ""
-        tempKVGroup = ""
-        tempQuantStart = ""
-        tempMaxKV = ""
-        tempPrefillStep = ""
         tempEvictionPolicy = serverDefaults.modelEvictionPolicy
+        tempContinuousBatching = serverDefaults.continuousBatching
+        tempMaxNumSeqs = ""
+        tempStreamInterval = ""
+        tempEnablePrefixCache = serverDefaults.enablePrefixCache
+        tempPrefixCacheSize = ""
+        tempCacheMemoryPercent = ""
+        tempCacheMemoryMB = ""
+        tempCacheTTLMinutes = ""
+        tempUsePagedCache = serverDefaults.usePagedCache
+        tempPagedCacheBlockSize = ""
+        tempMaxCacheBlocks = ""
+        tempEnableDiskCache = serverDefaults.enableDiskCache
+        tempDiskCacheMaxGB = ""
+        tempEnableBlockDiskCache = serverDefaults.enableBlockDiskCache
+        tempBlockDiskCacheMaxGB = ""
+        tempKVCacheQuantization = serverDefaults.kvCacheQuantization
+        tempKVCacheGroupSize = ""
+        tempToolCallParser = serverDefaults.toolCallParser
+        tempReasoningParser = serverDefaults.reasoningParser
+        tempEnableJIT = serverDefaults.enableJIT
+        tempSpeculativeModel = ""
+        tempNumDraftTokens = ""
+        tempEnablePLD = serverDefaults.enablePLD
+        tempIdleSleepMode = serverDefaults.idleSleepMode
+        tempIdleSleepMinutes = ""
+        tempEnableSoftSleep = serverDefaults.enableSoftSleep
+        tempSoftSleepMinutes = ""
+        tempEnableDeepSleep = serverDefaults.enableDeepSleep
+        tempDeepSleepMinutes = ""
+        tempDefaultEnableThinking = ""
+        tempDefaultTemperature = ""
+        tempDefaultTopP = ""
 
         showSuccess("Settings reset to defaults")
     }
@@ -766,30 +1069,85 @@ struct ConfigurationView: View {
             configuration.genTopP = Float(trimmedTopP) ?? defaults.genTopP
         }
 
-        configuration.genKVBits = Int(tempKVBits)
-
-        let trimmedKVGroup = tempKVGroup.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmedKVGroup.isEmpty {
-            configuration.genKVGroupSize = defaults.genKVGroupSize
-        } else {
-            configuration.genKVGroupSize = Int(trimmedKVGroup) ?? defaults.genKVGroupSize
-        }
-
-        let trimmedQuantStart = tempQuantStart.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmedQuantStart.isEmpty {
-            configuration.genQuantizedKVStart = defaults.genQuantizedKVStart
-        } else {
-            configuration.genQuantizedKVStart =
-                Int(trimmedQuantStart) ?? defaults.genQuantizedKVStart
-        }
-
-        let trimmedMaxKV = tempMaxKV.trimmingCharacters(in: .whitespacesAndNewlines)
-        configuration.genMaxKVSize = trimmedMaxKV.isEmpty ? nil : Int(trimmedMaxKV)
-
-        let trimmedPrefillStep = tempPrefillStep.trimmingCharacters(in: .whitespacesAndNewlines)
-        configuration.genPrefillStepSize = trimmedPrefillStep.isEmpty ? nil : Int(trimmedPrefillStep)
-
         configuration.modelEvictionPolicy = tempEvictionPolicy
+
+        // Engine
+        configuration.continuousBatching = tempContinuousBatching
+        let tMaxSeqs = tempMaxNumSeqs.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.maxNumSeqs = tMaxSeqs.isEmpty ? defaults.maxNumSeqs : (Int(tMaxSeqs) ?? defaults.maxNumSeqs)
+        let tStreamInt = tempStreamInterval.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.streamInterval = tStreamInt.isEmpty ? defaults.streamInterval : (Int(tStreamInt) ?? defaults.streamInterval)
+
+        // Cache
+        configuration.enablePrefixCache = tempEnablePrefixCache
+        let tPCS = tempPrefixCacheSize.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.prefixCacheSize = tPCS.isEmpty ? defaults.prefixCacheSize : (Int(tPCS) ?? defaults.prefixCacheSize)
+        let tCMP = tempCacheMemoryPercent.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.cacheMemoryPercent = tCMP.isEmpty ? defaults.cacheMemoryPercent : (Float(tCMP) ?? defaults.cacheMemoryPercent)
+        let tCMB = tempCacheMemoryMB.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.cacheMemoryMB = tCMB.isEmpty ? nil : Int(tCMB)
+        let tTTL = tempCacheTTLMinutes.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.cacheTTLMinutes = tTTL.isEmpty ? defaults.cacheTTLMinutes : (Float(tTTL) ?? defaults.cacheTTLMinutes)
+        configuration.usePagedCache = tempUsePagedCache
+        let tPBS = tempPagedCacheBlockSize.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.pagedCacheBlockSize = tPBS.isEmpty ? defaults.pagedCacheBlockSize : (Int(tPBS) ?? defaults.pagedCacheBlockSize)
+        let tMCB = tempMaxCacheBlocks.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.maxCacheBlocks = tMCB.isEmpty ? defaults.maxCacheBlocks : (Int(tMCB) ?? defaults.maxCacheBlocks)
+        configuration.enableDiskCache = tempEnableDiskCache
+        let tDMG = tempDiskCacheMaxGB.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.diskCacheMaxGB = tDMG.isEmpty ? defaults.diskCacheMaxGB : (Float(tDMG) ?? defaults.diskCacheMaxGB)
+        configuration.enableBlockDiskCache = tempEnableBlockDiskCache
+        let tBDG = tempBlockDiskCacheMaxGB.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.blockDiskCacheMaxGB = tBDG.isEmpty ? defaults.blockDiskCacheMaxGB : (Float(tBDG) ?? defaults.blockDiskCacheMaxGB)
+
+        // KV Quantization
+        configuration.kvCacheQuantization = tempKVCacheQuantization
+        let tKVG = tempKVCacheGroupSize.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.kvCacheGroupSize = tKVG.isEmpty ? defaults.kvCacheGroupSize : (Int(tKVG) ?? defaults.kvCacheGroupSize)
+
+        // Parsers
+        configuration.toolCallParser = tempToolCallParser
+        configuration.reasoningParser = tempReasoningParser
+
+        // Performance
+        configuration.enableJIT = tempEnableJIT
+        let tSpec = tempSpeculativeModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.speculativeModel = tSpec.isEmpty ? nil : tSpec
+        let tNDT = tempNumDraftTokens.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.numDraftTokens = tNDT.isEmpty ? defaults.numDraftTokens : (Int(tNDT) ?? defaults.numDraftTokens)
+        configuration.enablePLD = tempEnablePLD
+
+        // Power
+        // Derive idleSleepMode from checkboxes for backward compatibility
+        if tempEnableDeepSleep {
+            configuration.idleSleepMode = "deep"
+            configuration.idleSleepMinutes = tempDeepSleepMinutes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? defaults.deepSleepMinutes
+                : (Int(tempDeepSleepMinutes.trimmingCharacters(in: .whitespacesAndNewlines)) ?? defaults.deepSleepMinutes)
+        } else if tempEnableSoftSleep {
+            configuration.idleSleepMode = "soft"
+            configuration.idleSleepMinutes = tempSoftSleepMinutes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? defaults.softSleepMinutes
+                : (Int(tempSoftSleepMinutes.trimmingCharacters(in: .whitespacesAndNewlines)) ?? defaults.softSleepMinutes)
+        } else {
+            configuration.idleSleepMode = "none"
+            configuration.idleSleepMinutes = defaults.idleSleepMinutes
+        }
+        configuration.enableSoftSleep = tempEnableSoftSleep
+        let tSSM = tempSoftSleepMinutes.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.softSleepMinutes = tSSM.isEmpty ? defaults.softSleepMinutes : (Int(tSSM) ?? defaults.softSleepMinutes)
+        configuration.enableDeepSleep = tempEnableDeepSleep
+        let tDSM = tempDeepSleepMinutes.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.deepSleepMinutes = tDSM.isEmpty ? defaults.deepSleepMinutes : (Int(tDSM) ?? defaults.deepSleepMinutes)
+
+        // Thinking
+        let tDET = tempDefaultEnableThinking.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.defaultEnableThinking = tDET.isEmpty ? nil : tDET
+        // Default generation params
+        let tDefTemp = tempDefaultTemperature.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.defaultTemperature = tDefTemp.isEmpty ? nil : Float(tDefTemp)
+        let tDefTopP = tempDefaultTopP.trimmingCharacters(in: .whitespacesAndNewlines)
+        configuration.defaultTopP = tDefTopP.isEmpty ? nil : Float(tDefTopP)
 
         let parsedOrigins: [String] =
             tempAllowedOrigins
@@ -805,12 +1163,19 @@ struct ConfigurationView: View {
             || previousServerCfg.exposeToNetwork != configuration.exposeToNetwork
             || previousServerCfg.allowedOrigins != configuration.allowedOrigins
             || previousServerCfg.genTopP != configuration.genTopP
-            || previousServerCfg.genKVBits != configuration.genKVBits
-            || previousServerCfg.genKVGroupSize != configuration.genKVGroupSize
-            || previousServerCfg.genQuantizedKVStart != configuration.genQuantizedKVStart
-            || previousServerCfg.genMaxKVSize != configuration.genMaxKVSize
-            || previousServerCfg.genPrefillStepSize != configuration.genPrefillStepSize
             || previousServerCfg.modelEvictionPolicy != configuration.modelEvictionPolicy
+            || previousServerCfg.continuousBatching != configuration.continuousBatching
+            || previousServerCfg.maxNumSeqs != configuration.maxNumSeqs
+            || previousServerCfg.enablePrefixCache != configuration.enablePrefixCache
+            || previousServerCfg.usePagedCache != configuration.usePagedCache
+            || previousServerCfg.kvCacheQuantization != configuration.kvCacheQuantization
+            || previousServerCfg.toolCallParser != configuration.toolCallParser
+            || previousServerCfg.reasoningParser != configuration.reasoningParser
+            || previousServerCfg.enableJIT != configuration.enableJIT
+            || previousServerCfg.speculativeModel != configuration.speculativeModel
+            || previousServerCfg.enablePLD != configuration.enablePLD
+            || previousServerCfg.idleSleepMode != configuration.idleSleepMode
+            || previousServerCfg.defaultEnableThinking != configuration.defaultEnableThinking
 
         ServerConfigurationStore.save(configuration)
 

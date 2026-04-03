@@ -10,7 +10,7 @@ Canonical reference for all Osaurus features, their status, and documentation.
 
 | Feature                          | Status    | README Section     | Documentation                 | Code Location                                                                         |
 | -------------------------------- | --------- | ------------------ | ----------------------------- | ------------------------------------------------------------------------------------- |
-| Local LLM Server (MLX)           | Stable    | "Key Features"     | OpenAI_API_GUIDE.md           | Services/Inference/MLXService.swift, Services/ModelRuntime/                                     |
+| Local LLM Server (vmlx-engine)   | Stable    | "Key Features"     | VMLX_ENGINE.md, OpenAI_API_GUIDE.md | Services/Inference/VMLXService.swift, VMLXProcessManager.swift, VMLXGateway.swift               |
 | Remote Providers                 | Stable    | "Key Features"     | REMOTE_PROVIDERS.md           | Managers/RemoteProviderManager.swift, Services/Provider/RemoteProviderService.swift            |
 | Remote MCP Providers             | Stable    | "Key Features"     | REMOTE_MCP_PROVIDERS.md       | Managers/MCPProviderManager.swift, Tools/MCPProviderTool.swift                        |
 | MCP Server                       | Stable    | "MCP Server"       | (in README)                   | Networking/OsaurusServer.swift, Services/MCP/MCPServerManager.swift                       |

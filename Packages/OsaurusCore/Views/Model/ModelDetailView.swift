@@ -45,6 +45,10 @@ struct ModelDetailView: View, Identifiable {
     /// Whether HF details are currently loading
     @State private var isLoadingHFDetails = false
 
+    /// Per-model parser settings
+    @State private var selectedToolParser: String = "auto"
+    @State private var selectedReasoningParser: String = "auto"
+
     /// Whether content has appeared (for entrance animation)
     @State private var hasAppeared = false
 
@@ -76,6 +80,9 @@ struct ModelDetailView: View, Identifiable {
                     // Model Details Card
                     modelDetailsCard
 
+                    // Parser Configuration Card
+                    parserConfigCard
+
                     // Download Info Card
                     downloadInfoCard
                 }
@@ -94,6 +101,12 @@ struct ModelDetailView: View, Identifiable {
         .onAppear {
             withAnimation(.easeOut(duration: 0.2)) {
                 hasAppeared = true
+            }
+
+            // Load per-model parser settings
+            if let opts = ModelOptionsStore.shared.loadOptions(for: model.id) {
+                selectedToolParser = opts["toolParser"]?.stringValue ?? "auto"
+                selectedReasoningParser = opts["reasoningParser"]?.stringValue ?? "auto"
             }
 
             Task {
@@ -279,6 +292,88 @@ struct ModelDetailView: View, Identifiable {
                 )
             }
         }
+    }
+
+    // MARK: - Parser Configuration Card
+
+    private var parserConfigCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Parser Configuration")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(theme.primaryText)
+
+            Text("Set tool call and reasoning parsers for this model. Saved per-model.")
+                .font(.system(size: 11))
+                .foregroundColor(theme.tertiaryText)
+
+            VStack(spacing: 10) {
+                HStack {
+                    Text("Tool Parser")
+                        .font(.system(size: 12))
+                        .foregroundColor(theme.secondaryText)
+                        .frame(width: 120, alignment: .leading)
+                    Picker("", selection: $selectedToolParser) {
+                        Text("Auto-detect").tag("auto")
+                        Text("None").tag("none")
+                        Divider()
+                        Text("Qwen").tag("qwen")
+                        Text("Llama").tag("llama")
+                        Text("Mistral").tag("mistral")
+                        Text("Hermes").tag("hermes")
+                        Text("DeepSeek").tag("deepseek")
+                        Text("Nemotron").tag("nemotron")
+                        Text("MiniMax").tag("minimax")
+                        Text("Kimi").tag("kimi")
+                        Text("Granite").tag("granite")
+                        Text("Functionary").tag("functionary")
+                        Text("GLM-4.7").tag("glm47")
+                        Text("Step 3.5").tag("step3p5")
+                        Text("xLAM").tag("xlam")
+                    }
+                    .labelsHidden()
+                    .onChange(of: selectedToolParser) { _, newVal in
+                        saveParserOptions(toolParser: newVal, reasoningParser: selectedReasoningParser)
+                    }
+                }
+
+                HStack {
+                    Text("Reasoning Parser")
+                        .font(.system(size: 12))
+                        .foregroundColor(theme.secondaryText)
+                        .frame(width: 120, alignment: .leading)
+                    Picker("", selection: $selectedReasoningParser) {
+                        Text("Auto-detect").tag("auto")
+                        Text("None").tag("none")
+                        Divider()
+                        Text("Qwen 3").tag("qwen3")
+                        Text("DeepSeek R1").tag("deepseek_r1")
+                        Text("Mistral").tag("mistral")
+                        Text("Gemma 4").tag("gemma4")
+                        Text("GPT-OSS / GLM").tag("openai_gptoss")
+                    }
+                    .labelsHidden()
+                    .onChange(of: selectedReasoningParser) { _, newVal in
+                        saveParserOptions(toolParser: selectedToolParser, reasoningParser: newVal)
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(theme.cardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(theme.cardBorder, lineWidth: 1)
+                )
+        )
+    }
+
+    private func saveParserOptions(toolParser: String, reasoningParser: String) {
+        var opts = ModelOptionsStore.shared.loadOptions(for: model.id) ?? [:]
+        opts["toolParser"] = .string(toolParser)
+        opts["reasoningParser"] = .string(reasoningParser)
+        ModelOptionsStore.shared.saveOptions(opts, for: model.id)
     }
 
     // MARK: - Model Details Card

@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "vmlx-engine"
+version = "1.0.3"
+description = "Apple Silicon MLX inference engine for Osaurus"
+requires-python = ">=3.11"
+# No dependencies listed — install via bundle-python.sh with explicit versions
+
+[project.scripts]
+vmlx-engine = "vmlx_engine.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["vmlx_engine*"]

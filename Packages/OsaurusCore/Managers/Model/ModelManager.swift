@@ -8,7 +8,6 @@
 import Combine
 import Foundation
 import Hub
-import MLXLLM
 import SwiftUI
 
 extension Notification.Name {
@@ -273,13 +272,11 @@ final class ModelManager: NSObject, ObservableObject {
                 )
             }
 
-            // Keep only SDK-supported models
-            let allow = Self.sdkSupportedModelIds()
-            let allowedMapped = mapped.filter { allow.contains($0.id.lowercased()) }
+            // With vmlx Python engine, all MLX models are supported — no allowlist filter
 
             // Publish to UI on main actor (we already are, but be explicit about ordering)
             await MainActor.run {
-                self.mergeAvailable(with: allowedMapped)
+                self.mergeAvailable(with: mapped)
                 self.isLoadingModels = false
             }
         }
@@ -320,9 +317,7 @@ final class ModelManager: NSObject, ObservableObject {
             return nil
         }
 
-        // Only allow models supported by the SDK
-        let allow = Self.sdkSupportedModelIds()
-        guard allow.contains(lower) else { return nil }
+        // All MLX models are supported by vmlx engine — no allowlist
 
         // If already present in available or suggested (case-insensitive), return that instance
         if let existing = availableModels.first(where: { $0.id.lowercased() == trimmed.lowercased() }) {
@@ -354,9 +349,7 @@ final class ModelManager: NSObject, ObservableObject {
         let trimmed = repoId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
-        // Only allow models supported by the SDK
-        let allow = Self.sdkSupportedModelIds()
-        guard allow.contains(trimmed.lowercased()) else { return nil }
+        // All MLX models supported by vmlx engine — no allowlist
 
         // If already present, return immediately
         if let existing = availableModels.first(where: {
@@ -689,28 +682,17 @@ final class ModelManager: NSObject, ObservableObject {
 
     // MARK: - Private Methods
 
-    /// Compute the set of SDK-supported model ids from MLXLLM's registry
+    /// Compute the set of SDK-supported model ids.
+    /// With the vmlx Python engine, any MLX-format model is supported.
+    /// Returns an empty set — all installed models are allowed.
     static func sdkSupportedModelIds() -> Set<String> {
-        // The registry contains Apple-curated supported configurations.
-        // We normalize to lowercase for comparison.
-        var allowed: Set<String> = []
-        for config in LLMRegistry.shared.models {
-            allowed.insert(config.name.lowercased())
-        }
-        return allowed
+        return []
     }
 
-    /// Build MLXModel entries from the MLX registry of supported models
+    /// Registry models — no longer sourced from MLXLLM registry.
+    /// Returns empty; models are discovered from the local filesystem.
     static func registryModels() -> [MLXModel] {
-        return LLMRegistry.shared.models.map { cfg in
-            let id = cfg.name
-            return MLXModel(
-                id: id,
-                name: friendlyName(from: id),
-                description: "From MLX registry",
-                downloadURL: "https://huggingface.co/\(id)"
-            )
-        }
+        return []
     }
 
     private func copyContents(of sourceDirectory: URL, to destinationDirectory: URL) throws {
@@ -800,157 +782,204 @@ final class ModelManager: NSObject, ObservableObject {
 
 extension ModelManager {
     /// Fully curated models with descriptions we control. Order matters.
+    /// JANG Quantized models from https://huggingface.co/collections/jangq/jang-quantized-gguf-for-mlx
     fileprivate static let curatedSuggestedModels: [MLXModel] = [
-        // MARK: Top Picks
+        // MARK: Top Picks — Small & Fast
 
         MLXModel(
-            id: "LiquidAI/LFM2.5-1.2B-Thinking-MLX-8bit",
-            name: friendlyName(from: "LiquidAI/LFM2.5-1.2B-Thinking-MLX-8bit"),
-            description: "Reasoning model with chain-of-thought. 128K context, runs on any Mac.",
-            downloadURL: "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Thinking-MLX-8bit",
-            isTopSuggestion: true,
-            downloadSizeBytes: 1_240_000_000
+            id: "JANGQ-AI/Qwen3.5-4B-JANG_2S",
+            name: "Qwen 3.5 4B JANG 2-bit",
+            description: "Ultra-compact Qwen 3.5. ~1GB, runs on any Mac. Great for testing.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-4B-JANG_2S",
+            isTopSuggestion: true
         ),
 
         MLXModel(
-            id: "mlx-community/Qwen3-VL-4B-Instruct-8bit",
-            name: friendlyName(from: "mlx-community/Qwen3-VL-4B-Instruct-8bit"),
-            description: "See and understand images. Best vision model for most users.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3-VL-4B-Instruct-8bit",
-            isTopSuggestion: true,
-            downloadSizeBytes: 8_500_000_000
+            id: "JANGQ-AI/Qwen3.5-9B-JANG_2S",
+            name: "Qwen 3.5 9B JANG 2-bit",
+            description: "Balanced Qwen 3.5. Strong reasoning in a small footprint.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-9B-JANG_2S",
+            isTopSuggestion: true
         ),
 
         MLXModel(
-            id: "LiquidAI/LFM2-24B-A2B-MLX-8bit",
-            name: friendlyName(from: "LiquidAI/LFM2-24B-A2B-MLX-8bit"),
-            description: "Liquid AI's 24B MoE model. Only ~2B active params per token. 128K context.",
-            downloadURL: "https://huggingface.co/LiquidAI/LFM2-24B-A2B-MLX-8bit",
-            isTopSuggestion: true,
-            downloadSizeBytes: 23_600_000_000
+            id: "JANGQ-AI/Gemma-4-26B-A4B-it-JANG_2L",
+            name: "Gemma 4 26B JANG 2-bit",
+            description: "Google's Gemma 4 MoE. Only ~3B active params. Vision capable.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Gemma-4-26B-A4B-it-JANG_2L",
+            isTopSuggestion: true
         ),
 
-        // MARK: Coding Models
+        // MARK: Medium — Best Balance
 
         MLXModel(
-            id: "lmstudio-community/qwen3-coder-30b-a3b-instruct-mlx-4bit",
-            name: friendlyName(from: "lmstudio-community/qwen3-coder-30b-a3b-instruct-mlx-4bit"),
-            description: "Elite coding assistant. Excels at complex programming tasks. Needs 32GB+ RAM.",
-            downloadURL:
-                "https://huggingface.co/lmstudio-community/qwen3-coder-30b-a3b-instruct-mlx-4bit"
-        ),
-
-        // MARK: Large Models
-
-        MLXModel(
-            id: "mlx-community/Qwen3-235B-A22B-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3-235B-A22B-4bit"),
-            description: "Massive MoE model with frontier-level intelligence. Requires 64GB+ RAM.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3-235B-A22B-4bit"
+            id: "JANGQ-AI/Qwen3.5-27B-JANG_4S",
+            name: "Qwen 3.5 27B JANG 4-bit",
+            description: "Full Qwen 3.5 27B dense. Strong all-around. ~5GB.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-27B-JANG_4S"
         ),
 
         MLXModel(
-            id: "mlx-community/Qwen3-Next-80B-A3B-Thinking-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3-Next-80B-A3B-Thinking-4bit"),
-            description: "Advanced reasoning with thinking capability. Great for complex problems.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3-Next-80B-A3B-Thinking-4bit"
+            id: "JANGQ-AI/Qwen3.5-35B-A3B-JANG_2S",
+            name: "Qwen 3.5 35B MoE JANG 2-bit",
+            description: "Qwen 3.5 MoE. Only ~3B active. ~3GB, fast.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-35B-A3B-JANG_2S"
         ),
 
         MLXModel(
-            id: "lmstudio-community/gpt-oss-20b-MLX-8bit",
-            name: friendlyName(from: "lmstudio-community/gpt-oss-20b-MLX-8bit"),
-            description: "OpenAI's open-source release. Strong all-around performance.",
-            downloadURL: "https://huggingface.co/lmstudio-community/gpt-oss-20b-MLX-8bit"
+            id: "JANGQ-AI/Qwen3.5-35B-A3B-JANG_4K",
+            name: "Qwen 3.5 35B MoE JANG 4-bit",
+            description: "Qwen 3.5 MoE. Higher quality at 4-bit. ~5GB.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-35B-A3B-JANG_4K"
         ),
 
         MLXModel(
-            id: "lmstudio-community/gpt-oss-120b-MLX-8bit",
-            name: friendlyName(from: "lmstudio-community/gpt-oss-120b-MLX-8bit"),
-            description: "OpenAI's largest open model. Premium quality, requires 64GB+ unified memory.",
-            downloadURL: "https://huggingface.co/lmstudio-community/gpt-oss-120b-MLX-8bit"
+            id: "JANGQ-AI/Gemma-4-26B-A4B-it-JANG_4M",
+            name: "Gemma 4 26B JANG 4-bit",
+            description: "Google's Gemma 4 MoE at 4-bit. Vision capable. ~5GB.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Gemma-4-26B-A4B-it-JANG_4M"
         ),
 
-        // MARK: Vision Language Models (VLM)
+        // MARK: Large — 64GB+ RAM
 
         MLXModel(
-            id: "mlx-community/Ministral-3-8B-Instruct-2512-4bit",
-            name: friendlyName(from: "mlx-community/Ministral-3-8B-Instruct-2512-4bit"),
-            description: "Mistral's compact vision model. Multilingual support across 11 languages.",
-            downloadURL: "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit"
-        ),
-
-        MLXModel(
-            id: "mlx-community/LFM2-VL-3B-5bit",
-            name: friendlyName(from: "mlx-community/LFM2-VL-3B-5bit"),
-            description: "Liquid AI's compact vision model. 3B params with 10 language support.",
-            downloadURL: "https://huggingface.co/mlx-community/LFM2-VL-3B-5bit"
+            id: "JANGQ-AI/Qwen3.5-122B-A10B-JANG_2S",
+            name: "Qwen 3.5 122B MoE JANG 2-bit",
+            description: "Massive 122B MoE. ~11GB, only ~10B active. Frontier quality.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-122B-A10B-JANG_2S"
         ),
 
         MLXModel(
-            id: "mlx-community/Qwen3.5-27B-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3.5-27B-4bit"),
-            description: "Largest Qwen3.5 vision model. Top-tier multimodal reasoning.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3.5-27B-4bit",
-            downloadSizeBytes: 16_100_000_000
+            id: "JANGQ-AI/Qwen3.5-122B-A10B-JANG_4K",
+            name: "Qwen 3.5 122B MoE JANG 4-bit",
+            description: "Highest quality 122B. ~18GB. Premium intelligence.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-122B-A10B-JANG_4K"
         ),
 
         MLXModel(
-            id: "mlx-community/Qwen3.5-9B-MLX-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3.5-9B-MLX-4bit"),
-            description: "Most capable Qwen3.5 vision model. Strong multimodal understanding.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit",
-            downloadSizeBytes: 5_950_000_000
+            id: "JANGQ-AI/Qwen3.5-122B-A10B-JANG_3L",
+            name: "Qwen 3.5 122B MoE JANG 3-bit",
+            description: "Balance of quality and size at 3-bit. ~14GB.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-122B-A10B-JANG_3L"
         ),
 
         MLXModel(
-            id: "mlx-community/Qwen3.5-4B-MLX-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3.5-4B-MLX-4bit"),
-            description: "Balanced Qwen3.5 vision model. Good multimodal capabilities with modest resources.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit",
-            downloadSizeBytes: 3_030_000_000
+            id: "JANGQ-AI/Qwen3.5-397B-A17B-JANG_2L",
+            name: "Qwen 3.5 397B MoE JANG 2-bit",
+            description: "Largest Qwen. ~54GB. 128GB+ RAM required. State of the art.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-397B-A17B-JANG_2L"
         ),
 
         MLXModel(
-            id: "mlx-community/Qwen3.5-2B-MLX-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3.5-2B-MLX-4bit"),
-            description: "Lightweight Qwen3.5 vision model. Fast and runs on any Mac.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3.5-2B-MLX-4bit",
-            downloadSizeBytes: 1_720_000_000
+            id: "JANGQ-AI/Qwen3.5-397B-A17B-JANG_1L",
+            name: "Qwen 3.5 397B MoE JANG 1-bit",
+            description: "Ultra-compressed 397B. ~34GB. Fits in 64GB RAM.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-397B-A17B-JANG_1L"
+        ),
+
+        // MARK: Mistral
+
+        MLXModel(
+            id: "JANGQ-AI/Mistral-Small-4-119B-A6B-JANG_2L",
+            name: "Mistral Small 4 119B JANG 2-bit",
+            description: "Mistral's 119B MoE. ~12GB. Vision capable.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Mistral-Small-4-119B-A6B-JANG_2L"
         ),
 
         MLXModel(
-            id: "mlx-community/Qwen3.5-0.8B-MLX-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3.5-0.8B-MLX-4bit"),
-            description: "Ultra-compact Qwen3.5 vision model. Smallest footprint, runs anywhere.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3.5-0.8B-MLX-4bit",
-            downloadSizeBytes: 625_000_000
-        ),
-
-        // MARK: Compact Models
-
-        MLXModel(
-            id: "LiquidAI/LFM2.5-1.2B-Instruct-MLX-8bit",
-            name: friendlyName(from: "LiquidAI/LFM2.5-1.2B-Instruct-MLX-8bit"),
-            description: "Liquid AI's efficient 1.2B model. 128K context with 10 language support.",
-            downloadURL: "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-MLX-8bit"
+            id: "JANGQ-AI/Mistral-Small-4-119B-A6B-JANG_4M",
+            name: "Mistral Small 4 119B JANG 4-bit",
+            description: "Mistral 119B at 4-bit. ~19GB. Higher quality.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Mistral-Small-4-119B-A6B-JANG_4M"
         ),
 
         MLXModel(
-            id: "mlx-community/GLM-4.7-Flash-4bit",
-            name: friendlyName(from: "mlx-community/GLM-4.7-Flash-4bit"),
-            description: "Fast and lightweight MoE model. Great for quick responses.",
-            downloadURL: "https://huggingface.co/mlx-community/GLM-4.7-Flash-4bit",
-            downloadSizeBytes: 16_900_000_000
+            id: "JANGQ-AI/Mistral-Small-4-119B-A6B-JANG_6M",
+            name: "Mistral Small 4 119B JANG 6-bit",
+            description: "Mistral 119B at 6-bit. ~27GB. Near-lossless quality.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Mistral-Small-4-119B-A6B-JANG_6M"
+        ),
+
+        // MARK: MiniMax & Others
+
+        MLXModel(
+            id: "JANGQ-AI/MiniMax-M2.5-JANG_2L",
+            name: "MiniMax M2.5 JANG 2-bit",
+            description: "MiniMax MoE. ~19GB. 228B total, fast MoE routing.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/MiniMax-M2.5-JANG_2L"
         ),
 
         MLXModel(
-            id: "mlx-community/Nanbeige4.1-3B-8bit",
-            name: friendlyName(from: "mlx-community/Nanbeige4.1-3B-8bit"),
-            description: "Compact 3B model with English and Chinese support. Runs on any Mac.",
-            downloadURL: "https://huggingface.co/mlx-community/Nanbeige4.1-3B-8bit",
-            downloadSizeBytes: 4_180_000_000
+            id: "JANGQ-AI/MiniMax-M2.5-JANG_3M",
+            name: "MiniMax M2.5 JANG 3-bit",
+            description: "MiniMax at 3-bit. Better quality, more RAM needed.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/MiniMax-M2.5-JANG_3M"
         ),
 
+        MLXModel(
+            id: "JANGQ-AI/MiniMax-M2.5-JANG_3L",
+            name: "MiniMax M2.5 JANG 3-bit Large",
+            description: "MiniMax at 3-bit with larger group size. ~26GB.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/MiniMax-M2.5-JANG_3L"
+        ),
+
+        MLXModel(
+            id: "JANGQ-AI/Nemotron-Cascade-2-30B-A3B-JANG_2L",
+            name: "Nemotron Cascade 2 30B JANG 2-bit",
+            description: "NVIDIA Nemotron Cascade. SSM hybrid architecture. ~3GB.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Nemotron-Cascade-2-30B-A3B-JANG_2L"
+        ),
+
+        MLXModel(
+            id: "JANGQ-AI/Nemotron-Cascade-2-30B-A3B-JANG_4M",
+            name: "Nemotron Cascade 2 30B JANG 4-bit",
+            description: "Nemotron Cascade at 4-bit. SSM hybrid. ~5GB.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Nemotron-Cascade-2-30B-A3B-JANG_4M"
+        ),
+
+        MLXModel(
+            id: "JANGQ-AI/Nemotron-3-Super-120B-A12B-JANG_2L",
+            name: "Nemotron 3 Super 120B JANG 2-bit",
+            description: "NVIDIA's 120B MoE. ~13GB. Strong reasoning.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Nemotron-3-Super-120B-A12B-JANG_2L"
+        ),
+
+        MLXModel(
+            id: "JANGQ-AI/Nemotron-3-Super-120B-A12B-JANG_4M",
+            name: "Nemotron 3 Super 120B JANG 4-bit",
+            description: "Nemotron 120B at 4-bit. ~18GB. Higher quality.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Nemotron-3-Super-120B-A12B-JANG_4M"
+        ),
+
+        // MARK: Small — Runs on any Mac
+
+        MLXModel(
+            id: "JANGQ-AI/Qwen3.5-4B-JANG_4K",
+            name: "Qwen 3.5 4B JANG 4-bit K",
+            description: "Qwen 3.5 4B at 4-bit K-quant. ~1GB.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-4B-JANG_4K"
+        ),
+
+        MLXModel(
+            id: "JANGQ-AI/Qwen3.5-4B-JANG_4S",
+            name: "Qwen 3.5 4B JANG 4-bit S",
+            description: "Qwen 3.5 4B at 4-bit standard. ~1GB.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-4B-JANG_4S"
+        ),
+
+        MLXModel(
+            id: "JANGQ-AI/Qwen3.5-9B-JANG_4K",
+            name: "Qwen 3.5 9B JANG 4-bit K",
+            description: "Qwen 3.5 9B at 4-bit K-quant. ~2GB.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-9B-JANG_4K"
+        ),
+
+        MLXModel(
+            id: "JANGQ-AI/Qwen3.5-9B-JANG_4S",
+            name: "Qwen 3.5 9B JANG 4-bit S",
+            description: "Qwen 3.5 9B at 4-bit standard. ~2GB.",
+            downloadURL: "https://huggingface.co/JANGQ-AI/Qwen3.5-9B-JANG_4S"
+        ),
     ]
 
     nonisolated fileprivate static func friendlyName(from repoId: String) -> String {
@@ -971,43 +1000,53 @@ extension ModelManager {
 // MARK: - Installed models helpers for services
 
 extension ModelManager {
-    /// List installed MLX model names (repo component, lowercased), unique and sorted by name.
+    /// List installed model names, unique and sorted.
+    /// Returns the directory name (last path component of id) for each model.
     nonisolated static func installedModelNames() -> [String] {
         let models = discoverLocalModels()
         var seen: Set<String> = []
         var names: [String] = []
         for m in models {
-            let repo = m.id.split(separator: "/").last.map(String.init)?.lowercased() ?? m.id.lowercased()
-            if !seen.contains(repo) {
-                seen.insert(repo)
-                names.append(repo)
+            // id is now a filesystem path — use last component as display name
+            let displayName = URL(fileURLWithPath: m.id).lastPathComponent.lowercased()
+            if !seen.contains(displayName) {
+                seen.insert(displayName)
+                names.append(displayName)
             }
         }
         return names.sorted()
     }
 
     /// Find an installed model by user-provided name.
-    /// Accepts repo name (case-insensitive) or full id (case-insensitive).
+    /// Matches against model directory name (case-insensitive) or full path.
+    /// Returns (displayName, modelPath) where modelPath is the real filesystem path.
     nonisolated static func findInstalledModel(named name: String) -> (name: String, id: String)? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
         let models = discoverLocalModels()
 
-        // Try repo component first
+        // Try directory name match (last path component)
         if let match = models.first(where: { m in
-            m.id.split(separator: "/").last.map(String.init)?.lowercased() == trimmed.lowercased()
+            URL(fileURLWithPath: m.id).lastPathComponent.lowercased() == trimmed.lowercased()
         }) {
-            let repo =
-                match.id.split(separator: "/").last.map(String.init)?.lowercased() ?? trimmed.lowercased()
-            return (repo, match.id)
+            let displayName = URL(fileURLWithPath: match.id).lastPathComponent.lowercased()
+            return (displayName, match.id)
         }
 
-        // Try full id match
-        if let match = models.first(where: { m in m.id.lowercased() == trimmed.lowercased() }) {
-            let repo =
-                match.id.split(separator: "/").last.map(String.init)?.lowercased() ?? trimmed.lowercased()
-            return (repo, match.id)
+        // Try model name match
+        if let match = models.first(where: { m in
+            m.name.lowercased() == trimmed.lowercased()
+        }) {
+            let displayName = URL(fileURLWithPath: match.id).lastPathComponent.lowercased()
+            return (displayName, match.id)
         }
+
+        // Try full path match
+        if let match = models.first(where: { m in m.id == trimmed }) {
+            let displayName = URL(fileURLWithPath: match.id).lastPathComponent.lowercased()
+            return (displayName, match.id)
+        }
+
         return nil
     }
 }
@@ -1163,24 +1202,31 @@ extension ModelManager {
 
     private nonisolated static func scanLocalModels() -> [MLXModel] {
         let fm = FileManager.default
-        let root = DirectoryPickerService.effectiveModelsDirectory()
-        guard
-            let orgDirs = try? fm.contentsOfDirectory(
-                at: root,
-                includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
-                options: [.skipsHiddenFiles]
-            )
-        else {
-            return []
-        }
-
         var models: [MLXModel] = []
+
+        // Collect all directories to scan:
+        // 1. Primary models directory (bookmark or ~/MLXModels)
+        var roots: [URL] = [DirectoryPickerService.effectiveModelsDirectory()]
+        // 2. UserModelDirectories from UserDefaults (e.g. ~/.mlxstudio/models, ~/jang/models)
+        if let extras = UserDefaults.standard.stringArray(forKey: "UserModelDirectories") {
+            for path in extras {
+                let expanded = (path as NSString).expandingTildeInPath
+                let url = URL(fileURLWithPath: expanded, isDirectory: true)
+                if fm.fileExists(atPath: url.path) {
+                    roots.append(url)
+                }
+            }
+        }
+        // 3. ~/MLXModels (always scan if it exists and isn't already primary)
+        let homeMLX = fm.homeDirectoryForCurrentUser.appendingPathComponent("MLXModels")
+        if fm.fileExists(atPath: homeMLX.path) && !roots.contains(where: { $0.path == homeMLX.path }) {
+            roots.append(homeMLX)
+        }
 
         func exists(_ base: URL, _ name: String) -> Bool {
             fm.fileExists(atPath: base.appendingPathComponent(name).path)
         }
 
-        /// Resolve symlinks and return the real directory URL, or `nil` if the entry is not a directory.
         func resolvedDirectory(_ url: URL) -> URL? {
             let resolved = url.resolvingSymlinksInPath()
             var isDir: ObjCBool = false
@@ -1190,45 +1236,70 @@ extension ModelManager {
             return resolved
         }
 
-        for orgURL in orgDirs {
-            guard let resolvedOrgURL = resolvedDirectory(orgURL) else { continue }
-            guard
-                let repos = try? fm.contentsOfDirectory(
-                    at: resolvedOrgURL,
+        /// Check if a directory is a valid model (has config.json + tokenizer + weights)
+        func isValidModel(_ dir: URL) -> Bool {
+            guard exists(dir, "config.json") else { return false }
+            let hasTokenizerJSON = exists(dir, "tokenizer.json")
+            let hasBPE = exists(dir, "merges.txt")
+                && (exists(dir, "vocab.json") || exists(dir, "vocab.txt"))
+            let hasSentencePiece = exists(dir, "tokenizer.model") || exists(dir, "spiece.model")
+            // Also accept tokenizer_config.json (JANG models may only have this)
+            let hasTokenizerConfig = exists(dir, "tokenizer_config.json")
+            guard hasTokenizerJSON || hasBPE || hasSentencePiece || hasTokenizerConfig else { return false }
+            guard let items = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil),
+                  items.contains(where: { $0.pathExtension == "safetensors" })
+            else { return false }
+            return true
+        }
+
+        for root in roots {
+            guard let entries = try? fm.contentsOfDirectory(
+                at: root,
+                includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
+                options: [.skipsHiddenFiles]
+            ) else { continue }
+
+            for entryURL in entries {
+                guard let resolvedEntry = resolvedDirectory(entryURL) else { continue }
+
+                // Check if this entry is itself a model (flat structure: root/ModelName/)
+                if isValidModel(resolvedEntry) {
+                    let name = entryURL.lastPathComponent
+                    // Use the real filesystem path as the ID so the engine can load it
+                    let realPath = resolvedEntry.path
+                    models.append(MLXModel(
+                        id: realPath,
+                        name: friendlyName(from: name),
+                        description: "Local model (detected)",
+                        downloadURL: "",
+                        rootDirectory: resolvedEntry.deletingLastPathComponent()
+                    ))
+                    continue
+                }
+
+                // Otherwise treat as org directory (org/repo structure)
+                guard let repos = try? fm.contentsOfDirectory(
+                    at: resolvedEntry,
                     includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
                     options: [.skipsHiddenFiles]
-                )
-            else { continue }
-            for repoURL in repos {
-                guard let resolvedRepoURL = resolvedDirectory(repoURL) else { continue }
+                ) else { continue }
 
-                // Validate minimal required files (aligned with MLXModel.isDownloaded)
-                guard exists(resolvedRepoURL, "config.json") else { continue }
-                let hasTokenizerJSON = exists(resolvedRepoURL, "tokenizer.json")
-                let hasBPE =
-                    exists(resolvedRepoURL, "merges.txt")
-                    && (exists(resolvedRepoURL, "vocab.json") || exists(resolvedRepoURL, "vocab.txt"))
-                let hasSentencePiece =
-                    exists(resolvedRepoURL, "tokenizer.model") || exists(resolvedRepoURL, "spiece.model")
-                guard hasTokenizerJSON || hasBPE || hasSentencePiece else { continue }
-                guard
-                    let items = try? fm.contentsOfDirectory(
-                        at: resolvedRepoURL,
-                        includingPropertiesForKeys: nil
-                    ),
-                    items.contains(where: { $0.pathExtension == "safetensors" })
-                else { continue }
+                for repoURL in repos {
+                    guard let resolvedRepo = resolvedDirectory(repoURL) else { continue }
+                    guard isValidModel(resolvedRepo) else { continue }
 
-                let org = orgURL.lastPathComponent
-                let repo = repoURL.lastPathComponent
-                let id = "\(org)/\(repo)"
-                let model = MLXModel(
-                    id: id,
-                    name: friendlyName(from: id),
-                    description: "Local model (detected)",
-                    downloadURL: "https://huggingface.co/\(id)"
-                )
-                models.append(model)
+                    let org = entryURL.lastPathComponent
+                    let repo = repoURL.lastPathComponent
+                    // Use real filesystem path as ID for engine loading
+                    let realPath = resolvedRepo.path
+                    models.append(MLXModel(
+                        id: realPath,
+                        name: friendlyName(from: "\(org)/\(repo)"),
+                        description: "Local model (detected)",
+                        downloadURL: "https://huggingface.co/\(org)/\(repo)",
+                        rootDirectory: resolvedRepo.deletingLastPathComponent().deletingLastPathComponent()
+                    ))
+                }
             }
         }
 

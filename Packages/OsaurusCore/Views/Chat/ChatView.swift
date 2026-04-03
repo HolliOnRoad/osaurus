@@ -113,10 +113,7 @@ final class ChatSession: ObservableObject {
                     self.activeModelOptions = ModelProfileRegistry.defaults(for: model)
                 }
 
-                Task { @MainActor in
-                    let active = ChatWindowManager.shared.activeLocalModelNames()
-                    await ModelRuntime.shared.unloadModelsNotIn(active)
-                }
+                // Model unloading handled by VMLXProcessManager via eviction policy
             }
 
         if !cache.isLoaded {
