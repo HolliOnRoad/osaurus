@@ -985,52 +985,51 @@ extension FloatingInputCard {
 
     @ViewBuilder
     private var inferenceStatsChip: some View {
-        HStack(spacing: 8) {
-            // Tokens per second
+        let statFont = Font.system(size: 10, weight: .medium, design: .monospaced)
+        let labelFont = Font.system(size: 8, weight: .medium)
+        let labelColor = theme.tertiaryText
+        let valueColor = theme.secondaryText
+
+        return HStack(spacing: 6) {
+            // TPS
             if inferenceStats.tokensPerSecond > 0 {
-                HStack(spacing: 3) {
-                    Text(String(format: "%.1f", inferenceStats.tokensPerSecond))
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                        .foregroundColor(inferenceStats.isGenerating ? theme.accentColor : theme.secondaryText)
-                    Text("t/s")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundColor(theme.tertiaryText)
-                }
+                Text("\(String(format: "%.0f", inferenceStats.tokensPerSecond)) t/s")
+                    .font(statFont)
+                    .foregroundColor(inferenceStats.isGenerating ? theme.accentColor : valueColor)
             }
 
             // TTFT
             if let ttft = inferenceStats.timeToFirstToken {
-                HStack(spacing: 2) {
-                    Text(String(format: "%.1fs", ttft))
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundColor(theme.secondaryText)
-                    Text("TTFT")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundColor(theme.tertiaryText)
-                }
+                Text(ttft < 1.0
+                    ? "\(String(format: "%.0f", ttft * 1000))ms"
+                    : "\(String(format: "%.1f", ttft))s")
+                    .font(statFont)
+                    .foregroundColor(valueColor)
             }
 
             // Cache hit
             if inferenceStats.cachedTokens > 0 {
-                HStack(spacing: 2) {
+                HStack(spacing: 1) {
                     Image(systemName: "bolt.fill")
-                        .font(.system(size: 8))
+                        .font(.system(size: 7))
                         .foregroundColor(.green)
                     Text("\(inferenceStats.cachedTokens)")
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundColor(theme.secondaryText)
+                        .font(statFont)
+                        .foregroundColor(valueColor)
                 }
             }
 
-            // Token counts (compact)
+            // Token counts
             if inferenceStats.completionTokens > 0 {
                 Text("\(inferenceStats.promptTokens)→\(inferenceStats.completionTokens)")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .foregroundColor(theme.tertiaryText)
+                    .font(labelFont)
+                    .foregroundColor(labelColor)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
         .background(
             Capsule()
                 .fill(theme.cardBackground.opacity(0.6))
@@ -1335,6 +1334,7 @@ extension FloatingInputCard {
                     Text("GLM-4.7").tag("glm47")
                     Text("Step 3.5").tag("step3p5")
                     Text("xLAM").tag("xlam")
+                    Text("Gemma 4").tag("gemma4")
                 }
                 .labelsHidden()
                 .pickerStyle(.menu)
