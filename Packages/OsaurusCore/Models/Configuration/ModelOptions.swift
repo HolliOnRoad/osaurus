@@ -81,6 +81,7 @@ enum ModelProfileRegistry {
         Gemini31FlashImageProfile.self,
         GeminiProImageProfile.self,
         GeminiFlashImageProfile.self,
+        LocalMLXThinkingProfile.self,  // Catch-all for local models with reasoning
     ]
 
     static func profile(for modelId: String) -> (any ModelProfile.Type)? {
@@ -154,6 +155,38 @@ struct QwenThinkingProfile: ModelProfile {
     static let defaults: [String: ModelOptionValue] = [
         "disableThinking": .bool(true)
     ]
+
+    static let thinkingOption: (id: String, inverted: Bool)? = ("disableThinking", true)
+}
+
+// MARK: - Local MLX Thinking Profile (catch-all)
+
+/// Catch-all profile for local MLX models that may support reasoning.
+/// Shows the thinking toggle for any local model not already matched by a specific profile.
+/// The Python engine's reasoning parser auto-detects whether the model actually supports thinking.
+struct LocalMLXThinkingProfile: ModelProfile {
+    static let displayName = "Local Model"
+
+    static func matches(modelId: String) -> Bool {
+        // Match any local model (not remote providers like openai/, anthropic/)
+        let lower = modelId.lowercased()
+        let remoteProviders = ["openai/", "anthropic/", "google/", "venice/", "openrouter/"]
+        return !remoteProviders.contains(where: { lower.hasPrefix($0) })
+            && !lower.isEmpty
+            && lower != "foundation"
+            && lower != "default"
+    }
+
+    static let options: [ModelOptionDefinition] = [
+        ModelOptionDefinition(
+            id: "disableThinking",
+            label: "Disable Thinking",
+            icon: "brain.head.profile",
+            kind: .toggle(default: false)
+        )
+    ]
+
+    static let defaults: [String: ModelOptionValue] = [:]
 
     static let thinkingOption: (id: String, inverted: Bool)? = ("disableThinking", true)
 }
