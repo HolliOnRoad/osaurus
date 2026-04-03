@@ -151,23 +151,35 @@ actor VMLXProcessManager {
 
     // MARK: - Stop
 
-    /// Stop the engine for a model.
+    /// Stop the engine for a model. Accepts model name, path, or any registered key.
     func stopEngine(model: String) async {
-        cancelIdleTimer(for: model)
-        monitors[model]?.cancel()
-        monitors.removeValue(forKey: model)
-
-        if let process = processes.removeValue(forKey: model) {
-            let pid = process.processIdentifier
-            process.terminate()  // SIGTERM
-            // Give 1.5s for graceful shutdown (flush disk caches, etc.)
-            try? await Task.sleep(for: .milliseconds(1500))
-            if process.isRunning {
-                // SIGKILL — force kill if SIGTERM didn't work
-                kill(pid, SIGKILL)
+        // Find the actual process key — might be registered under name or path
+        let processKey: String? = {
+            if processes[model] != nil { return model }
+            // Try matching by last path component (lowercased)
+            let needle = URL(fileURLWithPath: model).lastPathComponent.lowercased()
+            return processes.keys.first { key in
+                URL(fileURLWithPath: key).lastPathComponent.lowercased() == needle
             }
+        }()
+
+        if let key = processKey {
+            cancelIdleTimer(for: key)
+            monitors[key]?.cancel()
+            monitors.removeValue(forKey: key)
+
+            if let process = processes.removeValue(forKey: key) {
+                let pid = process.processIdentifier
+                process.terminate()  // SIGTERM
+                try? await Task.sleep(for: .milliseconds(1500))
+                if process.isRunning {
+                    kill(pid, SIGKILL)
+                }
+            }
+            restartCounts.removeValue(forKey: key)
         }
-        restartCounts.removeValue(forKey: model)
+
+        // Unregister from gateway (handles both name and path keys)
         await VMLXGateway.shared.unregister(model: model)
         logger.info("Stopped engine for \(model)")
     }

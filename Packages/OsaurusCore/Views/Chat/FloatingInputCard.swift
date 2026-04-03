@@ -1301,6 +1301,17 @@ extension FloatingInputCard {
         .help("Configure tool & reasoning parsers")
     }
 
+    /// Save parser option and restart engine so the new parser takes effect.
+    private func setParserAndRestart(key: String, value: String) {
+        activeModelOptions[key] = .string(value)
+        guard let model = selectedModel else { return }
+        ModelOptionsStore.shared.saveOptions(activeModelOptions, for: model)
+        // Parser changes require engine restart — kill it so next message relaunches with new parser
+        Task {
+            await VMLXProcessManager.shared.stopEngine(model: model)
+        }
+    }
+
     private var parserPickerContent: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Parser Configuration")
@@ -1311,18 +1322,10 @@ extension FloatingInputCard {
                 Text("Tool Call Parser")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(theme.secondaryText)
-                Picker(
-                    "",
-                    selection: Binding(
-                        get: { currentToolParser },
-                        set: { newVal in
-                            activeModelOptions["toolParser"] = .string(newVal)
-                            if let model = selectedModel {
-                                ModelOptionsStore.shared.saveOptions(activeModelOptions, for: model)
-                            }
-                        }
-                    )
-                ) {
+                Picker("", selection: Binding(
+                    get: { currentToolParser },
+                    set: { setParserAndRestart(key: "toolParser", value: $0) }
+                )) {
                     Text("Auto-detect").tag("auto")
                     Text("None").tag("none")
                     Divider()
@@ -1349,18 +1352,10 @@ extension FloatingInputCard {
                 Text("Reasoning Parser")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(theme.secondaryText)
-                Picker(
-                    "",
-                    selection: Binding(
-                        get: { currentReasoningParser },
-                        set: { newVal in
-                            activeModelOptions["reasoningParser"] = .string(newVal)
-                            if let model = selectedModel {
-                                ModelOptionsStore.shared.saveOptions(activeModelOptions, for: model)
-                            }
-                        }
-                    )
-                ) {
+                Picker("", selection: Binding(
+                    get: { currentReasoningParser },
+                    set: { setParserAndRestart(key: "reasoningParser", value: $0) }
+                )) {
                     Text("Auto-detect").tag("auto")
                     Text("None").tag("none")
                     Divider()

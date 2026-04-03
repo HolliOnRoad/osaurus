@@ -375,6 +375,10 @@ struct ModelDetailView: View, Identifiable {
         opts["toolParser"] = .string(toolParser)
         opts["reasoningParser"] = .string(reasoningParser)
         ModelOptionsStore.shared.saveOptions(opts, for: model.id)
+        // Restart engine so new parsers take effect
+        Task {
+            await VMLXProcessManager.shared.stopEngine(model: model.id)
+        }
     }
 
     // MARK: - Model Details Card

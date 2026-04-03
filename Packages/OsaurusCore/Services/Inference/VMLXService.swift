@@ -110,6 +110,14 @@ actor VMLXService: ToolCapableService {
         toolChoice: ToolChoiceOption?,
         requestedModel: String?
     ) async throws -> AsyncThrowingStream<String, Error> {
+        // Check if thinking display is enabled (controls UI display, not model generation)
+        let showThinking: Bool = {
+            if let val = parameters.modelOptions["disableThinking"]?.boolValue {
+                return !val  // disableThinking=false means show thinking
+            }
+            return false  // Default: don't show thinking bubbles
+        }()
+
         // Resolve model and port
         let resolved = try resolveModel(requestedModel)
         let modelName = resolved.name
@@ -141,45 +149,39 @@ actor VMLXService: ToolCapableService {
         }
 
         return AsyncThrowingStream { continuation in
-            Task {
+            let streamTask = Task {
                 // Signal generation started for stats tracking
                 InferenceProgressManager.shared.generationDidStartAsync()
 
                 var hasEmittedThinkOpen = false
                 do {
-                    // Accumulate tool calls across chunks:
-                    // Chunk 1: tool_calls data with finish_reason=null
-                    // Chunk 2: empty delta with finish_reason="tool_calls"
                     var accumulatedToolCalls: [AccumulatedToolCall] = []
 
-                    // Use .lines for efficient line-buffered reading instead of
-                    // byte-by-byte iteration. At 80+ tok/s, byte-by-byte causes
-                    // ~3000+ async suspensions/sec; .lines batches internally.
+                    // Batching: accumulate content deltas and yield in batches
+                    // to reduce async hops to the MainActor consumer.
+                    // At 80+ tok/s, per-token yields cause ~80 async suspensions/sec
+                    // each triggering MainActor work. Batching to ~20 yields/sec is smoother.
+                    var contentBatch = ""
+                    var reasoningBatch = ""
+                    var lastYieldTime = CFAbsoluteTimeGetCurrent()
+                    let minYieldIntervalSec: Double = 0.03  // ~33 yields/sec max
+
                     for try await line in bytes.lines {
                         guard !line.isEmpty else { continue }
 
                         guard let chunk = VMLXSSEParser.parse(line: line) else { continue }
                         if chunk.isDone { break }
 
-                        // Emit reasoning wrapped in <think> tags so
-                        // StreamingDeltaProcessor routes it to appendThinking()
-                        if let reasoning = chunk.reasoningContent, !reasoning.isEmpty {
-                            if !hasEmittedThinkOpen {
-                                continuation.yield("<think>")
-                                hasEmittedThinkOpen = true
-                            }
-                            continuation.yield(reasoning)
+                        // Accumulate reasoning
+                        if let reasoning = chunk.reasoningContent, !reasoning.isEmpty, showThinking {
+                            reasoningBatch += reasoning
                         }
-                        // When we transition from reasoning to content, close the think tag
+                        // Accumulate content
                         if let content = chunk.content, !content.isEmpty {
-                            if hasEmittedThinkOpen {
-                                continuation.yield("</think>")
-                                hasEmittedThinkOpen = false
-                            }
-                            continuation.yield(content)
+                            contentBatch += content
                         }
 
-                        // Update inference stats from usage data
+                        // Update inference stats (lightweight, no UI)
                         if let usage = chunk.usage {
                             InferenceProgressManager.shared.updateStatsAsync(
                                 prompt: usage.promptTokens,
@@ -206,7 +208,32 @@ actor VMLXService: ToolCapableService {
                             }
                         }
 
-                        // When finish_reason is "tool_calls", emit accumulated tools
+                        // Yield batched content at controlled intervals
+                        let now = CFAbsoluteTimeGetCurrent()
+                        let shouldFlush = (now - lastYieldTime) >= minYieldIntervalSec
+                            || chunk.finishReason != nil  // Always flush on finish
+
+                        if shouldFlush && (!reasoningBatch.isEmpty || !contentBatch.isEmpty) {
+                            if !reasoningBatch.isEmpty {
+                                if !hasEmittedThinkOpen {
+                                    continuation.yield("<think>")
+                                    hasEmittedThinkOpen = true
+                                }
+                                continuation.yield(reasoningBatch)
+                                reasoningBatch = ""
+                            }
+                            if !contentBatch.isEmpty {
+                                if hasEmittedThinkOpen {
+                                    continuation.yield("</think>")
+                                    hasEmittedThinkOpen = false
+                                }
+                                continuation.yield(contentBatch)
+                                contentBatch = ""
+                            }
+                            lastYieldTime = now
+                        }
+
+                        // When finish_reason is "tool_calls", flush remaining then emit tools
                         if chunk.finishReason == "tool_calls" && !accumulatedToolCalls.isEmpty {
                             for tc in accumulatedToolCalls {
                                 continuation.yield(StreamingToolHint.encode(tc.name))
@@ -222,6 +249,15 @@ actor VMLXService: ToolCapableService {
                             )
                             return
                         }
+                    }
+                    // Flush any remaining batched content
+                    if !reasoningBatch.isEmpty {
+                        if !hasEmittedThinkOpen { continuation.yield("<think>"); hasEmittedThinkOpen = true }
+                        continuation.yield(reasoningBatch)
+                    }
+                    if !contentBatch.isEmpty {
+                        if hasEmittedThinkOpen { continuation.yield("</think>"); hasEmittedThinkOpen = false }
+                        continuation.yield(contentBatch)
                     }
                     // Close unclosed think tag
                     if hasEmittedThinkOpen {
@@ -240,6 +276,12 @@ actor VMLXService: ToolCapableService {
                     InferenceProgressManager.shared.generationDidFinishAsync()
                     continuation.finish(throwing: error)
                 }
+            }
+            // When the consumer cancels the stream (user presses stop),
+            // cancel the inner task which closes the HTTP connection.
+            // The engine detects client disconnect and aborts generation.
+            continuation.onTermination = { @Sendable _ in
+                streamTask.cancel()
             }
         }
     }
@@ -353,19 +395,10 @@ actor VMLXService: ToolCapableService {
             body["cache_hint"] = cacheHint
         }
 
-        // Only send enable_thinking when user explicitly set a preference.
-        // Otherwise let the Python engine auto-detect per model (model_config_registry).
-        // Forcing it off breaks models like Gemma 4 where thinking is architectural.
-        if let disableThinking = parameters.modelOptions["disableThinking"] {
-            switch disableThinking {
-            case .bool(let val):
-                body["enable_thinking"] = !val
-            case .string(let val):
-                body["enable_thinking"] = val != "true"
-            default:
-                break
-            }
-        }
+        // Never send enable_thinking — let the engine auto-detect per model.
+        // The thinking toggle controls UI DISPLAY only (showThinking flag above).
+        // Sending enable_thinking:true breaks Gemma 4 2-bit (all output goes to thinking channel).
+        // Not sending it lets the engine's reasoning parser cleanly separate thinking from content.
 
         // Stream options for usage reporting
         if stream {
