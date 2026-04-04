@@ -63,8 +63,6 @@ test:
 resolve:
 	@echo "Resolving OsaurusCore dependencies…"
 	swift package resolve --package-path Packages/OsaurusCore
-	@echo "Resolving OsaurusCLI dependencies…"
-	swift package resolve --package-path Packages/OsaurusCLI
 	@echo "Done. Commit Packages/OsaurusCore/Package.resolved if it changed."
 
 ## ── LOCOMO Benchmark ──────────────────────────────────────────────

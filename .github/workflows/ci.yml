@@ -56,11 +56,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: Packages/OsaurusCLI/.build
-          key: spm-cli-${{ runner.os }}-${{ hashFiles('Packages/OsaurusCLI/Package.swift', 'Packages/OsaurusCLI/Package.resolved') }}
+          key: spm-cli-${{ runner.os }}-${{ hashFiles('Packages/OsaurusCLI/Package.swift') }}
           restore-keys: spm-cli-${{ runner.os }}-
 
       - name: Test OsaurusCLI
-        run: swift test --package-path Packages/OsaurusCLI --force-resolved-versions
+        run: swift test --package-path Packages/OsaurusCLI
 
   swiftlint:
     runs-on: macos-latest
