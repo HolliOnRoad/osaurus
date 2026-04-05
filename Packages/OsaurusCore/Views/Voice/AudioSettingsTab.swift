@@ -351,7 +351,7 @@ struct AudioSettingsTab: View {
     private var inputSourceDescription: String {
         switch audioInputManager.selectedInputSource {
         case .microphone:
-            return audioInputManager.selectedDevice?.name ?? "System Default"
+            return audioInputManager.selectedDevice?.name ?? String(localized: "System Default")
         case .systemAudio:
             return systemAudioManager.hasPermission ? "Computer audio" : "Permission required"
         }
@@ -363,7 +363,7 @@ struct AudioSettingsTab: View {
         {
             return device.name
         }
-        return "System Default"
+        return String(localized: "System Default")
     }
 
     // MARK: - Live Test Card

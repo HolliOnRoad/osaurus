@@ -544,7 +544,7 @@ struct ModelDetailView: View, Identifiable {
         if let s = estimatedSize, s > 0 {
             return ByteCountFormatter.string(fromByteCount: s, countStyle: .file)
         }
-        return "Unknown"
+        return String(localized: "Unknown")
     }
 
     /// Fetches download size estimation from the model manager if not already calculated

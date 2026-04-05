@@ -196,9 +196,9 @@ struct OnboardingIdentitySetupView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 3) {
-                        recoveryBullet("Single-use — consumed on recovery")
-                        recoveryBullet("Store in a safe place")
-                        recoveryBullet("Cannot be retrieved by Osaurus")
+                        recoveryBullet(String(localized: "Single-use — consumed on recovery"))
+                        recoveryBullet(String(localized: "Store in a safe place"))
+                        recoveryBullet(String(localized: "Cannot be retrieved by Osaurus"))
                     }
                     .padding(.top, 2)
                 }

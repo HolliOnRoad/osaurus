@@ -427,10 +427,10 @@ public enum VoiceState: Equatable {
 
     var label: String {
         switch self {
-        case .idle: return "Ready"
-        case .listening: return "Listening"
-        case .processing: return "Processing"
-        case .ready: return "Done"
+        case .idle: return String(localized: "Ready")
+        case .listening: return String(localized: "Listening")
+        case .processing: return String(localized: "Processing")
+        case .ready: return String(localized: "Done")
         case .error(let message): return message
         }
     }

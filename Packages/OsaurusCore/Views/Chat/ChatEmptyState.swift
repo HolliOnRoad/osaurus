@@ -147,10 +147,10 @@ struct ChatEmptyState: View {
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
-        case 5 ..< 12: return "Good morning"
-        case 12 ..< 17: return "Good afternoon"
-        case 17 ..< 22: return "Good evening"
-        default: return "Hello"
+        case 5 ..< 12: return String(localized: "Good morning")
+        case 12 ..< 17: return String(localized: "Good afternoon")
+        case 17 ..< 22: return String(localized: "Good evening")
+        default: return String(localized: "Hello")
         }
     }
 }

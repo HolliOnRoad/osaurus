@@ -397,15 +397,15 @@ struct ModelDownloadView: View {
 
     private var emptyStateTitle: String {
         if !searchText.isEmpty {
-            return "No models match your search"
+            return String(localized: "No models match your search")
         }
         switch selectedTab {
         case .all:
-            return "No models available"
+            return String(localized: "No models available")
         case .suggested:
-            return "No recommended models"
+            return String(localized: "No recommended models")
         case .downloaded:
-            return "No downloaded models"
+            return String(localized: "No downloaded models")
         }
     }
 

@@ -79,7 +79,7 @@ struct HotkeyRecorder: View {
     }
 
     private func display(for hotkey: Hotkey?) -> String {
-        guard let hotkey else { return "Not set" }
+        guard let hotkey else { return String(localized: "Not set") }
         return hotkey.displayString
     }
 

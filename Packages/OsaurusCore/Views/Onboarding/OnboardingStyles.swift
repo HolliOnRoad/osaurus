@@ -145,7 +145,7 @@ struct OnboardingPrimaryButton: View {
                     )
 
                 // Text
-                Text(title)
+                Text(LocalizedStringKey(title))
                     .font(theme.font(size: 15, weight: .semibold))
                     .foregroundColor(theme.isDark ? theme.primaryText : .white)
             }
@@ -305,7 +305,7 @@ struct OnboardingStatefulButton: View {
                             .font(.system(size: 13, weight: .semibold))
                     }
 
-                    Text(currentTitle)
+                    Text(LocalizedStringKey(currentTitle))
                         .font(theme.font(size: 15, weight: .semibold))
                 }
                 .foregroundColor(theme.isDark ? theme.primaryText : .white)
@@ -396,7 +396,7 @@ struct OnboardingShimmerButton: View {
                     )
 
                 // Text
-                Text(title)
+                Text(LocalizedStringKey(title))
                     .font(theme.font(size: 15, weight: .semibold))
                     .foregroundColor(theme.isDark ? theme.primaryText : .white)
             }
@@ -501,7 +501,7 @@ struct OnboardingSecondaryButton: View {
                     )
 
                 // Text
-                Text(title)
+                Text(LocalizedStringKey(title))
                     .font(theme.font(size: 15, weight: .semibold))
                     .foregroundColor(theme.primaryText)
             }
@@ -530,7 +530,7 @@ struct OnboardingTextButton: View {
 
     var body: some View {
         Button(action: action) {
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .font(theme.font(size: 13, weight: .medium))
                 .foregroundColor(isHovered ? theme.accentColor : theme.secondaryText)
                 .underline(isHovered)

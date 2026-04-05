@@ -86,16 +86,16 @@ struct OnboardingLocalDownloadView: View {
                 let minutes = Int(eta) / 60
                 let seconds = Int(eta) % 60
                 if minutes > 0 {
-                    parts.append("\(minutes)m \(seconds)s remaining")
+                    parts.append(String(localized: "\(minutes)m \(seconds)s remaining"))
                 } else {
-                    parts.append("\(seconds)s remaining")
+                    parts.append(String(localized: "\(seconds)s remaining"))
                 }
             }
 
             return parts.joined(separator: " · ")
         }
 
-        return "Preparing download..."
+        return String(localized: "Preparing download...")
     }
 
     var body: some View {
@@ -446,7 +446,7 @@ private struct DownloadedBadgeView: View {
         HStack(spacing: 3) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 9, weight: .medium))
-            Text("Downloaded")
+            Text("Downloaded", comment: "Badge label for already-downloaded models")
                 .font(theme.font(size: 10, weight: .medium))
         }
         .foregroundColor(.green)
