@@ -1,0 +1,3386 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    " Copy": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " Kopie"
+          }
+        }
+      }
+    },
+    "+ Enter to save": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+ Enter zum Speichern"
+          }
+        }
+      }
+    },
+    "Access Keys": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugangsschlüssel"
+          }
+        }
+      }
+    },
+    "Active": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiv"
+          }
+        }
+      }
+    },
+    "Add": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzufügen"
+          }
+        }
+      }
+    },
+    "Add a remote MCP server to discover and use its tools": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge einen Remote-MCP-Server hinzu, um seine Tools zu entdecken und zu nutzen"
+          }
+        }
+      }
+    },
+    "Add Header": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Header hinzufügen"
+          }
+        }
+      }
+    },
+    "Add Override": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überschreibung hinzufügen"
+          }
+        }
+      }
+    },
+    "Add Provider": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anbieter hinzufügen"
+          }
+        }
+      }
+    },
+    "Add Your First Provider": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge deinen ersten Anbieter hinzu"
+          }
+        }
+      }
+    },
+    "Agent can create its own tools as plugins": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent kann eigene Tools als Plugins erstellen"
+          }
+        }
+      }
+    },
+    "Agents": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten"
+          }
+        }
+      }
+    },
+    "Agents execute commands safely": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten führen Befehle sicher aus"
+          }
+        }
+      }
+    },
+    "Agents run shell commands safely": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten führen Shell-Befehle sicher aus"
+          }
+        }
+      }
+    },
+    "ALL": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ALLE"
+          }
+        }
+      }
+    },
+    "Allow agent to run arbitrary commands in the sandbox": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent darf beliebige Befehle in der Sandbox ausführen"
+          }
+        }
+      }
+    },
+    "API Keys Required": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Schlüssel erforderlich"
+          }
+        }
+      }
+    },
+    "Application behavior and system integration.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anwendungsverhalten und Systemintegration."
+          }
+        }
+      }
+    },
+    "Approval Required": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genehmigung erforderlich"
+          }
+        }
+      }
+    },
+    "Approve": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genehmigen"
+          }
+        }
+      }
+    },
+    "Ask": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fragen"
+          }
+        }
+      }
+    },
+    "Attach File": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datei anhängen"
+          }
+        }
+      }
+    },
+    "Attach Image": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bild anhängen"
+          }
+        }
+      }
+    },
+    "Audio File": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audiodatei"
+          }
+        }
+      }
+    },
+    "Auto": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto"
+          }
+        }
+      }
+    },
+    "Automate recurring AI tasks with custom schedules": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisiere wiederkehrende KI-Aufgaben mit individuellen Zeitplänen"
+          }
+        }
+      }
+    },
+    "Automated notifications at set times": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatische Benachrichtigungen zu festgelegten Zeiten"
+          }
+        }
+      }
+    },
+    "Autonomous Agents": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autonome Agenten"
+          }
+        }
+      }
+    },
+    "Autonomous Exec": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autonome Ausführung"
+          }
+        }
+      }
+    },
+    "Autonomous Execution": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autonome Ausführung"
+          }
+        }
+      }
+    },
+    "Available endpoints on your Osaurus server. Expand to test directly.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verfügbare Endpunkte auf deinem Osaurus-Server. Aufklappen, um direkt zu testen."
+          }
+        }
+      }
+    },
+    "Beta Updates": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beta-Updates"
+          }
+        }
+      }
+    },
+    "Browse": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durchsuchen"
+          }
+        }
+      }
+    },
+    "Browse and manage plugins": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugins durchsuchen und verwalten"
+          }
+        }
+      }
+    },
+    "Browse the repository to install plugins": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durchsuche das Repository, um Plugins zu installieren"
+          }
+        }
+      }
+    },
+    "Build your custom AI assistant": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle deinen individuellen KI-Assistenten"
+          }
+        }
+      }
+    },
+    "Built-in": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Integriert"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        }
+      }
+    },
+    "Cancel edit": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bearbeitung abbrechen"
+          }
+        }
+      }
+    },
+    "Change in Settings → General": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ändern unter Einstellungen → Allgemein"
+          }
+        }
+      }
+    },
+    "Chat": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat"
+          }
+        }
+      }
+    },
+    "Choose File": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datei auswählen"
+          }
+        }
+      }
+    },
+    "Clear All": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles löschen"
+          }
+        }
+      }
+    },
+    "Clear All Memory": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesamtes Gedächtnis löschen"
+          }
+        }
+      }
+    },
+    "Clear Everything": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles löschen"
+          }
+        }
+      }
+    },
+    "Clear folder selection": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordnerauswahl aufheben"
+          }
+        }
+      }
+    },
+    "Clear queued message": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warteschlange leeren"
+          }
+        }
+      }
+    },
+    "Clear response": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antwort löschen"
+          }
+        }
+      }
+    },
+    "Command Line Tool": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Befehlszeilen-Tool"
+          }
+        }
+      }
+    },
+    "Configure": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfigurieren"
+          }
+        }
+      }
+    },
+    "Configure how chat mode generates responses.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfiguriere, wie der Chat-Modus Antworten generiert."
+          }
+        }
+      }
+    },
+    "Configure resources for the Linux container. These can be changed later.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ressourcen für den Linux-Container konfigurieren. Diese können später geändert werden."
+          }
+        }
+      }
+    },
+    "Configure the local API server for external integrations.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfiguriere den lokalen API-Server für externe Integrationen."
+          }
+        }
+      }
+    },
+    "Configure voice settings directly in the Voice tab.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spracheinstellungen direkt im Sprache-Tab konfigurieren."
+          }
+        }
+      }
+    },
+    "Connect": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinden"
+          }
+        }
+      }
+    },
+    "Connected": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbunden"
+          }
+        }
+      }
+    },
+    "Connecting...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinde..."
+          }
+        }
+      }
+    },
+    "Context Budget": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontext-Budget"
+          }
+        }
+      }
+    },
+    "Context Length": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontextlänge"
+          }
+        }
+      }
+    },
+    "Control how work folder tools execute when working with folders in Work mode.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steuere, wie Ordner-Tools im Arbeitsmodus ausgeführt werden."
+          }
+        }
+      }
+    },
+    "Controls how the AI reasons and calls tools. Lower temperature improves reliability.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steuert, wie die KI denkt und Tools aufruft. Niedrigere Temperatur verbessert die Zuverlässigkeit."
+          }
+        }
+      }
+    },
+    "CONVERSATION HISTORY": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GESPRÄCHSVERLAUF"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopieren"
+          }
+        }
+      }
+    },
+    "Copy content to clipboard": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inhalt in die Zwischenablage kopieren"
+          }
+        }
+      }
+    },
+    "Copy relay URL": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relay-URL kopieren"
+          }
+        }
+      }
+    },
+    "Copy response": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antwort kopieren"
+          }
+        }
+      }
+    },
+    "Copy this key now. It won't be shown again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiere diesen Schlüssel jetzt. Er wird nicht erneut angezeigt."
+          }
+        }
+      }
+    },
+    "Copy URL": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL kopieren"
+          }
+        }
+      }
+    },
+    "Core Model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kernmodell"
+          }
+        }
+      }
+    },
+    "CPUs": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CPUs"
+          }
+        }
+      }
+    },
+    "Create Agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent erstellen"
+          }
+        }
+      }
+    },
+    "Create an agent to configure sandbox access, plugins, and secrets.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle einen Agenten, um Sandbox-Zugriff, Plugins und Secrets zu konfigurieren."
+          }
+        }
+      }
+    },
+    "Create custom assistant personalities with unique behaviors": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle individuelle Assistenten mit einzigartigen Verhaltensweisen"
+          }
+        }
+      }
+    },
+    "Create Schedule": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeitplan erstellen"
+          }
+        }
+      }
+    },
+    "Create Watcher": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watcher erstellen"
+          }
+        }
+      }
+    },
+    "Create Your First Agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle deinen ersten Agenten"
+          }
+        }
+      }
+    },
+    "Create Your First Schedule": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle deinen ersten Zeitplan"
+          }
+        }
+      }
+    },
+    "Create a symlink to the embedded CLI": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symlink zur eingebetteten CLI erstellen"
+          }
+        }
+      }
+    },
+    "Cron Expression": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cron-Ausdruck"
+          }
+        }
+      }
+    },
+    "Custom AI assistants with unique prompts, tools, and styles.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Individuelle KI-Assistenten mit eigenen Prompts, Tools und Stilen."
+          }
+        }
+      }
+    },
+    "Custom instructions for this plugin...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigene Anweisungen für dieses Plugin..."
+          }
+        }
+      }
+    },
+    "Customize how the AI uses this plugin.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anpassen, wie die KI dieses Plugin nutzt."
+          }
+        }
+      }
+    },
+    "Daily Planner": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagesplaner"
+          }
+        }
+      }
+    },
+    "DANGER ZONE": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GEFAHRENBEREICH"
+          }
+        }
+      }
+    },
+    "Date": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datum"
+          }
+        }
+      }
+    },
+    "Day": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag"
+          }
+        }
+      }
+    },
+    "Day of Month": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tag des Monats"
+          }
+        }
+      }
+    },
+    "Day of Week": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wochentag"
+          }
+        }
+      }
+    },
+    "Default (from global settings)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard (aus globalen Einstellungen)"
+          }
+        }
+      }
+    },
+    "Default Agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard-Agent"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen"
+          }
+        }
+      }
+    },
+    "Delete secret": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secret löschen"
+          }
+        }
+      }
+    },
+    "Deleting data and preferences. Please wait…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lösche Daten und Einstellungen. Bitte warten…"
+          }
+        }
+      }
+    },
+    "Deny": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ablehnen"
+          }
+        }
+      }
+    },
+    "Developer tools and API reference": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entwickler-Tools und API-Referenz"
+          }
+        }
+      }
+    },
+    "Disable tools": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools deaktivieren"
+          }
+        }
+      }
+    },
+    "Disabled": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deaktiviert"
+          }
+        }
+      }
+    },
+    "Disconnect": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trennen"
+          }
+        }
+      }
+    },
+    "Discovery Timeout": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erkennungs-Timeout"
+          }
+        }
+      }
+    },
+    "Dismiss": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließen"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
+          }
+        }
+      }
+    },
+    "Draft and send texts": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texte verfassen und senden"
+          }
+        }
+      }
+    },
+    "Duplicate": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplizieren"
+          }
+        }
+      }
+    },
+    "Edit": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bearbeiten"
+          }
+        }
+      }
+    },
+    "Edit User Profile": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzerprofil bearbeiten"
+          }
+        }
+      }
+    },
+    "Editing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bearbeitung"
+          }
+        }
+      }
+    },
+    "Enable": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivieren"
+          }
+        }
+      }
+    },
+    "Enable clipboard monitoring": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zwischenablage-Überwachung aktivieren"
+          }
+        }
+      }
+    },
+    "Enable relay in the Sandbox tab to get a public URL.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiviere Relay im Sandbox-Tab für eine öffentliche URL."
+          }
+        }
+      }
+    },
+    "Enabled": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiviert"
+          }
+        }
+      }
+    },
+    "Enter an explicit fact that should always be in your profile": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib eine explizite Tatsache ein, die immer in deinem Profil sein soll"
+          }
+        }
+      }
+    },
+    "Enter instructions for all chats...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anweisungen für alle Chats eingeben..."
+          }
+        }
+      }
+    },
+    "Enter instructions for this agent...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anweisungen für diesen Agenten eingeben..."
+          }
+        }
+      }
+    },
+    "Enter the server token for this agent, or leave blank if none is required.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib das Server-Token für diesen Agenten ein, oder lass das Feld leer, wenn keines benötigt wird."
+          }
+        }
+      }
+    },
+    "Error": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehler"
+          }
+        }
+      }
+    },
+    "Expiration": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ablauf"
+          }
+        }
+      }
+    },
+    "Export": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportieren"
+          }
+        }
+      }
+    },
+    "Expose Agent to Internet?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent ins Internet freigeben?"
+          }
+        }
+      }
+    },
+    "Expose agents to the public internet via relay tunnels.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten über Relay-Tunnel im Internet freigeben."
+          }
+        }
+      }
+    },
+    "Factory Reset…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werksreset…"
+          }
+        }
+      }
+    },
+    "Failed - Tap to retry": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlgeschlagen – Tippen zum Wiederholen"
+          }
+        }
+      }
+    },
+    "Failed to delete agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent konnte nicht gelöscht werden"
+          }
+        }
+      }
+    },
+    "Failed to load plugin": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugin konnte nicht geladen werden"
+          }
+        }
+      }
+    },
+    "Find places nearby": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orte in der Nähe finden"
+          }
+        }
+      }
+    },
+    "Folder": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordner"
+          }
+        }
+      }
+    },
+    "Folder is locked while task is running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordner ist gesperrt während Task läuft"
+          }
+        }
+      }
+    },
+    "Format: minute hour day-of-month month day-of-week": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format: Minute Stunde Tag-des-Monats Monat Wochentag"
+          }
+        }
+      }
+    },
+    "Full Isolation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vollständige Isolation"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemein"
+          }
+        }
+      }
+    },
+    "Generate": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generieren"
+          }
+        }
+      }
+    },
+    "Generate Access Key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugangsschlüssel generieren"
+          }
+        }
+      }
+    },
+    "Generate Key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlüssel generieren"
+          }
+        }
+      }
+    },
+    "Generate insights on a schedule": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erkenntnisse nach Zeitplan generieren"
+          }
+        }
+      }
+    },
+    "Generation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Generierung"
+          }
+        }
+      }
+    },
+    "Get a daily summary every morning": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erhalte jeden Morgen eine tägliche Zusammenfassung"
+          }
+        }
+      }
+    },
+    "Global Hotkey": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Globaler Hotkey"
+          }
+        }
+      }
+    },
+    "Grant the following permissions to use all features:": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gewähre die folgenden Berechtigungen, um alle Funktionen zu nutzen:"
+          }
+        }
+      }
+    },
+    "Hide Dock Icon": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock-Symbol ausblenden"
+          }
+        }
+      }
+    },
+    "Identity →": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identität →"
+          }
+        }
+      }
+    },
+    "If installed to ~/.local/bin, ensure it's in your PATH.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn installiert in ~/.local/bin, stelle sicher, dass es in deinem PATH ist."
+          }
+        }
+      }
+    },
+    "If the day doesn't exist in a month, it will run on the last day.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn der Tag in einem Monat nicht existiert, wird am letzten Tag ausgeführt."
+          }
+        }
+      }
+    },
+    "Import": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importieren"
+          }
+        }
+      }
+    },
+    "Import Error": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importfehler"
+          }
+        }
+      }
+    },
+    "Install": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installieren"
+          }
+        }
+      }
+    },
+    "Install CLI": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CLI installieren"
+          }
+        }
+      }
+    },
+    "Install and run sandbox plugins": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox-Plugins installieren und ausführen"
+          }
+        }
+      }
+    },
+    "Install the `osaurus` CLI into your PATH for terminal access.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installiere die `osaurus` CLI in deinen PATH für Terminal-Zugriff."
+          }
+        }
+      }
+    },
+    "Install tools that run inside the VM": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools installieren, die in der VM laufen"
+          }
+        }
+      }
+    },
+    "Instructions that define this agent's behavior. Leave empty to use global settings.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anweisungen, die das Verhalten dieses Agenten definieren. Leer lassen für globale Einstellungen."
+          }
+        }
+      }
+    },
+    "Interrupt and send immediately": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterbrechen und sofort senden"
+          }
+        }
+      }
+    },
+    "Interval": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intervall"
+          }
+        }
+      }
+    },
+    "Isolated Execution": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isolierte Ausführung"
+          }
+        }
+      }
+    },
+    "Key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlüssel"
+          }
+        }
+      }
+    },
+    "Label": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezeichnung"
+          }
+        }
+      }
+    },
+    "Launch Osaurus when you sign in": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osaurus beim Anmelden starten"
+          }
+        }
+      }
+    },
+    "Learn More": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehr erfahren"
+          }
+        }
+      }
+    },
+    "Learn how to integrate Osaurus into your applications.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfahre, wie du Osaurus in deine Anwendungen integrierst."
+          }
+        }
+      }
+    },
+    "Leave empty to use default values from global settings.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer lassen, um Standardwerte aus den globalen Einstellungen zu verwenden."
+          }
+        }
+      }
+    },
+    "Lightweight model used for memory extraction, preflight search optimization, and other background inference tasks.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leichtgewichtiges Modell für Gedächtnis-Extraktion, Preflight-Suchoptimierung und andere Hintergrund-Inferenzaufgaben."
+          }
+        }
+      }
+    },
+    "Loading memory...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gedächtnis wird geladen..."
+          }
+        }
+      }
+    },
+    "Loading repository...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repository wird geladen..."
+          }
+        }
+      }
+    },
+    "Local Guide": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokaler Guide"
+          }
+        }
+      }
+    },
+    "Local Network Discovery": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokale Netzwerkerkennung"
+          }
+        }
+      }
+    },
+    "Logs": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protokolle"
+          }
+        }
+      }
+    },
+    "Maintenance": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartung"
+          }
+        }
+      }
+    },
+    "Manage your profile, overrides, and memory configuration": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwalte dein Profil, Überschreibungen und Gedächtnis-Konfiguration"
+          }
+        }
+      }
+    },
+    "Manage your schedule": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwalte deinen Zeitplan"
+          }
+        }
+      }
+    },
+    "Manual": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manuell"
+          }
+        }
+      }
+    },
+    "Manually edit your profile content": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profilinhalt manuell bearbeiten"
+          }
+        }
+      }
+    },
+    "Max Tokens": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Max. Token"
+          }
+        }
+      }
+    },
+    "Max Tool Attempts": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Max. Tool-Versuche"
+          }
+        }
+      }
+    },
+    "MCP Providers": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP-Anbieter"
+          }
+        }
+      }
+    },
+    "Memory": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gedächtnis"
+          }
+        }
+      }
+    },
+    "Memory Context Preview": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gedächtnis-Kontextvorschau"
+          }
+        }
+      }
+    },
+    "Memory system is disabled. Enable it below to start building memory.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gedächtnissystem ist deaktiviert. Aktiviere es unten, um das Gedächtnis aufzubauen."
+          }
+        }
+      }
+    },
+    "Message Assistant": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachrichten-Assistent"
+          }
+        }
+      }
+    },
+    "Minute of Hour": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minute der Stunde"
+          }
+        }
+      }
+    },
+    "Model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell"
+          }
+        }
+      }
+    },
+    "Model ready": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell bereit"
+          }
+        }
+      }
+    },
+    "Month": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monat"
+          }
+        }
+      }
+    },
+    "Morning Briefing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morgenbriefing"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        }
+      }
+    },
+    "New Chat": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuer Chat"
+          }
+        }
+      }
+    },
+    "No Agents": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Agenten"
+          }
+        }
+      }
+    },
+    "No MCP Providers": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine MCP-Anbieter"
+          }
+        }
+      }
+    },
+    "No agents configured. Create an agent first.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Agenten konfiguriert. Erstelle zuerst einen Agenten."
+          }
+        }
+      }
+    },
+    "No chat sessions yet": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Chat-Sitzungen"
+          }
+        }
+      }
+    },
+    "No conversation summaries yet.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Gesprächszusammenfassungen."
+          }
+        }
+      }
+    },
+    "No custom headers configured": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine benutzerdefinierten Header konfiguriert"
+          }
+        }
+      }
+    },
+    "No execution history": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Ausführungsverlauf"
+          }
+        }
+      }
+    },
+    "No file selected": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Datei ausgewählt"
+          }
+        }
+      }
+    },
+    "No folder selected": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Ordner ausgewählt"
+          }
+        }
+      }
+    },
+    "No identity set up": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Identität eingerichtet"
+          }
+        }
+      }
+    },
+    "No model selected": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Modell ausgewählt"
+          }
+        }
+      }
+    },
+    "No overrides set. Add explicit facts that should always be in your profile.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Überschreibungen gesetzt. Füge explizite Fakten hinzu, die immer in deinem Profil sein sollen."
+          }
+        }
+      }
+    },
+    "No plugins available": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Plugins verfügbar"
+          }
+        }
+      }
+    },
+    "No plugins installed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Plugins installiert"
+          }
+        }
+      }
+    },
+    "No plugins match your search": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Plugins entsprechen deiner Suche"
+          }
+        }
+      }
+    },
+    "No profile generated yet. Chat with Osaurus and the memory system will build your profile automatically.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch kein Profil erstellt. Chatte mit Osaurus und das Gedächtnissystem erstellt dein Profil automatisch."
+          }
+        }
+      }
+    },
+    "No schedules linked to this agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Zeitpläne mit diesem Agenten verknüpft"
+          }
+        }
+      }
+    },
+    "No watchers linked to this agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Watcher mit diesem Agenten verknüpft"
+          }
+        }
+      }
+    },
+    "No work tasks yet": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Arbeitsaufgaben"
+          }
+        }
+      }
+    },
+    "No working memory entries yet. Memories are automatically extracted from conversations.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Arbeitsgedächtnis-Einträge. Erinnerungen werden automatisch aus Gesprächen extrahiert."
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnen"
+          }
+        }
+      }
+    },
+    "Open Documentation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dokumentation öffnen"
+          }
+        }
+      }
+    },
+    "Open Sandbox Settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox-Einstellungen öffnen"
+          }
+        }
+      }
+    },
+    "Open Settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen öffnen"
+          }
+        }
+      }
+    },
+    "Open Voice Tab": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprache-Tab öffnen"
+          }
+        }
+      }
+    },
+    "Open Web App": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Web-App öffnen"
+          }
+        }
+      }
+    },
+    "Open with default application": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit Standardanwendung öffnen"
+          }
+        }
+      }
+    },
+    "Open with…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnen mit…"
+          }
+        }
+      }
+    },
+    "Optional. Shown as a system message for all chats.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional. Wird als Systemnachricht für alle Chats angezeigt."
+          }
+        }
+      }
+    },
+    "Optionally assign a visual theme to this agent.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional ein visuelles Theme für diesen Agenten zuweisen."
+          }
+        }
+      }
+    },
+    "Override added": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überschreibung hinzugefügt"
+          }
+        }
+      }
+    },
+    "Paste to Input": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Eingabe einfügen"
+          }
+        }
+      }
+    },
+    "Pause": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausieren"
+          }
+        }
+      }
+    },
+    "Permanently delete all memory data including profile, entries, and summaries.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Gedächtnisdaten einschließlich Profil, Einträge und Zusammenfassungen dauerhaft löschen."
+          }
+        }
+      }
+    },
+    "Please try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitte versuche es erneut."
+          }
+        }
+      }
+    },
+    "Plugin Creation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugin-Erstellung"
+          }
+        }
+      }
+    },
+    "Plugin Runtime": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugin-Laufzeitumgebung"
+          }
+        }
+      }
+    },
+    "Plugins": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugins"
+          }
+        }
+      }
+    },
+    "Preview context for this agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontext für diesen Agenten vorschauen"
+          }
+        }
+      }
+    },
+    "Preview memory context": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gedächtnis-Kontext vorschauen"
+          }
+        }
+      }
+    },
+    "Profile saved": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profil gespeichert"
+          }
+        }
+      }
+    },
+    "Prompt shortcuts shown in the empty state. Customize each mode independently.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prompt-Schnellzugriffe im Leerzustand. Jeden Modus unabhängig anpassen."
+          }
+        }
+      }
+    },
+    "Provides:": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bietet:"
+          }
+        }
+      }
+    },
+    "Queued:": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warteschlange:"
+          }
+        }
+      }
+    },
+    "RECENT CHATS": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LETZTE CHATS"
+          }
+        }
+      }
+    },
+    "RECENT TASKS": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LETZTE AUFGABEN"
+          }
+        }
+      }
+    },
+    "Receive pre-release updates with new features before they're generally available": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorab-Updates mit neuen Funktionen erhalten, bevor sie allgemein verfügbar sind"
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisieren"
+          }
+        }
+      }
+    },
+    "Refresh agents": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten aktualisieren"
+          }
+        }
+      }
+    },
+    "Refresh memory data": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gedächtnisdaten aktualisieren"
+          }
+        }
+      }
+    },
+    "Refresh repository": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repository aktualisieren"
+          }
+        }
+      }
+    },
+    "Refresh schedules": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeitpläne aktualisieren"
+          }
+        }
+      }
+    },
+    "Refreshing...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisiere..."
+          }
+        }
+      }
+    },
+    "Regenerate": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu generieren"
+          }
+        }
+      }
+    },
+    "Reminders": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen"
+          }
+        }
+      }
+    },
+    "Remove Container?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Container entfernen?"
+          }
+        }
+      }
+    },
+    "Remove file": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datei entfernen"
+          }
+        }
+      }
+    },
+    "Replace path parameters with real values. Test via curl or your HTTP client.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ersetze Pfad-Parameter durch echte Werte. Teste mit curl oder deinem HTTP-Client."
+          }
+        }
+      }
+    },
+    "Reset": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset All to Default": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles auf Standard zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset Container?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Container zurücksetzen?"
+          }
+        }
+      }
+    },
+    "Reset all work tool permissions to default": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Arbeits-Tool-Berechtigungen auf Standard zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset to Default": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Standard zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset to Defaults": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Standards zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset to default": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Standard zurücksetzen"
+          }
+        }
+      }
+    },
+    "Resetting Osaurus": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osaurus wird zurückgesetzt"
+          }
+        }
+      }
+    },
+    "Resetting destroys all installed sandbox packages. Agent workspace files on the host persist.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Zurücksetzen zerstört alle installierten Sandbox-Pakete. Agent-Arbeitsbereichsdateien auf dem Host bleiben erhalten."
+          }
+        }
+      }
+    },
+    "RESOURCES": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RESSOURCEN"
+          }
+        }
+      }
+    },
+    "Restore view-only settings to recommended defaults (does not affect saved configuration)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur-Ansicht-Einstellungen auf empfohlene Standards zurücksetzen (beeinflusst gespeicherte Konfiguration nicht)"
+          }
+        }
+      }
+    },
+    "Resume": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsetzen"
+          }
+        }
+      }
+    },
+    "Retry": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut versuchen"
+          }
+        }
+      }
+    },
+    "Reveal in Finder": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Finder anzeigen"
+          }
+        }
+      }
+    },
+    "Reveal in Finder or export as PDF": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Finder anzeigen oder als PDF exportieren"
+          }
+        }
+      }
+    },
+    "Revoke": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widerrufen"
+          }
+        }
+      }
+    },
+    "Run Now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt ausführen"
+          }
+        }
+      }
+    },
+    "Run code in a secure Linux container": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code in einem sicheren Linux-Container ausführen"
+          }
+        }
+      }
+    },
+    "Run in menu bar only (requires restart)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur in der Menüleiste ausführen (Neustart erforderlich)"
+          }
+        }
+      }
+    },
+    "Run isolated Linux containers for agent plugins and autonomous execution.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isolierte Linux-Container für Agent-Plugins und autonome Ausführung."
+          }
+        }
+      }
+    },
+    "Sandbox": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox"
+          }
+        }
+      }
+    },
+    "Sandbox Cleanup": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox-Bereinigung"
+          }
+        }
+      }
+    },
+    "Sandbox Plugins": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox-Plugins"
+          }
+        }
+      }
+    },
+    "Sandbox Unavailable": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox nicht verfügbar"
+          }
+        }
+      }
+    },
+    "Sandbox requires macOS 26 or later.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox erfordert macOS 26 oder neuer."
+          }
+        }
+      }
+    },
+    "Sandbox requires macOS 26+. Native plugins work normally.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox erfordert macOS 26+. Native Plugins funktionieren normal."
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speichern"
+          }
+        }
+      }
+    },
+    "Scheduled for": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geplant für"
+          }
+        }
+      }
+    },
+    "Schedules": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeitpläne"
+          }
+        }
+      }
+    },
+    "Search endpoints": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endpunkte suchen"
+          }
+        }
+      }
+    },
+    "Search plugins": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugins suchen"
+          }
+        }
+      }
+    },
+    "Select Model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell auswählen"
+          }
+        }
+      }
+    },
+    "Select an issue to view its details, or run it to see live execution.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle ein Issue aus, um Details zu sehen, oder starte es für die Live-Ausführung."
+          }
+        }
+      }
+    },
+    "Send Now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt senden"
+          }
+        }
+      }
+    },
+    "Separate filesystem per agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Separates Dateisystem pro Agent"
+          }
+        }
+      }
+    },
+    "Server": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server"
+          }
+        }
+      }
+    },
+    "Server URL": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server-URL"
+          }
+        }
+      }
+    },
+    "Server is locked": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server ist gesperrt"
+          }
+        }
+      }
+    },
+    "Server is not running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server läuft nicht"
+          }
+        }
+      }
+    },
+    "Session Total": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sitzung gesamt"
+          }
+        }
+      }
+    },
+    "Set Up Sandbox": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox einrichten"
+          }
+        }
+      }
+    },
+    "Set up automated AI tasks that run on your schedule.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richte automatisierte KI-Aufgaben ein, die nach deinem Zeitplan laufen."
+          }
+        }
+      }
+    },
+    "Set up this agent's identity in the Identity tab": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richte die Identität dieses Agenten im Identität-Tab ein"
+          }
+        }
+      }
+    },
+    "Setting Up Sandbox": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox wird eingerichtet"
+          }
+        }
+      }
+    },
+    "Skills": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skills"
+          }
+        }
+      }
+    },
+    "Start Server": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server starten"
+          }
+        }
+      }
+    },
+    "Start at Login": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei Anmeldung starten"
+          }
+        }
+      }
+    },
+    "Start the sandbox container to enable these options.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starte den Sandbox-Container, um diese Optionen zu aktivieren."
+          }
+        }
+      }
+    },
+    "Start the server from the Overview tab to test endpoints.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starte den Server vom Übersicht-Tab, um Endpunkte zu testen."
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        }
+      }
+    },
+    "Stop": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stopp"
+          }
+        }
+      }
+    },
+    "Storage": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speicher"
+          }
+        }
+      }
+    },
+    "Summary Retention": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zusammenfassungs-Aufbewahrung"
+          }
+        }
+      }
+    },
+    "Supports standard 5 field format with * , - and / operators": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterstützt Standard-5-Felder-Format mit * , - und / Operatoren"
+          }
+        }
+      }
+    },
+    "Sync": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronisieren"
+          }
+        }
+      }
+    },
+    "Sync complete": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronisierung abgeschlossen"
+          }
+        }
+      }
+    },
+    "Syncing...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronisiere..."
+          }
+        }
+      }
+    },
+    "System Permissions Required": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemberechtigungen erforderlich"
+          }
+        }
+      }
+    },
+    "System Prompt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System-Prompt"
+          }
+        }
+      }
+    },
+    "Temperature": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temperatur"
+          }
+        }
+      }
+    },
+    "Test": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Testen"
+          }
+        }
+      }
+    },
+    "Test Toast": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test-Benachrichtigung"
+          }
+        }
+      }
+    },
+    "Tests exec, NAT networking, agent users, apk, and vsock bridge": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Testet exec, NAT-Netzwerk, Agent-Benutzer, apk und vsock-Bridge"
+          }
+        }
+      }
+    },
+    "The AI will use this folder as its working directory.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die KI wird diesen Ordner als Arbeitsverzeichnis verwenden."
+          }
+        }
+      }
+    },
+    "The agent determines the AI's behavior and available tools.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Agent bestimmt das Verhalten der KI und die verfügbaren Tools."
+          }
+        }
+      }
+    },
+    "These instructions will be sent to the AI when the schedule runs.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Anweisungen werden an die KI gesendet, wenn der Zeitplan ausgeführt wird."
+          }
+        }
+      }
+    },
+    "Thinking": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denkt nach"
+          }
+        }
+      }
+    },
+    "This is injected before the system prompt on each message": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies wird vor dem System-Prompt bei jeder Nachricht eingefügt"
+          }
+        }
+      }
+    },
+    "This plugin needs your approval before it can load.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Plugin benötigt deine Genehmigung, bevor es geladen werden kann."
+          }
+        }
+      }
+    },
+    "This plugin requires credentials to function properly.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Plugin benötigt Zugangsdaten, um richtig zu funktionieren."
+          }
+        }
+      }
+    },
+    "This will permanently delete your profile, all working memory entries, conversation summaries, and processing history. This cannot be undone.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies löscht dauerhaft dein Profil, alle Arbeitsgedächtnis-Einträge, Gesprächszusammenfassungen und den Verarbeitungsverlauf. Dies kann nicht rückgängig gemacht werden."
+          }
+        }
+      }
+    },
+    "This will stop and remove the container entirely. You can set it up again later.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies stoppt und entfernt den Container vollständig. Du kannst ihn später erneut einrichten."
+          }
+        }
+      }
+    },
+    "Time": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeit"
+          }
+        }
+      }
+    },
+    "Toggle model reasoning mode": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell-Denkmodus umschalten"
+          }
+        }
+      }
+    },
+    "Tool Call Timeout": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool-Aufruf-Timeout"
+          }
+        }
+      }
+    },
+    "Tools": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools"
+          }
+        }
+      }
+    },
+    "Top P Override": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top-P-Überschreibung"
+          }
+        }
+      }
+    },
+    "Total": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesamt"
+          }
+        }
+      }
+    },
+    "Troubleshoot or reset the application. A factory reset permanently deletes all data and settings.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlerbehebung oder Zurücksetzen der Anwendung. Ein Werksreset löscht alle Daten und Einstellungen dauerhaft."
+          }
+        }
+      }
+    },
+    "Try a different search term": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versuche einen anderen Suchbegriff"
+          }
+        }
+      }
+    },
+    "Unable to access the selected file": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf die ausgewählte Datei konnte nicht zugegriffen werden"
+          }
+        }
+      }
+    },
+    "Uninstall": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deinstallieren"
+          }
+        }
+      }
+    },
+    "Update": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisieren"
+          }
+        }
+      }
+    },
+    "User Profile": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benutzerprofil"
+          }
+        }
+      }
+    },
+    "Uses your global chat settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwendet deine globalen Chat-Einstellungen"
+          }
+        }
+      }
+    },
+    "WAV, MP3, M4A": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WAV, MP3, M4A"
+          }
+        }
+      }
+    },
+    "Waiting for response...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warte auf Antwort..."
+          }
+        }
+      }
+    },
+    "Weekly Report": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wochenbericht"
+          }
+        }
+      }
+    },
+    "What should the AI do when this runs?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was soll die KI tun, wenn dies ausgeführt wird?"
+          }
+        }
+      }
+    },
+    "WORKING MEMORY": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ARBEITSGEDÄCHTNIS"
+          }
+        }
+      }
+    },
+    "Your server is exposed to the local network while Bonjour is enabled.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Server ist im lokalen Netzwerk sichtbar, solange Bonjour aktiviert ist."
+          }
+        }
+      }
+    },
+    "to send": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "zum Senden"
+          }
+        }
+      }
+    },
+    "tokens": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token"
+          }
+        }
+      }
+    },
+    "used": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "verbraucht"
+          }
+        }
+      }
+    },
+    "Osaurus Server": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osaurus Server"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

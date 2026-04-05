@@ -46,7 +46,8 @@ let package = Package(
                 .product(name: "ContainerizationExtras", package: "containerization"),
             ],
             path: ".",
-            exclude: ["Tests"]
+            exclude: ["Tests"],
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "OsaurusCoreTests",

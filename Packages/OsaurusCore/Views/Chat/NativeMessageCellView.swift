@@ -45,7 +45,7 @@ struct CellRenderingContext {
 final class NativeHeaderView: NSView {
 
     private let nameLabel = NSTextField(labelWithString: "")
-    private let editingBadge = NSTextField(labelWithString: "Editing")
+    private let editingBadge = NSTextField(labelWithString: String(localized: "Editing"))
     private let actionStack = NSStackView()
     private var isEditing = false
 
@@ -125,7 +125,7 @@ final class NativeHeaderView: NSView {
         nameLabel.font = NSFont.systemFont(ofSize: CGFloat(theme.captionSize) + 1, weight: .semibold)
         nameLabel.textColor = role == .user ? NSColor(theme.accentColor) : NSColor(theme.secondaryText)
 
-        editingBadge.stringValue = "Editing"
+        editingBadge.stringValue = String(localized: "Editing")
         editingBadge.font = NSFont.systemFont(ofSize: CGFloat(theme.captionSize) - 1, weight: .medium)
         editingBadge.textColor = NSColor(theme.accentColor).withAlphaComponent(0.7)
         editingBadge.isHidden = !isEditing
@@ -153,29 +153,29 @@ final class NativeHeaderView: NSView {
             v.removeFromSuperview()
         }
 
-        addBtn(icon: "doc.on.doc", help: "Copy", theme: theme, tint: nil) { [weak self] in
+        addBtn(icon: "doc.on.doc", help: String(localized: "Copy"), theme: theme, tint: nil) { [weak self] in
             guard let self else { return }
             self.onCopy?(self.turnId)
         }
 
         if role == .assistant {
-            addBtn(icon: "arrow.counterclockwise", help: "Regenerate", theme: theme, tint: nil) { [weak self] in
+            addBtn(icon: "arrow.counterclockwise", help: String(localized: "Regenerate"), theme: theme, tint: nil) { [weak self] in
                 guard let self else { return }
                 self.onRegenerate?(self.turnId)
             }
         } else {
-            addBtn(icon: "pencil", help: "Edit", theme: theme, tint: nil) { [weak self] in
+            addBtn(icon: "pencil", help: String(localized: "Edit"), theme: theme, tint: nil) { [weak self] in
                 guard let self else { return }
                 self.onEdit?(self.turnId)
             }
-            addBtn(icon: "trash", help: "Delete", theme: theme, tint: nil) { [weak self] in
+            addBtn(icon: "trash", help: String(localized: "Delete"), theme: theme, tint: nil) { [weak self] in
                 guard let self else { return }
                 self.onDelete?(self.turnId)
             }
         }
 
         if isEditing, let onCancelEdit {
-            addBtn(icon: "xmark", help: "Cancel edit", theme: theme, tint: nil, action: onCancelEdit)
+            addBtn(icon: "xmark", help: String(localized: "Cancel edit"), theme: theme, tint: nil, action: onCancelEdit)
         }
     }
 
