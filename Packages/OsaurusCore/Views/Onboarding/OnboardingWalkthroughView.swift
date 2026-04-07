@@ -625,7 +625,7 @@ private struct WalkthroughSandboxIllustration: View {
                     Circle().fill(Color.yellow.opacity(0.7)).frame(width: 6, height: 6)
                     Circle().fill(Color.green.opacity(0.7)).frame(width: 6, height: 6)
                     Spacer()
-                    Text("sandbox")
+                    Text("sandbox", bundle: .module)
                         .font(.system(size: 8, weight: .semibold, design: .monospaced))
                         .foregroundColor(theme.tertiaryText)
                     Spacer()
@@ -640,7 +640,7 @@ private struct WalkthroughSandboxIllustration: View {
                     HStack(spacing: 4) {
                         Text("$")
                             .foregroundColor(stepColor)
-                        Text("pip install numpy")
+                        Text("pip install numpy", bundle: .module)
                             .foregroundColor(theme.secondaryText)
                     }
                     .font(.system(size: 10, design: .monospaced))
@@ -648,7 +648,7 @@ private struct WalkthroughSandboxIllustration: View {
                     HStack(spacing: 4) {
                         Text("$")
                             .foregroundColor(stepColor)
-                        Text("python run.py")
+                        Text("python run.py", bundle: .module)
                             .foregroundColor(theme.secondaryText)
 
                         Rectangle()

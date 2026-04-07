@@ -43,7 +43,7 @@ struct EmptyStateView: View {
 
                 if !searchText.isEmpty {
                     Button(action: onClearSearch) {
-                        Text("Clear search")
+                        Text("Clear search", bundle: .module)
                             .font(.system(size: 13))
                             .foregroundColor(theme.accentColor)
                     }

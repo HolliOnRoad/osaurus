@@ -46,7 +46,7 @@ struct OnboardingCompleteView: View {
             Spacer().frame(height: 20)
 
             // Headline
-            Text("Ready to go")
+            Text("Ready to go", bundle: .module)
                 .font(theme.font(size: 24, weight: .semibold))
                 .foregroundColor(theme.primaryText)
                 .multilineTextAlignment(.center)

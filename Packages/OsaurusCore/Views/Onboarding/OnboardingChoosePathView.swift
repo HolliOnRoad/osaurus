@@ -79,7 +79,7 @@ struct OnboardingChoosePathView: View {
                 Spacer().frame(height: OnboardingStyle.headerTopPadding + 15)
 
                 // Headline
-                Text("How do you want to power Osaurus?")
+                Text("How do you want to power Osaurus?", bundle: .module)
                     .font(theme.font(size: 22, weight: .semibold))
                     .foregroundColor(theme.primaryText)
                     .multilineTextAlignment(.center)
@@ -148,7 +148,7 @@ struct OnboardingChoosePathView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "questionmark.circle")
                             .font(.system(size: 13))
-                        Text("What's the difference?")
+                        Text("What's the difference?", bundle: .module)
                             .font(theme.font(size: 13, weight: .medium))
                     }
                     .foregroundColor(theme.secondaryText)
@@ -156,7 +156,7 @@ struct OnboardingChoosePathView: View {
                 .buttonStyle(.plain)
                 .popover(isPresented: $showHelpPopover, arrowEdge: .bottom) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("What's the difference?")
+                        Text("What's the difference?", bundle: .module)
                             .font(theme.font(size: 14, weight: .semibold))
                             .foregroundColor(theme.primaryText)
 

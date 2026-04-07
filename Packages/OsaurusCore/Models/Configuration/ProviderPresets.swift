@@ -313,7 +313,7 @@ struct ProviderHelpLinks: View {
                 }
             } label: {
                 HStack(spacing: 6) {
-                    Text("Open \(preset.name) Console")
+                    Text("Open \(preset.name) Console", bundle: .module)
                         .font(.system(size: 13, weight: .medium))
                     Image(systemName: "arrow.up.right")
                         .font(.system(size: 11, weight: .semibold))
@@ -329,7 +329,7 @@ struct ProviderHelpLinks: View {
                     }
                 } label: {
                     HStack(spacing: 6) {
-                        Text("View Docs")
+                        Text("View Docs", bundle: .module)
                             .font(.system(size: 13, weight: .medium))
                         Image(systemName: "book")
                             .font(.system(size: 11, weight: .semibold))

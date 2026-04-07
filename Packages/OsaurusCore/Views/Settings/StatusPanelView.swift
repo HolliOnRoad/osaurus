@@ -154,7 +154,7 @@ private struct TopStatusHeader: View {
                 .onTapGesture {
                     AppDelegate.shared?.showManagementWindow(initialTab: .server)
                 }
-                .help("Open Server Management")
+                .help(Text("Open Server Management", bundle: .module))
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
@@ -162,7 +162,7 @@ private struct TopStatusHeader: View {
                         .font(.system(size: 18, weight: .bold, design: .rounded))
                         .foregroundColor(theme.primaryText)
 
-                    Text("v\(appVersion)")
+                    Text("v\(appVersion)", bundle: .module)
                         .font(.system(size: 12, weight: .regular))
                         .foregroundColor(theme.tertiaryText)
 
@@ -171,11 +171,11 @@ private struct TopStatusHeader: View {
                     // Show status indicator
                     if case .error = server.serverHealth {
                         RetryButton(action: onRetry)
-                            .help("Retry starting the server")
+                            .help(Text("Retry starting the server", bundle: .module))
                     } else if case .running = server.serverHealth {
                         // Simple green dot for running state
                         StatusDot(color: badgeColor, isAnimating: false)
-                            .help("Server is running")
+                            .help(Text("Server is running", bundle: .module))
                     } else {
                         // Show full badge for transitional states
                         StatusBadge(status: badgeText, color: badgeColor, isAnimating: badgeAnimating)
@@ -195,7 +195,7 @@ private struct TopStatusHeader: View {
                                 .foregroundColor(theme.tertiaryText)
                         }
                         .buttonStyle(PlainButtonStyle())
-                        .help("Copy URL")
+                        .help(Text("Copy URL", bundle: .module))
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else {
@@ -272,7 +272,7 @@ private struct RetryButton: View {
             HStack(spacing: 4) {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 10, weight: .semibold))
-                Text("Retry")
+                Text("Retry", bundle: .module)
                     .font(.system(size: 11, weight: .semibold))
             }
             .foregroundColor(.white)
@@ -543,7 +543,7 @@ private struct AskAIButton: View {
 
     var body: some View {
         Button(action: action) {
-            Text("Ask AI")
+            Text("Ask AI", bundle: .module)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 14)
@@ -603,7 +603,7 @@ private struct AskAIButton: View {
             },
             perform: {}
         )
-        .help("Open AI Chat")
+        .help(Text("Open AI Chat", bundle: .module))
     }
 }
 

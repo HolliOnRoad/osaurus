@@ -17,10 +17,10 @@ struct HotkeyRecorder: View {
     var body: some View {
         HStack(spacing: 8) {
             if isRecording {
-                Text("Recording… Press new shortcut")
+                Text("Recording… Press new shortcut", bundle: .module)
                     .font(.system(size: 11))
                     .foregroundColor(theme.secondaryText)
-                Button("Cancel") { isRecording = false }
+                Button { isRecording = false } label: { Text("Cancel", bundle: .module) }
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(theme.accentColor)
                     .buttonStyle(.plain)
@@ -38,12 +38,12 @@ struct HotkeyRecorder: View {
                                     .stroke(theme.inputBorder, lineWidth: 1)
                             )
                     )
-                Button("Change…") { isRecording = true }
+                Button { isRecording = true } label: { Text("Change…", bundle: .module) }
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(theme.accentColor)
                     .buttonStyle(.plain)
                 if value != nil {
-                    Button("Clear") { value = nil }
+                    Button { value = nil } label: { Text("Clear", bundle: .module) }
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(theme.secondaryText)
                         .buttonStyle(.plain)

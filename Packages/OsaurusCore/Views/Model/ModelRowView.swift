@@ -305,7 +305,7 @@ struct ModelRowView: View {
                             .foregroundColor(theme.tertiaryText)
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .help("Cancel download")
+                    .help(Text("Cancel download", bundle: .module))
                 }
             }
 

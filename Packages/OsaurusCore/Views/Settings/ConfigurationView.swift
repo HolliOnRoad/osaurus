@@ -107,7 +107,7 @@ struct ConfigurationView: View {
                         ) {
                             SettingsSection(title: "General", icon: "gear") {
                                 VStack(alignment: .leading, spacing: 20) {
-                                    Text("Application behavior and system integration.")
+                                    Text("Application behavior and system integration.", bundle: .module)
                                         .font(.system(size: 12))
                                         .foregroundColor(theme.secondaryText)
 
@@ -118,19 +118,19 @@ struct ConfigurationView: View {
 
                                     // Start at Login
                                     SettingsToggle(
-                                        title: "Start at Login",
+                                        title: L("Start at Login"),
                                         description: "Launch Osaurus when you sign in",
                                         isOn: $tempStartAtLogin
                                     )
 
                                     SettingsToggle(
-                                        title: "Hide Dock Icon",
+                                        title: L("Hide Dock Icon"),
                                         description: "Run in menu bar only (requires restart)",
                                         isOn: $tempHideDockIcon
                                     )
 
                                     SettingsToggle(
-                                        title: "Beta Updates",
+                                        title: L("Beta Updates"),
                                         description:
                                             "Receive pre-release updates with new features before they're generally available",
                                         isOn: $updater.isBetaChannel
@@ -142,7 +142,7 @@ struct ConfigurationView: View {
                                         VStack(alignment: .leading, spacing: 8) {
                                             coreModelPicker
                                             Text(
-                                                "Lightweight model used for memory extraction, preflight search optimization, and other background inference tasks."
+                                                "Lightweight model used for memory extraction, preflight search optimization, and other background inference tasks.", bundle: .module
                                             )
                                             .font(.system(size: 11))
                                             .foregroundColor(theme.tertiaryText)
@@ -154,16 +154,16 @@ struct ConfigurationView: View {
                                     // Command Line Tool
                                     SettingsSubsection(label: "Command Line Tool") {
                                         VStack(alignment: .leading, spacing: 12) {
-                                            Text("Install the `osaurus` CLI into your PATH for terminal access.")
+                                            Text("Install the `osaurus` CLI into your PATH for terminal access.", bundle: .module)
                                                 .font(.system(size: 12))
                                                 .foregroundColor(theme.tertiaryText)
 
                                             HStack(spacing: 12) {
                                                 Button(action: { installCLI() }) {
-                                                    Text("Install CLI")
+                                                    Text("Install CLI", bundle: .module)
                                                 }
                                                 .buttonStyle(SettingsButtonStyle())
-                                                .help("Create a symlink to the embedded CLI")
+                                                .help(Text("Create a symlink to the embedded CLI", bundle: .module))
 
                                                 if let message = cliInstallMessage {
                                                     HStack(spacing: 6) {
@@ -183,7 +183,7 @@ struct ConfigurationView: View {
                                                 }
                                             }
 
-                                            Text("If installed to ~/.local/bin, ensure it's in your PATH.")
+                                            Text("If installed to ~/.local/bin, ensure it's in your PATH.", bundle: .module)
                                                 .font(.system(size: 11))
                                                 .foregroundColor(theme.tertiaryText)
                                         }
@@ -202,7 +202,7 @@ struct ConfigurationView: View {
                                     SettingsSubsection(label: "Maintenance") {
                                         VStack(alignment: .leading, spacing: 12) {
                                             Text(
-                                                "Troubleshoot or reset the application. A factory reset permanently deletes all data and settings."
+                                                "Troubleshoot or reset the application. A factory reset permanently deletes all data and settings.", bundle: .module
                                             )
                                             .font(.system(size: 12))
                                             .foregroundColor(theme.tertiaryText)
@@ -211,7 +211,7 @@ struct ConfigurationView: View {
                                                 HStack(spacing: 6) {
                                                     Image(systemName: "trash")
                                                         .font(.system(size: 12))
-                                                    Text("Factory Reset…")
+                                                    Text("Factory Reset…", bundle: .module)
                                                 }
                                             }
                                             .buttonStyle(SettingsButtonStyle(isDestructive: true))
@@ -236,7 +236,7 @@ struct ConfigurationView: View {
                         ) {
                             SettingsSection(title: "Chat", icon: "message") {
                                 VStack(alignment: .leading, spacing: 20) {
-                                    Text("Configure how chat mode generates responses.")
+                                    Text("Configure how chat mode generates responses.", bundle: .module)
                                         .font(.system(size: 12))
                                         .foregroundColor(theme.secondaryText)
 
@@ -320,11 +320,11 @@ struct ConfigurationView: View {
                                     SettingsSubsection(label: "Tools") {
                                         VStack(alignment: .leading, spacing: 8) {
                                             Toggle(isOn: $tempDisableTools) {
-                                                Text("Disable tools")
+                                                Text("Disable tools", bundle: .module)
                                                     .font(.system(size: 12))
                                             }
                                             Text(
-                                                "Send messages directly to the model with no tool specs or capability injection. Keeps the prompt stable across turns for maximum KV-cache reuse. Recommended when osaurus is acting as a backend for an external agent."
+                                                "Send messages directly to the model with no tool specs or capability injection. Keeps the prompt stable across turns for maximum KV-cache reuse. Recommended when osaurus is acting as a backend for an external agent.", bundle: .module
                                             )
                                             .font(.system(size: 11))
                                             .foregroundColor(theme.tertiaryText)
@@ -336,11 +336,11 @@ struct ConfigurationView: View {
                                     SettingsSubsection(label: "Clipboard") {
                                         VStack(alignment: .leading, spacing: 8) {
                                             Toggle(isOn: $tempEnableClipboardMonitoring) {
-                                                Text("Enable clipboard monitoring")
+                                                Text("Enable clipboard monitoring", bundle: .module)
                                                     .font(.system(size: 12))
                                             }
                                             Text(
-                                                "Automatically detect and offer text from any app as context. Includes 'grab selection' feature when summoning Osaurus."
+                                                "Automatically detect and offer text from any app as context. Includes 'grab selection' feature when summoning Osaurus.", bundle: .module
                                             )
                                             .font(.system(size: 11))
                                             .foregroundColor(theme.tertiaryText)
@@ -381,7 +381,7 @@ struct ConfigurationView: View {
                         if matchesSearch("Server", "Port", "Network", "Expose", "CORS", "Origins", "Allowed Origins") {
                             SettingsSection(title: "Server", icon: "network") {
                                 VStack(alignment: .leading, spacing: 20) {
-                                    Text("Configure the local API server for external integrations.")
+                                    Text("Configure the local API server for external integrations.", bundle: .module)
                                         .font(.system(size: 12))
                                         .foregroundColor(theme.secondaryText)
 
@@ -397,7 +397,7 @@ struct ConfigurationView: View {
 
                                     // Network Exposure Toggle
                                     SettingsToggle(
-                                        title: "Expose to Network",
+                                        title: L("Expose to Network"),
                                         description: "Allow devices on your network to connect",
                                         isOn: $tempExposeToNetwork
                                     )
@@ -429,7 +429,7 @@ struct ConfigurationView: View {
                             SettingsSection(title: "Local Inference", icon: "bolt") {
                                 VStack(alignment: .leading, spacing: 20) {
                                     Text(
-                                        "Tune the local model runtime. These settings only affect models running on this device."
+                                        "Tune the local model runtime. These settings only affect models running on this device.", bundle: .module
                                     )
                                     .font(.system(size: 12))
                                     .foregroundColor(theme.secondaryText)
@@ -541,7 +541,7 @@ struct ConfigurationView: View {
                                 VStack(alignment: .leading, spacing: 20) {
                                     // Enable Toasts Toggle
                                     SettingsToggle(
-                                        title: "Show Toast Notifications",
+                                        title: L("Show Toast Notifications"),
                                         description: "Display notifications for background tasks and events",
                                         isOn: $tempToastEnabled
                                     )
@@ -600,7 +600,7 @@ struct ConfigurationView: View {
                                             HStack(spacing: 6) {
                                                 Image(systemName: "bell.badge")
                                                     .font(.system(size: 12))
-                                                Text("Test Toast")
+                                                Text("Test Toast", bundle: .module)
                                                     .font(.system(size: 12, weight: .medium))
                                             }
                                         }
@@ -641,11 +641,11 @@ struct ConfigurationView: View {
                             .tint(theme.accentColor)
 
                         VStack(spacing: 8) {
-                            Text("Resetting Osaurus")
+                            Text("Resetting Osaurus", bundle: .module)
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(theme.primaryText)
 
-                            Text("Deleting data and preferences. Please wait…")
+                            Text("Deleting data and preferences. Please wait…", bundle: .module)
                                 .font(.system(size: 14))
                                 .foregroundColor(theme.secondaryText)
                         }
@@ -697,13 +697,13 @@ struct ConfigurationView: View {
 
     private var headerView: some View {
         ManagerHeaderWithActions(
-            title: "Settings",
-            subtitle: "Configure your Osaurus settings"
+            title: L("Settings"),
+            subtitle: L("Configure your Osaurus settings")
         ) {
             HeaderSecondaryButton("Restore View Defaults", icon: "arrow.counterclockwise") {
                 resetToDefaults()
             }
-            .help("Restore view-only settings to recommended defaults (does not affect saved configuration)")
+            .help(Text("Restore view-only settings to recommended defaults (does not affect saved configuration)", bundle: .module))
             HeaderPrimaryButton("Save Changes", icon: "checkmark") {
                 saveConfiguration()
             }
@@ -1030,7 +1030,7 @@ struct ConfigurationView: View {
 
     private var coreModelPicker: some View {
         Picker("", selection: coreModelIdentifierBinding) {
-            Text("None").tag("")
+            Text("None", bundle: .module).tag("")
             if !coreModelIdentifierBinding.wrappedValue.isEmpty,
                 !coreModelPickerItems.contains(where: { $0.id == coreModelIdentifierBinding.wrappedValue })
             {
@@ -1847,7 +1847,7 @@ private struct VoiceSettingsSection: View {
     var body: some View {
         SettingsSection(title: "Voice (Advanced)", icon: "waveform") {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Configure voice settings directly in the Voice tab.")
+                Text("Configure voice settings directly in the Voice tab.", bundle: .module)
                     .font(.system(size: 12))
                     .foregroundColor(themeManager.currentTheme.secondaryText)
 
@@ -1882,7 +1882,7 @@ private struct VoiceSettingsSection: View {
                         HStack(spacing: 4) {
                             Image(systemName: "arrow.right.circle")
                                 .font(.system(size: 11))
-                            Text("Open Voice Tab")
+                            Text("Open Voice Tab", bundle: .module)
                                 .font(.system(size: 11, weight: .medium))
                         }
                         .foregroundColor(themeManager.currentTheme.accentColor)
@@ -1948,7 +1948,7 @@ private struct AgentSettingsSection: View {
                 // Generation Settings
                 SettingsSubsection(label: "Generation") {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Controls how the AI reasons and calls tools. Lower temperature improves reliability.")
+                        Text("Controls how the AI reasons and calls tools. Lower temperature improves reliability.", bundle: .module)
                             .font(.system(size: 12))
                             .foregroundColor(themeManager.currentTheme.secondaryText)
 
@@ -1994,7 +1994,7 @@ private struct AgentSettingsSection: View {
                 // Permissions
                 SettingsSubsection(label: "Permissions") {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Control how work folder tools execute when working with folders in Work mode.")
+                        Text("Control how work folder tools execute when working with folders in Work mode.", bundle: .module)
                             .font(.system(size: 12))
                             .foregroundColor(themeManager.currentTheme.secondaryText)
 
@@ -2026,12 +2026,12 @@ private struct AgentSettingsSection: View {
                                 HStack(spacing: 6) {
                                     Image(systemName: "arrow.counterclockwise")
                                         .font(.system(size: 11))
-                                    Text("Reset All to Default")
+                                    Text("Reset All to Default", bundle: .module)
                                         .font(.system(size: 12, weight: .medium))
                                 }
                             }
                             .buttonStyle(SettingsButtonStyle())
-                            .help("Reset all work tool permissions to default")
+                            .help(Text("Reset all work tool permissions to default", bundle: .module))
                         }
                     }
                 }
@@ -2102,9 +2102,9 @@ private struct AgentToolPermissionRow: View {
                     }
                 )
             ) {
-                Text("Auto").tag(ToolPermissionPolicy.auto)
-                Text("Ask").tag(ToolPermissionPolicy.ask)
-                Text("Deny").tag(ToolPermissionPolicy.deny)
+                Text("Auto", bundle: .module).tag(ToolPermissionPolicy.auto)
+                Text("Ask", bundle: .module).tag(ToolPermissionPolicy.ask)
+                Text("Deny", bundle: .module).tag(ToolPermissionPolicy.deny)
             }
             .pickerStyle(.segmented)
             .frame(width: 150)

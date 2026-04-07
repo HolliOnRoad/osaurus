@@ -11,6 +11,46 @@
         }
       }
     },
+    "%lld skills available": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Skill verfügbar"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Skills verfügbar"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld skill available"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld skills available"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "(Default)": {
       "localizations": {
         "de": {
@@ -61,6 +101,66 @@
         }
       }
     },
+    "ALL": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ALLE"
+          }
+        }
+      }
+    },
+    "ALL MODELS": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ALLE MODELLE"
+          }
+        }
+      }
+    },
+    "API Endpoints": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Endpunkte"
+          }
+        }
+      }
+    },
+    "API KEY": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API KEY"
+          }
+        }
+      }
+    },
+    "API Keys Required": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Schlüssel erforderlich"
+          }
+        }
+      }
+    },
+    "AUTHENTICATION": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AUTHENTIFIZIERUNG"
+          }
+        }
+      }
+    },
     "About System Permissions": {
       "localizations": {
         "de": {
@@ -77,6 +177,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zugangsschlüssel"
+          }
+        }
+      }
+    },
+    "Accessibility": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedienungshilfen"
           }
         }
       }
@@ -131,22 +241,12 @@
         }
       }
     },
-    "Add a model to get started": {
+    "Add Color": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Füge ein Modell hinzu, um loszulegen"
-          }
-        }
-      }
-    },
-    "Add a remote MCP server to discover and use its tools": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Füge einen Remote-MCP-Server hinzu, um seine Tools zu entdecken und zu nutzen"
+            "value": "Farbe hinzufügen"
           }
         }
       }
@@ -217,6 +317,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Füge deinen ersten Anbieter hinzu"
+          }
+        }
+      }
+    },
+    "Add a model to get started": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge ein Modell hinzu, um loszulegen"
+          }
+        }
+      }
+    },
+    "Add a remote MCP server to discover and use its tools": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge einen Remote-MCP-Server hinzu, um seine Tools zu entdecken und zu nutzen"
           }
         }
       }
@@ -301,16 +421,6 @@
         }
       }
     },
-    "ALL": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ALLE"
-          }
-        }
-      }
-    },
     "All": {
       "localizations": {
         "de": {
@@ -327,16 +437,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alle Modelle"
-          }
-        }
-      }
-    },
-    "ALL MODELS": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ALLE MODELLE"
           }
         }
       }
@@ -367,6 +467,136 @@
           "stringUnit": {
             "state": "translated",
             "value": "Agent darf beliebige Befehle in der Sandbox ausführen"
+          }
+        }
+      }
+    },
+    "Allows capturing system audio for transcription. Screen content is not recorded.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt das Aufnehmen von System-Audio für Transkription. Bildschirminhalte werden nicht aufgezeichnet."
+          }
+        }
+      }
+    },
+    "Allows plugins to access and search contacts.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Plugins, auf Kontakte zuzugreifen und sie zu durchsuchen."
+          }
+        }
+      }
+    },
+    "Allows plugins to access protected files like the Messages database and other app data.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Plugins, auf geschützte Dateien wie die Nachrichten-Datenbank und andere App-Daten zuzugreifen."
+          }
+        }
+      }
+    },
+    "Allows plugins to access your calendar to read and create events directly.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Plugins, direkt auf deinen Kalender zuzugreifen, um Termine zu lesen und zu erstellen."
+          }
+        }
+      }
+    },
+    "Allows plugins to access your current location.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Plugins, auf deinen aktuellen Standort zuzugreifen."
+          }
+        }
+      }
+    },
+    "Allows plugins to access your reminders to read and create tasks.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Plugins, auf deine Erinnerungen zuzugreifen, um Aufgaben zu lesen und zu erstellen."
+          }
+        }
+      }
+    },
+    "Allows plugins to control Maps app via AppleScript.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Plugins, die Karten-App via AppleScript zu steuern."
+          }
+        }
+      }
+    },
+    "Allows plugins to control other applications using AppleScript and Apple Events.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Plugins, andere Apps via AppleScript und Apple Events zu steuern."
+          }
+        }
+      }
+    },
+    "Allows plugins to interact with UI elements, simulate input, and control the computer.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Plugins, mit UI-Elementen zu interagieren, Eingaben zu simulieren und den Computer zu steuern."
+          }
+        }
+      }
+    },
+    "Allows plugins to read and create events in Calendar.app via AppleScript.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Plugins, Termine in Kalender.app via AppleScript zu lesen und zu erstellen."
+          }
+        }
+      }
+    },
+    "Allows plugins to read and create notes in the Notes app via AppleScript.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Plugins, Notizen in der Notizen-App via AppleScript zu lesen und zu erstellen."
+          }
+        }
+      }
+    },
+    "Allows plugins to read and send emails in Mail.app via AppleScript.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Plugins, Mails in Mail.app via AppleScript zu lesen und zu senden."
+          }
+        }
+      }
+    },
+    "Allows voice transcription using the microphone for speech-to-text.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt Sprach-Transkription über das Mikrofon für Speech-to-Text."
           }
         }
       }
@@ -407,26 +637,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Jede OpenAI-kompatible API"
-          }
-        }
-      }
-    },
-    "API KEY": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "API KEY"
-          }
-        }
-      }
-    },
-    "API Keys Required": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "API-Schlüssel erforderlich"
           }
         }
       }
@@ -611,16 +821,6 @@
         }
       }
     },
-    "AUTHENTICATION": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AUTHENTIFIZIERUNG"
-          }
-        }
-      }
-    },
     "Author": {
       "localizations": {
         "de": {
@@ -637,6 +837,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Auto"
+          }
+        }
+      }
+    },
+    "Auto-Start": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto-Start"
           }
         }
       }
@@ -681,6 +891,36 @@
         }
       }
     },
+    "Automation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisierung"
+          }
+        }
+      }
+    },
+    "Automation (Calendar)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisierung (Kalender)"
+          }
+        }
+      }
+    },
+    "Automation (Mail)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisierung (Mail)"
+          }
+        }
+      }
+    },
     "Autonomous Agents": {
       "localizations": {
         "de": {
@@ -711,22 +951,32 @@
         }
       }
     },
-    "Available endpoints on your Osaurus server. Expand to test directly.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verfügbare Endpunkte auf deinem Osaurus-Server. Aufklappen, um direkt zu testen."
-          }
-        }
-      }
-    },
     "Available Models": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Verfügbare Modelle"
+          }
+        }
+      }
+    },
+    "Available Tools": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verfügbare Tools"
+          }
+        }
+      }
+    },
+    "Available endpoints on your Osaurus server. Expand to test directly.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verfügbare Endpunkte auf deinem Osaurus-Server. Aufklappen, um direkt zu testen."
           }
         }
       }
@@ -891,6 +1141,16 @@
         }
       }
     },
+    "Built-in Themes": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Integrierte Themes"
+          }
+        }
+      }
+    },
     "Built-in skills are read-only": {
       "localizations": {
         "de": {
@@ -901,12 +1161,72 @@
         }
       }
     },
+    "Built-in themes cannot be modified directly": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Integrierte Themes können nicht direkt bearbeitet werden"
+          }
+        }
+      }
+    },
+    "CONNECTION": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VERBINDUNG"
+          }
+        }
+      }
+    },
+    "CONVERSATION HISTORY": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GESPRÄCHSVERLAUF"
+          }
+        }
+      }
+    },
+    "CPUs": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CPUs"
+          }
+        }
+      }
+    },
+    "CUSTOM HEADERS": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EIGENE HEADER"
+          }
+        }
+      }
+    },
     "Cache Inspector": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Cache-Inspektor"
+          }
+        }
+      }
+    },
+    "Calendar": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalender"
           }
         }
       }
@@ -977,6 +1297,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kategorie"
+          }
+        }
+      }
+    },
+    "Change Folder": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordner ändern"
           }
         }
       }
@@ -1061,26 +1391,6 @@
         }
       }
     },
-    "Choose a local model": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lokales Modell wählen"
-          }
-        }
-      }
-    },
-    "Choose a provider": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anbieter auswählen"
-          }
-        }
-      }
-    },
     "Choose File": {
       "localizations": {
         "de": {
@@ -1101,22 +1411,42 @@
         }
       }
     },
-    "Choose how the app knows when you've finished speaking.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wähle, wie die App erkennt, dass du fertig gesprochen hast."
-          }
-        }
-      }
-    },
     "Choose Image": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Bild wählen"
+          }
+        }
+      }
+    },
+    "Choose a local model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokales Modell wählen"
+          }
+        }
+      }
+    },
+    "Choose a provider": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anbieter auswählen"
+          }
+        }
+      }
+    },
+    "Choose how the app knows when you've finished speaking.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wähle, wie die App erkennt, dass du fertig gesprochen hast."
           }
         }
       }
@@ -1167,6 +1497,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alles löschen"
+          }
+        }
+      }
+    },
+    "Clear Folder": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordner leeren"
           }
         }
       }
@@ -1311,12 +1651,32 @@
         }
       }
     },
+    "Computer audio": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer-Audio"
+          }
+        }
+      }
+    },
     "Configure": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Konfigurieren"
+          }
+        }
+      }
+    },
+    "Configure Secrets": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugangsdaten konfigurieren"
           }
         }
       }
@@ -1361,16 +1721,6 @@
         }
       }
     },
-    "Configure Secrets": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zugangsdaten konfigurieren"
-          }
-        }
-      }
-    },
     "Configure the local API server for external integrations.": {
       "localizations": {
         "de": {
@@ -1397,6 +1747,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Konfiguriere was passiert, wenn ein Aktivierungswort erkannt wird"
+          }
+        }
+      }
+    },
+    "Configure your Osaurus settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfiguriere deine Osaurus-Einstellungen"
           }
         }
       }
@@ -1501,12 +1861,12 @@
         }
       }
     },
-    "CONNECTION": {
+    "Contacts": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "VERBINDUNG"
+            "value": "Kontakte"
           }
         }
       }
@@ -1581,16 +1941,6 @@
         }
       }
     },
-    "CONVERSATION HISTORY": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "GESPRÄCHSVERLAUF"
-          }
-        }
-      }
-    },
     "Conversations stay on your Mac. Switch providers anytime — your history comes with you.": {
       "localizations": {
         "de": {
@@ -1631,6 +1981,26 @@
         }
       }
     },
+    "Copy Image": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bild kopieren"
+          }
+        }
+      }
+    },
+    "Copy URL": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URL kopieren"
+          }
+        }
+      }
+    },
     "Copy code": {
       "localizations": {
         "de": {
@@ -1647,16 +2017,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Inhalt in die Zwischenablage kopieren"
-          }
-        }
-      }
-    },
-    "Copy Image": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bild kopieren"
           }
         }
       }
@@ -1701,16 +2061,6 @@
         }
       }
     },
-    "Copy URL": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "URL kopieren"
-          }
-        }
-      }
-    },
     "Core Model": {
       "localizations": {
         "de": {
@@ -1741,62 +2091,12 @@
         }
       }
     },
-    "CPUs": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CPUs"
-          }
-        }
-      }
-    },
-    "Create a symlink to the embedded CLI": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Symlink zur eingebetteten CLI erstellen"
-          }
-        }
-      }
-    },
     "Create Agent": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Agent erstellen"
-          }
-        }
-      }
-    },
-    "Create an agent to configure sandbox access, plugins, and secrets.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erstelle einen Agenten, um Sandbox-Zugriff, Plugins und Secrets zu konfigurieren."
-          }
-        }
-      }
-    },
-    "Create custom assistant personalities with unique behaviors": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erstelle individuelle Assistenten mit einzigartigen Verhaltensweisen"
-          }
-        }
-      }
-    },
-    "Create different agents for different tasks. Talk hands-free with voice. Customize how everything looks.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erstelle verschiedene Agenten für verschiedene Aufgaben. Sprich freihändig per Stimme. Passe das Erscheinungsbild an."
           }
         }
       }
@@ -1891,6 +2191,16 @@
         }
       }
     },
+    "Create Your First Watcher": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle deinen ersten Watcher"
+          }
+        }
+      }
+    },
     "Create Your Identity": {
       "localizations": {
         "de": {
@@ -1907,6 +2217,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erstelle deine Osaurus-Identität"
+          }
+        }
+      }
+    },
+    "Create a symlink to the embedded CLI": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symlink zur eingebetteten CLI erstellen"
+          }
+        }
+      }
+    },
+    "Create an agent to configure sandbox access, plugins, and secrets.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle einen Agenten, um Sandbox-Zugriff, Plugins und Secrets zu konfigurieren."
+          }
+        }
+      }
+    },
+    "Create custom assistant personalities with unique behaviors": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle individuelle Assistenten mit einzigartigen Verhaltensweisen"
+          }
+        }
+      }
+    },
+    "Create different agents for different tasks. Talk hands-free with voice. Customize how everything looks.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle verschiedene Agenten für verschiedene Aufgaben. Sprich freihändig per Stimme. Passe das Erscheinungsbild an."
           }
         }
       }
@@ -1951,36 +2301,6 @@
         }
       }
     },
-    "Custom directory selected": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eigenes Verzeichnis ausgewählt"
-          }
-        }
-      }
-    },
-    "CUSTOM HEADERS": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "EIGENE HEADER"
-          }
-        }
-      }
-    },
-    "Custom instructions for this plugin...": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eigene Anweisungen für dieses Plugin..."
-          }
-        }
-      }
-    },
     "Custom JSON data preserved across exports and imports": {
       "localizations": {
         "de": {
@@ -2011,6 +2331,26 @@
         }
       }
     },
+    "Custom directory selected": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigenes Verzeichnis ausgewählt"
+          }
+        }
+      }
+    },
+    "Custom instructions for this plugin...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigene Anweisungen für dieses Plugin..."
+          }
+        }
+      }
+    },
     "Customize": {
       "localizations": {
         "de": {
@@ -2031,12 +2371,12 @@
         }
       }
     },
-    "Daily Planner": {
+    "Customize the look and feel of your chat interface": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tagesplaner"
+            "value": "Passe das Aussehen deiner Chat-Oberfläche an"
           }
         }
       }
@@ -2047,6 +2387,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "GEFAHRENBEREICH"
+          }
+        }
+      }
+    },
+    "DURATION": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAUER"
+          }
+        }
+      }
+    },
+    "Daily Planner": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tagesplaner"
           }
         }
       }
@@ -2127,6 +2487,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Standard-Agent"
+          }
+        }
+      }
+    },
+    "Default Model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard-Modell"
           }
         }
       }
@@ -2311,6 +2681,16 @@
         }
       }
     },
+    "Documentation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dokumentation"
+          }
+        }
+      }
+    },
     "Don't have a key?": {
       "localizations": {
         "de": {
@@ -2341,12 +2721,12 @@
         }
       }
     },
-    "Download a Local Model": {
+    "Download": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lokales Modell herunterladen"
+            "value": "Herunterladen"
           }
         }
       }
@@ -2357,6 +2737,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Download fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "Download a Local Model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokales Modell herunterladen"
           }
         }
       }
@@ -2411,12 +2801,32 @@
         }
       }
     },
+    "Downloads Organizer": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads-Organizer"
+          }
+        }
+      }
+    },
     "Draft and send texts": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Texte verfassen und senden"
+          }
+        }
+      }
+    },
+    "Dropbox Automation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dropbox-Automatisierung"
           }
         }
       }
@@ -2431,42 +2841,22 @@
         }
       }
     },
-    "DURATION": {
+    "EN": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "DAUER"
+            "value": "EN"
           }
         }
       }
     },
-    "e.g., Downloads Organizer": {
+    "Edge Light": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "z.B. Downloads-Organizer"
-          }
-        }
-      }
-    },
-    "e.g., productivity": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "z.B. Produktivität"
-          }
-        }
-      }
-    },
-    "e.g., Research Analyst": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "z.B. Forschungsanalyst"
+            "value": "Rand-Licht"
           }
         }
       }
@@ -2521,22 +2911,22 @@
         }
       }
     },
-    "EN": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "EN"
-          }
-        }
-      }
-    },
     "Enable": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Aktivieren"
+          }
+        }
+      }
+    },
+    "Enable Tunnel": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel aktivieren"
           }
         }
       }
@@ -2567,6 +2957,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aktiviert"
+          }
+        }
+      }
+    },
+    "Enter Repository URL": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repository-URL eingeben"
           }
         }
       }
@@ -2617,6 +3017,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fehler"
+          }
+        }
+      }
+    },
+    "Error: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehler: %@"
           }
         }
       }
@@ -2681,6 +3091,16 @@
         }
       }
     },
+    "Expose to Network": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Netzwerk freigeben"
+          }
+        }
+      }
+    },
     "Fact-checking and balanced analysis": {
       "localizations": {
         "de": {
@@ -2701,12 +3121,32 @@
         }
       }
     },
+    "Failed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlgeschlagen"
+          }
+        }
+      }
+    },
     "Failed - Tap to retry": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Fehlgeschlagen – Tippen zum Wiederholen"
+          }
+        }
+      }
+    },
+    "Failed to Load Themes": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Themes konnten nicht geladen werden"
           }
         }
       }
@@ -2751,22 +3191,22 @@
         }
       }
     },
-    "Failed to Load Themes": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Themes konnten nicht geladen werden"
-          }
-        }
-      }
-    },
     "Fetching repository information": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Repository-Informationen werden abgerufen"
+          }
+        }
+      }
+    },
+    "Fetching skills...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lade Skills…"
           }
         }
       }
@@ -2891,6 +3331,46 @@
         }
       }
     },
+    "From File": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Datei"
+          }
+        }
+      }
+    },
+    "From GitHub": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von GitHub"
+          }
+        }
+      }
+    },
+    "From: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von: %@"
+          }
+        }
+      }
+    },
+    "Full Disk Access": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vollständiger Festplattenzugriff"
+          }
+        }
+      }
+    },
     "Full Isolation": {
       "localizations": {
         "de": {
@@ -2931,42 +3411,12 @@
         }
       }
     },
-    "Generate a cryptographic identity for you and your\nagents. Stored securely in iCloud Keychain.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erstelle eine kryptografische Identität für dich und\ndeine Agenten. Sicher im iCloud-Schlüsselbund gespeichert."
-          }
-        }
-      }
-    },
-    "Generate a cryptographic identity stored securely\nin your iCloud Keychain and Secure Enclave.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erstelle eine kryptografische Identität, sicher gespeichert\nim iCloud-Schlüsselbund und Secure Enclave."
-          }
-        }
-      }
-    },
     "Generate Access Key": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Zugangsschlüssel generieren"
-          }
-        }
-      }
-    },
-    "Generate ideas and explore possibilities": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ideen generieren und Möglichkeiten erkunden"
           }
         }
       }
@@ -2981,22 +3431,72 @@
         }
       }
     },
-    "Generate insights on a schedule": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erkenntnisse nach Zeitplan generieren"
-          }
-        }
-      }
-    },
     "Generate Key": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Schlüssel generieren"
+          }
+        }
+      }
+    },
+    "Generate a cryptographic identity for you and your\nagents. Stored securely in iCloud Keychain.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle eine kryptografische Identität für dich und\ndeine Agenten. Sicher im iCloud-Schlüsselbund gespeichert."
+          }
+        }
+      }
+    },
+    "Generate a cryptographic identity for you and your\\nagents. Stored securely in iCloud Keychain.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle eine kryptografische Identität für dich und deine\\nAgenten. Sicher im iCloud-Schlüsselbund gespeichert."
+          }
+        }
+      }
+    },
+    "Generate a cryptographic identity stored securely\nin your iCloud Keychain and Secure Enclave.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle eine kryptografische Identität, sicher gespeichert\nim iCloud-Schlüsselbund und Secure Enclave."
+          }
+        }
+      }
+    },
+    "Generate a cryptographic identity stored securely\\nin your iCloud Keychain and Secure Enclave.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstelle eine kryptografische Identität, sicher gespeichert\\nim iCloud-Schlüsselbund und in der Secure Enclave."
+          }
+        }
+      }
+    },
+    "Generate ideas and explore possibilities": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ideen generieren und Möglichkeiten erkunden"
+          }
+        }
+      }
+    },
+    "Generate insights on a schedule": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erkenntnisse nach Zeitplan generieren"
           }
         }
       }
@@ -3021,16 +3521,6 @@
         }
       }
     },
-    "Get a daily summary every morning": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erhalte jeden Morgen eine tägliche Zusammenfassung"
-          }
-        }
-      }
-    },
     "Get Key": {
       "localizations": {
         "de": {
@@ -3047,6 +3537,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Los geht's"
+          }
+        }
+      }
+    },
+    "Get a daily summary every morning": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erhalte jeden Morgen eine tägliche Zusammenfassung"
           }
         }
       }
@@ -3201,6 +3701,16 @@
         }
       }
     },
+    "INSTRUCTIONS": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ANWEISUNGEN"
+          }
+        }
+      }
+    },
     "Identity": {
       "localizations": {
         "de": {
@@ -3291,12 +3801,62 @@
         }
       }
     },
+    "Import skills from any GitHub repository": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importiere Skills aus einem beliebigen GitHub-Repository"
+          }
+        }
+      }
+    },
+    "Importing Skills": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importiere Skills"
+          }
+        }
+      }
+    },
+    "Importing skill %lld of %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importiere Skill %lld von %lld"
+          }
+        }
+      }
+    },
     "Importing...": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Importiere…"
+          }
+        }
+      }
+    },
+    "Indeterminate Progress": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbestimmter Fortschritt"
+          }
+        }
+      }
+    },
+    "Inference Details": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inferenz-Details"
           }
         }
       }
@@ -3341,12 +3901,12 @@
         }
       }
     },
-    "Install and run sandbox plugins": {
+    "Install Built-in Themes": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sandbox-Plugins installieren und ausführen"
+            "value": "Integrierte Themes installieren"
           }
         }
       }
@@ -3357,6 +3917,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "CLI installieren"
+          }
+        }
+      }
+    },
+    "Install and run sandbox plugins": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox-Plugins installieren und ausführen"
           }
         }
       }
@@ -3377,16 +3947,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tools installieren, die in der VM laufen"
-          }
-        }
-      }
-    },
-    "INSTRUCTIONS": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ANWEISUNGEN"
           }
         }
       }
@@ -3491,6 +4051,16 @@
         }
       }
     },
+    "LISTENING": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HÖRT ZU"
+          }
+        }
+      }
+    },
     "Label": {
       "localizations": {
         "de": {
@@ -3511,6 +4081,16 @@
         }
       }
     },
+    "Large": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groß"
+          }
+        }
+      }
+    },
     "Launch Osaurus when you sign in": {
       "localizations": {
         "de": {
@@ -3521,22 +4101,22 @@
         }
       }
     },
-    "Learn how to integrate Osaurus into your applications.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erfahre, wie du Osaurus in deine Anwendungen integrierst."
-          }
-        }
-      }
-    },
     "Learn More": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Mehr erfahren"
+          }
+        }
+      }
+    },
+    "Learn how to integrate Osaurus into your applications.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfahre, wie du Osaurus in deine Anwendungen integrierst."
           }
         }
       }
@@ -3627,16 +4207,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hört zu"
-          }
-        }
-      }
-    },
-    "LISTENING": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HÖRT ZU"
           }
         }
       }
@@ -3751,6 +4321,16 @@
         }
       }
     },
+    "Local Network Discovery": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokale Netzwerkerkennung"
+          }
+        }
+      }
+    },
     "Local models run on your Mac using your hardware. They're private and free to use, but less capable than cloud models for complex tasks.\n\nCloud providers like Claude and ChatGPT are more powerful but require an account and charge per use.\n\nNot sure? Start local. You can add providers later.": {
       "localizations": {
         "de": {
@@ -3761,12 +4341,12 @@
         }
       }
     },
-    "Local Network Discovery": {
+    "Location": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lokale Netzwerkerkennung"
+            "value": "Standort"
           }
         }
       }
@@ -3781,6 +4361,26 @@
         }
       }
     },
+    "MCP Providers": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MCP-Anbieter"
+          }
+        }
+      }
+    },
+    "METHOD": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "METHODE"
+          }
+        }
+      }
+    },
     "Maintenance": {
       "localizations": {
         "de": {
@@ -3791,12 +4391,42 @@
         }
       }
     },
+    "Manage Agents...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten verwalten…"
+          }
+        }
+      }
+    },
     "Manage Tools": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Tools verwalten"
+          }
+        }
+      }
+    },
+    "Manage and discover tools": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools verwalten und entdecken"
+          }
+        }
+      }
+    },
+    "Manage system permissions for plugins and features": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemberechtigungen für Plugins und Funktionen verwalten"
           }
         }
       }
@@ -3871,6 +4501,16 @@
         }
       }
     },
+    "Maps": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karten"
+          }
+        }
+      }
+    },
     "Master Address": {
       "localizations": {
         "de": {
@@ -3901,12 +4541,12 @@
         }
       }
     },
-    "MCP Providers": {
+    "Medium": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "MCP-Anbieter"
+            "value": "Mittel"
           }
         }
       }
@@ -3957,16 +4597,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nachricht oder Bild einfügen…"
-          }
-        }
-      }
-    },
-    "METHOD": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "METHODE"
           }
         }
       }
@@ -4031,6 +4661,26 @@
         }
       }
     },
+    "Model updates available": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell-Updates verfügbar"
+          }
+        }
+      }
+    },
+    "Models": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelle"
+          }
+        }
+      }
+    },
     "Models will be organized in subfolders by repository name": {
       "localizations": {
         "de": {
@@ -4057,6 +4707,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deine Skill-Anweisungen bearbeiten"
+          }
+        }
+      }
+    },
+    "Monitor API requests and performance": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Anfragen und Performance überwachen"
+          }
+        }
+      }
+    },
+    "Monitor folders for changes and trigger work tasks automatically": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordner auf Änderungen überwachen und Arbeitsaufgaben automatisch auslösen"
+          }
+        }
+      }
+    },
+    "Monitor folders for changes and trigger work tasks automatically.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordner auf Änderungen überwachen und Arbeitsaufgaben automatisch auslösen."
           }
         }
       }
@@ -4111,6 +4791,16 @@
         }
       }
     },
+    "Needs Permission": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berechtigung erforderlich"
+          }
+        }
+      }
+    },
     "Needs input": {
       "localizations": {
         "de": {
@@ -4121,12 +4811,12 @@
         }
       }
     },
-    "Needs Permission": {
+    "Network Access": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Berechtigung erforderlich"
+            "value": "Netzwerk-Zugriff"
           }
         }
       }
@@ -4171,6 +4861,66 @@
         }
       }
     },
+    "No Agents": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Agenten"
+          }
+        }
+      }
+    },
+    "No MCP Providers": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine MCP-Anbieter"
+          }
+        }
+      }
+    },
+    "No Remote Providers": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Remote-Anbieter"
+          }
+        }
+      }
+    },
+    "No Requests Yet": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Anfragen"
+          }
+        }
+      }
+    },
+    "No Themes Found": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Themes gefunden"
+          }
+        }
+      }
+    },
+    "No Watchers": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Watcher"
+          }
+        }
+      }
+    },
     "No active tasks": {
       "localizations": {
         "de": {
@@ -4187,16 +4937,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Keine Adresse"
-          }
-        }
-      }
-    },
-    "No Agents": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine Agenten"
           }
         }
       }
@@ -4371,16 +5111,6 @@
         }
       }
     },
-    "No MCP Providers": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine MCP-Anbieter"
-          }
-        }
-      }
-    },
     "No model selected": {
       "localizations": {
         "de": {
@@ -4491,32 +5221,12 @@
         }
       }
     },
-    "No Remote Providers": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine Remote-Anbieter"
-          }
-        }
-      }
-    },
     "No request body": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Kein Anfrage-Body"
-          }
-        }
-      }
-    },
-    "No Requests Yet": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Noch keine Anfragen"
           }
         }
       }
@@ -4571,12 +5281,12 @@
         }
       }
     },
-    "No Themes Found": {
+    "No tools available": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine Themes gefunden"
+            "value": "Keine Tools verfügbar"
           }
         }
       }
@@ -4587,16 +5297,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Keine Tools in diesem Plugin definiert"
-          }
-        }
-      }
-    },
-    "No Watchers": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine Watcher"
           }
         }
       }
@@ -4641,22 +5341,22 @@
         }
       }
     },
-    "Not available": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nicht verfügbar"
-          }
-        }
-      }
-    },
     "Not Connected": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Nicht verbunden"
+          }
+        }
+      }
+    },
+    "Not available": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht verfügbar"
           }
         }
       }
@@ -4671,12 +5371,12 @@
         }
       }
     },
-    "Off": {
+    "Notes": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aus"
+            "value": "Notizen"
           }
         }
       }
@@ -4691,12 +5391,42 @@
         }
       }
     },
+    "OSAURUS IDENTITY RECOVERY": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OSAURUS-IDENTITÄTSWIEDERHERSTELLUNG"
+          }
+        }
+      }
+    },
+    "Off": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus"
+          }
+        }
+      }
+    },
     "On": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Ein"
+          }
+        }
+      }
+    },
+    "On This Network": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In diesem Netzwerk"
           }
         }
       }
@@ -4751,7 +5481,7 @@
         }
       }
     },
-    "Open file": {
+    "Open File": {
       "localizations": {
         "de": {
           "stringUnit": {
@@ -4767,16 +5497,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vollbild öffnen"
-          }
-        }
-      }
-    },
-    "Open repository": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Repository öffnen"
           }
         }
       }
@@ -4811,16 +5531,6 @@
         }
       }
     },
-    "Open source libraries used by Osaurus": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Von Osaurus verwendete Open-Source-Bibliotheken"
-          }
-        }
-      }
-    },
     "Open Voice Tab": {
       "localizations": {
         "de": {
@@ -4837,6 +5547,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Web-App öffnen"
+          }
+        }
+      }
+    },
+    "Open file": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datei öffnen"
+          }
+        }
+      }
+    },
+    "Open in New Window": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In neuem Fenster öffnen"
+          }
+        }
+      }
+    },
+    "Open repository": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repository öffnen"
+          }
+        }
+      }
+    },
+    "Open source libraries used by Osaurus": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von Osaurus verwendete Open-Source-Bibliotheken"
           }
         }
       }
@@ -4901,6 +5651,16 @@
         }
       }
     },
+    "Osaurus Server": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osaurus Server"
+          }
+        }
+      }
+    },
     "Osaurus builds a layered memory from your conversations — profile, working context, summaries, and a knowledge graph. Agents recall relevant facts automatically. Your memory stays with you, not a provider.": {
       "localizations": {
         "de": {
@@ -4911,32 +5671,12 @@
         }
       }
     },
-    "OSAURUS IDENTITY RECOVERY": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OSAURUS-IDENTITÄTSWIEDERHERSTELLUNG"
-          }
-        }
-      }
-    },
     "Osaurus needs an AI to work — either a cloud provider or a local model.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Osaurus braucht eine KI – entweder einen Cloud-Anbieter oder ein lokales Modell."
-          }
-        }
-      }
-    },
-    "Osaurus Server": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Osaurus Server"
           }
         }
       }
@@ -4991,6 +5731,26 @@
         }
       }
     },
+    "PATH": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PFAD"
+          }
+        }
+      }
+    },
+    "PROTOCOL": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PROTOKOLL"
+          }
+        }
+      }
+    },
     "Parameters": {
       "localizations": {
         "de": {
@@ -5031,16 +5791,6 @@
         }
       }
     },
-    "PATH": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PFAD"
-          }
-        }
-      }
-    },
     "Pause": {
       "localizations": {
         "de": {
@@ -5071,12 +5821,42 @@
         }
       }
     },
+    "Pending": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausstehend"
+          }
+        }
+      }
+    },
     "Permanently delete all memory data including profile, entries, and summaries.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Alle Gedächtnisdaten einschließlich Profil, Einträge und Zusammenfassungen dauerhaft löschen."
+          }
+        }
+      }
+    },
+    "Permission required": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berechtigung erforderlich"
+          }
+        }
+      }
+    },
+    "Permissions": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berechtigungen"
           }
         }
       }
@@ -5107,6 +5887,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bitte versuche es erneut."
+          }
+        }
+      }
+    },
+    "Plugin": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugin"
           }
         }
       }
@@ -5311,12 +6101,12 @@
         }
       }
     },
-    "PROTOCOL": {
+    "Providers": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "PROTOKOLL"
+            "value": "Anbieter"
           }
         }
       }
@@ -5341,12 +6131,92 @@
         }
       }
     },
+    "Quick Actions": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schnellaktionen"
+          }
+        }
+      }
+    },
     "Quick walkthrough": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Kurzführung"
+          }
+        }
+      }
+    },
+    "RECENT CHATS": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LETZTE CHATS"
+          }
+        }
+      }
+    },
+    "RECENT TASKS": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LETZTE AUFGABEN"
+          }
+        }
+      }
+    },
+    "RECOMMENDED": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EMPFOHLEN"
+          }
+        }
+      }
+    },
+    "RECORDING": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AUFNAHME"
+          }
+        }
+      }
+    },
+    "RECOVERY CODE": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WIEDERHERSTELLUNGSCODE"
+          }
+        }
+      }
+    },
+    "REQUEST TIMEOUT": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZEITLIMIT FÜR ANFRAGEN"
+          }
+        }
+      }
+    },
+    "RESOURCES": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RESSOURCEN"
           }
         }
       }
@@ -5401,52 +6271,12 @@
         }
       }
     },
-    "RECENT CHATS": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "LETZTE CHATS"
-          }
-        }
-      }
-    },
-    "RECENT TASKS": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "LETZTE AUFGABEN"
-          }
-        }
-      }
-    },
     "Recommended": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Empfohlen"
-          }
-        }
-      }
-    },
-    "RECOMMENDED": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "EMPFOHLEN"
-          }
-        }
-      }
-    },
-    "RECORDING": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AUFNAHME"
           }
         }
       }
@@ -5471,16 +6301,6 @@
         }
       }
     },
-    "RECOVERY CODE": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "WIEDERHERSTELLUNGSCODE"
-          }
-        }
-      }
-    },
     "Recursive monitoring": {
       "localizations": {
         "de": {
@@ -5497,6 +6317,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aktualisieren"
+          }
+        }
+      }
+    },
+    "Refresh Context": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontext aktualisieren"
           }
         }
       }
@@ -5581,12 +6411,42 @@
         }
       }
     },
+    "Reinstall Built-ins": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Integrierte neu installieren"
+          }
+        }
+      }
+    },
+    "Relays": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relays"
+          }
+        }
+      }
+    },
     "Reminders": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Erinnerungen"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernen"
           }
         }
       }
@@ -5601,6 +6461,26 @@
         }
       }
     },
+    "Remove Image": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bild entfernen"
+          }
+        }
+      }
+    },
+    "Remove Plugin?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plugin entfernen?"
+          }
+        }
+      }
+    },
     "Remove file": {
       "localizations": {
         "de": {
@@ -5611,12 +6491,12 @@
         }
       }
     },
-    "Remove Image": {
+    "Rename": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bild entfernen"
+            "value": "Umbenennen"
           }
         }
       }
@@ -5637,16 +6517,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anfrage"
-          }
-        }
-      }
-    },
-    "REQUEST TIMEOUT": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ZEITLIMIT FÜR ANFRAGEN"
           }
         }
       }
@@ -5691,16 +6561,6 @@
         }
       }
     },
-    "Reset all work tool permissions to default": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alle Arbeits-Tool-Berechtigungen auf Standard zurücksetzen"
-          }
-        }
-      }
-    },
     "Reset Container?": {
       "localizations": {
         "de": {
@@ -5711,12 +6571,32 @@
         }
       }
     },
+    "Reset all work tool permissions to default": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Arbeits-Tool-Berechtigungen auf Standard zurücksetzen"
+          }
+        }
+      }
+    },
     "Reset to Default": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Auf Standard zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset to Defaults": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Standards zurücksetzen"
           }
         }
       }
@@ -5741,26 +6621,6 @@
         }
       }
     },
-    "Reset to Defaults": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auf Standards zurücksetzen"
-          }
-        }
-      }
-    },
-    "Resetting destroys all installed sandbox packages. Agent workspace files on the host persist.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das Zurücksetzen zerstört alle installierten Sandbox-Pakete. Agent-Arbeitsbereichsdateien auf dem Host bleiben erhalten."
-          }
-        }
-      }
-    },
     "Resetting Osaurus": {
       "localizations": {
         "de": {
@@ -5771,12 +6631,12 @@
         }
       }
     },
-    "RESOURCES": {
+    "Resetting destroys all installed sandbox packages. Agent workspace files on the host persist.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "RESSOURCEN"
+            "value": "Das Zurücksetzen zerstört alle installierten Sandbox-Pakete. Agent-Arbeitsbereichsdateien auf dem Host bleiben erhalten."
           }
         }
       }
@@ -5911,6 +6771,26 @@
         }
       }
     },
+    "Run LLMs locally": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LLMs lokal ausführen"
+          }
+        }
+      }
+    },
+    "Run Now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt ausführen"
+          }
+        }
+      }
+    },
     "Run a diagnostic test to verify permission": {
       "localizations": {
         "de": {
@@ -5951,32 +6831,22 @@
         }
       }
     },
-    "Run LLMs locally": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "LLMs lokal ausführen"
-          }
-        }
-      }
-    },
-    "Run Now": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jetzt ausführen"
-          }
-        }
-      }
-    },
     "Running": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Läuft"
+          }
+        }
+      }
+    },
+    "Running on port %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Läuft auf Port %@"
           }
         }
       }
@@ -5997,6 +6867,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Läuft komplett auf deinem Mac. Keine Daten verlassen deinen Computer."
+          }
+        }
+      }
+    },
+    "SOURCE": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QUELLE"
+          }
+        }
+      }
+    },
+    "STATUS": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "STATUS"
           }
         }
       }
@@ -6041,6 +6931,16 @@
         }
       }
     },
+    "Sandbox Unavailable": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox nicht verfügbar"
+          }
+        }
+      }
+    },
     "Sandbox requires macOS 26 or later.": {
       "localizations": {
         "de": {
@@ -6057,16 +6957,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sandbox erfordert macOS 26+. Native Plugins funktionieren normal."
-          }
-        }
-      }
-    },
-    "Sandbox Unavailable": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sandbox nicht verfügbar"
           }
         }
       }
@@ -6161,12 +7051,42 @@
         }
       }
     },
+    "Screen Recording": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildschirmaufnahme"
+          }
+        }
+      }
+    },
+    "Screenshot Manager": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshot-Manager"
+          }
+        }
+      }
+    },
     "Search": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Suchen"
+          }
+        }
+      }
+    },
+    "Search Settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen durchsuchen"
           }
         }
       }
@@ -6201,6 +7121,16 @@
         }
       }
     },
+    "Search entries...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einträge durchsuchen…"
+          }
+        }
+      }
+    },
     "Search models": {
       "localizations": {
         "de": {
@@ -6221,6 +7151,16 @@
         }
       }
     },
+    "Search path or model...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pfad oder Modell suchen…"
+          }
+        }
+      }
+    },
     "Search plugins": {
       "localizations": {
         "de": {
@@ -6231,22 +7171,22 @@
         }
       }
     },
-    "Search Settings": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einstellungen durchsuchen"
-          }
-        }
-      }
-    },
     "Search tasks...": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Aufgaben suchen…"
+          }
+        }
+      }
+    },
+    "Search tools and skills...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tools und Skills suchen…"
           }
         }
       }
@@ -6291,6 +7231,36 @@
         }
       }
     },
+    "Select All": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles auswählen"
+          }
+        }
+      }
+    },
+    "Select Input Device": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingabegerät auswählen"
+          }
+        }
+      }
+    },
+    "Select Model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell auswählen"
+          }
+        }
+      }
+    },
     "Select an issue to view its details, or run it to see live execution.": {
       "localizations": {
         "de": {
@@ -6331,32 +7301,22 @@
         }
       }
     },
-    "Select Input Device": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eingabegerät auswählen"
-          }
-        }
-      }
-    },
-    "Select Model": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Modell auswählen"
-          }
-        }
-      }
-    },
     "Select which agents can be activated by voice": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Wähle welche Agenten per Stimme aktiviert werden können"
+          }
+        }
+      }
+    },
+    "Selected model is outdated.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewähltes Modell ist veraltet."
           }
         }
       }
@@ -6411,6 +7371,16 @@
         }
       }
     },
+    "Server URL": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server-URL"
+          }
+        }
+      }
+    },
     "Server is locked": {
       "localizations": {
         "de": {
@@ -6441,32 +7411,12 @@
         }
       }
     },
-    "Server URL": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Server-URL"
-          }
-        }
-      }
-    },
     "Session Total": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Sitzung gesamt"
-          }
-        }
-      }
-    },
-    "Set a hotkey to enable transcription mode": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Setze einen Hotkey, um den Transkriptionsmodus zu aktivieren"
           }
         }
       }
@@ -6481,22 +7431,32 @@
         }
       }
     },
-    "Set up automated AI tasks that run on your schedule.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Richte automatisierte KI-Aufgaben ein, die nach deinem Zeitplan laufen."
-          }
-        }
-      }
-    },
     "Set Up Sandbox": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Sandbox einrichten"
+          }
+        }
+      }
+    },
+    "Set a hotkey to enable transcription mode": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setze einen Hotkey, um den Transkriptionsmodus zu aktivieren"
+          }
+        }
+      }
+    },
+    "Set up automated AI tasks that run on your schedule.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richte automatisierte KI-Aufgaben ein, die nach deinem Zeitplan laufen."
           }
         }
       }
@@ -6591,6 +7551,16 @@
         }
       }
     },
+    "Shimmer Progress Bar": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schimmernder Fortschrittsbalken"
+          }
+        }
+      }
+    },
     "Short description": {
       "localizations": {
         "de": {
@@ -6617,6 +7587,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weniger anzeigen"
+          }
+        }
+      }
+    },
+    "Show Toast Notifications": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toast-Benachrichtigungen anzeigen"
           }
         }
       }
@@ -6711,6 +7691,16 @@
         }
       }
     },
+    "Small": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klein"
+          }
+        }
+      }
+    },
     "Solid": {
       "localizations": {
         "de": {
@@ -6731,12 +7721,22 @@
         }
       }
     },
-    "SOURCE": {
+    "Some downloaded models have been replaced with improved OsaurusAI versions that fix known bugs.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "QUELLE"
+            "value": "Einige heruntergeladene Modelle wurden durch verbesserte OsaurusAI-Versionen ersetzt, die bekannte Fehler beheben."
+          }
+        }
+      }
+    },
+    "Something went wrong": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etwas ist schiefgelaufen"
           }
         }
       }
@@ -6771,26 +7771,6 @@
         }
       }
     },
-    "Start a work session to see tasks here": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starte eine Arbeitssitzung, um hier Aufgaben zu sehen"
-          }
-        }
-      }
-    },
-    "Start at Login": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bei Anmeldung starten"
-          }
-        }
-      }
-    },
     "Start Download": {
       "localizations": {
         "de": {
@@ -6807,6 +7787,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Server starten"
+          }
+        }
+      }
+    },
+    "Start a work session to see tasks here": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starte eine Arbeitssitzung, um hier Aufgaben zu sehen"
+          }
+        }
+      }
+    },
+    "Start at Login": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei Anmeldung starten"
           }
         }
       }
@@ -6861,22 +7861,22 @@
         }
       }
     },
+    "Starting…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starte…"
+          }
+        }
+      }
+    },
     "Status": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Status"
-          }
-        }
-      }
-    },
-    "STATUS": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "STATUS"
           }
         }
       }
@@ -6981,6 +7981,16 @@
         }
       }
     },
+    "Summaries": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zusammenfassungen"
+          }
+        }
+      }
+    },
     "Summary Retention": {
       "localizations": {
         "de": {
@@ -6997,6 +8007,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Unterstützt Standard-5-Felder-Format mit * , - und / Operatoren"
+          }
+        }
+      }
+    },
+    "Sure! Here's an example:": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klar! Hier ein Beispiel:"
           }
         }
       }
@@ -7041,16 +8061,6 @@
         }
       }
     },
-    "System packages installed via apk": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Systempakete installiert über apk"
-          }
-        }
-      }
-    },
     "System Permissions Required": {
       "localizations": {
         "de": {
@@ -7077,6 +8087,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Systemeinstellungen"
+          }
+        }
+      }
+    },
+    "System packages installed via apk": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systempakete installiert über apk"
+          }
+        }
+      }
+    },
+    "TIME": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZEIT"
+          }
+        }
+      }
+    },
+    "TRANSCRIBING": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TRANSKRIPTION"
           }
         }
       }
@@ -7191,22 +8231,22 @@
         }
       }
     },
-    "Test transcription mode here. Text will be typed into the field below.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teste den Transkriptionsmodus hier. Text wird in das Feld unten eingegeben."
-          }
-        }
-      }
-    },
     "Test Wake Word Detection": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Aktivierungswort-Erkennung testen"
+          }
+        }
+      }
+    },
+    "Test transcription mode here. Text will be typed into the field below.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teste den Transkriptionsmodus hier. Text wird in das Feld unten eingegeben."
           }
         }
       }
@@ -7241,16 +8281,6 @@
         }
       }
     },
-    "The agent determines the AI's behavior and available tools.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der Agent bestimmt das Verhalten der KI und die verfügbaren Tools."
-          }
-        }
-      }
-    },
     "The AI will be triggered when files in this folder change.": {
       "localizations": {
         "de": {
@@ -7277,6 +8307,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Die Sandbox führt Code in einem Linux-Container auf deinem Mac aus. Agenten können Befehle ausführen, Pakete installieren und mit Dateien arbeiten – komplett isoliert von deinem System."
+          }
+        }
+      }
+    },
+    "The agent determines the AI's behavior and available tools.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Agent bestimmt das Verhalten der KI und die verfügbaren Tools."
           }
         }
       }
@@ -7361,6 +8401,16 @@
         }
       }
     },
+    "This model is outdated. Click to switch to a newer version.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Modell ist veraltet. Klicke, um zu einer neueren Version zu wechseln."
+          }
+        }
+      }
+    },
     "This plugin needs your approval before it can load.": {
       "localizations": {
         "de": {
@@ -7421,16 +8471,6 @@
         }
       }
     },
-    "TIME": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ZEIT"
-          }
-        }
-      }
-    },
     "Time to cancel before message is automatically sent": {
       "localizations": {
         "de": {
@@ -7441,12 +8481,12 @@
         }
       }
     },
-    "to send": {
+    "Tiny": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "zum Senden"
+            "value": "Winzig"
           }
         }
       }
@@ -7457,16 +8497,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modell-Denkmodus umschalten"
-          }
-        }
-      }
-    },
-    "tokens": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Token"
           }
         }
       }
@@ -7551,16 +8581,6 @@
         }
       }
     },
-    "TRANSCRIBING": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "TRANSKRIPTION"
-          }
-        }
-      }
-    },
     "Transcription": {
       "localizations": {
         "de": {
@@ -7601,12 +8621,32 @@
         }
       }
     },
+    "Trigger Now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt auslösen"
+          }
+        }
+      }
+    },
     "Troubleshoot or reset the application. A factory reset permanently deletes all data and settings.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Fehlerbehebung oder Zurücksetzen der Anwendung. Ein Werksreset löscht alle Daten und Einstellungen dauerhaft."
+          }
+        }
+      }
+    },
+    "Try Again": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nochmal versuchen"
           }
         }
       }
@@ -7631,12 +8671,12 @@
         }
       }
     },
-    "Try Again": {
+    "Typing Indicator": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nochmal versuchen"
+            "value": "Tipp-Indikator"
           }
         }
       }
@@ -7657,6 +8697,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Alles rückgängig"
+          }
+        }
+      }
+    },
+    "Undo Change": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Änderung rückgängig"
           }
         }
       }
@@ -7781,16 +8831,6 @@
         }
       }
     },
-    "used": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "verbraucht"
-          }
-        }
-      }
-    },
     "User Bubble": {
       "localizations": {
         "de": {
@@ -7871,6 +8911,36 @@
         }
       }
     },
+    "View Details": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details ansehen"
+          }
+        }
+      }
+    },
+    "View Docs": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dokumentation ansehen"
+          }
+        }
+      }
+    },
+    "View Skill": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skill anzeigen"
+          }
+        }
+      }
+    },
     "View artifact": {
       "localizations": {
         "de": {
@@ -7901,16 +8971,6 @@
         }
       }
     },
-    "View Skill": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Skill anzeigen"
-          }
-        }
-      }
-    },
     "Voice": {
       "localizations": {
         "de": {
@@ -7927,6 +8987,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sprachaktivitätserkennung"
+          }
+        }
+      }
+    },
+    "Voice Detection Error: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spracherkennung-Fehler: %@"
           }
         }
       }
@@ -8041,6 +9111,26 @@
         }
       }
     },
+    "WAV, MP3, M4A": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "WAV, MP3, M4A"
+          }
+        }
+      }
+    },
+    "WORKING MEMORY": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ARBEITSGEDÄCHTNIS"
+          }
+        }
+      }
+    },
     "Waiting": {
       "localizations": {
         "de": {
@@ -8077,16 +9167,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Watcher"
-          }
-        }
-      }
-    },
-    "WAV, MP3, M4A": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "WAV, MP3, M4A"
           }
         }
       }
@@ -8131,12 +9211,22 @@
         }
       }
     },
-    "WORKING MEMORY": {
+    "Work": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "ARBEITSGEDÄCHTNIS"
+            "value": "Arbeit"
+          }
+        }
+      }
+    },
+    "Working Memory": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arbeitsgedächtnis"
           }
         }
       }
@@ -8211,112 +9301,62 @@
         }
       }
     },
-    "Computer audio": {
+    "e.g., Downloads Organizer": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Computer-Audio"
+            "value": "z.B. Downloads-Organizer"
           }
         }
       }
     },
-    "Permission required": {
+    "e.g., Research Analyst": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Berechtigung erforderlich"
+            "value": "z.B. Forschungsanalyst"
           }
         }
       }
     },
-    "From: %@": {
+    "e.g., productivity": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Von: %@"
+            "value": "z.B. Produktivität"
           }
         }
       }
     },
-    "Running on port %@": {
+    "to send": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Läuft auf Port %@"
+            "value": "zum Senden"
           }
         }
       }
     },
-    "Error: %@": {
+    "tokens": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fehler: %@"
+            "value": "Token"
           }
         }
       }
     },
-    "Voice Detection Error: %@": {
+    "used": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Spracherkennung-Fehler: %@"
-          }
-        }
-      }
-    },
-    "%lld skills available": {
-      "localizations": {
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Skill verfügbar"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Skills verfügbar"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld skill available"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld skills available"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "Importing skill %lld of %lld": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Importiere Skill %lld von %lld"
+            "value": "verbraucht"
           }
         }
       }

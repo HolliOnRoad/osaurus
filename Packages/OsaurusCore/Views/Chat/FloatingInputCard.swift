@@ -974,12 +974,12 @@ extension FloatingInputCard {
     private var contextIndicatorChip: some View {
         HStack(spacing: 4) {
             if let cumulative = cumulativeTokens, cumulative > 0, workInputState != nil {
-                Text("\(formatTokenCount(cumulative))")
+                Text("\(formatTokenCount(cumulative))", bundle: .module)
                     .font(.system(size: CGFloat(theme.captionSize) - 1, weight: .medium, design: .monospaced))
                     .foregroundColor(theme.accentColor)
 
                 if !isCompact {
-                    Text("used")
+                    Text("used", bundle: .module)
                         .font(theme.font(size: CGFloat(theme.captionSize) - 1, weight: .regular))
                         .foregroundColor(theme.tertiaryText.opacity(0.7))
                 }
@@ -996,7 +996,7 @@ extension FloatingInputCard {
                     .foregroundColor(isStreaming ? theme.secondaryText : theme.tertiaryText)
 
                 if !isCompact {
-                    Text("tokens")
+                    Text("tokens", bundle: .module)
                         .font(theme.font(size: CGFloat(theme.captionSize) - 1, weight: .regular))
                         .foregroundColor(theme.tertiaryText.opacity(0.7))
                 }
@@ -1059,12 +1059,12 @@ extension FloatingInputCard {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(theme.font(size: CGFloat(theme.captionSize) - 2))
                         .foregroundColor(.orange)
-                        .help("This model is outdated. Click to switch to a newer version.")
+                        .help(Text("This model is outdated. Click to switch to a newer version.", bundle: .module))
                 } else {
                     Circle()
                         .fill(Color.green)
                         .frame(width: 6, height: 6)
-                        .help("Model ready")
+                        .help(Text("Model ready", bundle: .module))
                 }
 
                 // Model name with metadata badges
@@ -1095,7 +1095,7 @@ extension FloatingInputCard {
                         }
                     }
                 } else {
-                    Text("Select Model")
+                    Text("Select Model", bundle: .module)
                         .font(theme.font(size: CGFloat(theme.captionSize), weight: .medium))
                         .foregroundColor(theme.secondaryText)
                 }
@@ -1140,12 +1140,12 @@ extension FloatingInputCard {
                         .foregroundColor(isEnabled ? theme.accentColor : theme.tertiaryText)
                         .contentTransition(.symbolEffect(.replace))
 
-                    Text("Thinking")
+                    Text("Thinking", bundle: .module)
                         .font(theme.font(size: CGFloat(theme.captionSize), weight: .medium))
                         .foregroundColor(isEnabled ? theme.secondaryText : theme.tertiaryText)
                 }
             }
-            .help("Toggle model reasoning mode")
+            .help(Text("Toggle model reasoning mode", bundle: .module))
         }
     }
 
@@ -1279,7 +1279,7 @@ extension FloatingInputCard {
                             : (isSandboxLoading ? Color.orange : theme.tertiaryText)
                     )
 
-                Text("Sandbox")
+                Text("Sandbox", bundle: .module)
                     .font(theme.font(size: CGFloat(theme.captionSize), weight: .medium))
                     .foregroundColor(
                         isSandboxEnabled
@@ -1312,9 +1312,9 @@ extension FloatingInputCard {
         }
         .help(sandboxHelpText)
         .contextMenu {
-            Button("Open Sandbox Settings") {
+            Button {
                 AppDelegate.shared?.showManagementWindow(initialTab: .sandbox)
-            }
+            } label: { Text("Open Sandbox Settings", bundle: .module) }
         }
         .task(id: isSandboxLoading) {
             sandboxPulseTask?.cancel()
@@ -1413,7 +1413,7 @@ extension FloatingInputCard {
                 .foregroundColor(theme.accentColor)
 
             HStack(spacing: 4) {
-                Text("Paste \(info.label) From")
+                Text("Paste \(info.label) From", bundle: .module)
                     .font(theme.font(size: CGFloat(theme.captionSize), weight: .medium))
                     .foregroundColor(theme.secondaryText)
 
@@ -1493,27 +1493,27 @@ extension FloatingInputCard {
                 isClipboardHovered = hovering
             }
         }
-        .help("Attach snippet from \(clipboardService.lastSourceApp ?? "clipboard")")
+        .help(Text("Attach snippet from \(clipboardService.lastSourceApp ?? "clipboard")", bundle: .module))
         .contextMenu {
-            Button("Dismiss") {
+            Button {
                 clipboardService.markAsRead()
-            }
+            } label: { Text("Dismiss", bundle: .module) }
             Divider()
             if let content = clipboardService.currentContent {
                 switch content {
                 case .text(let text):
-                    Button("Paste to Input") {
+                    Button {
                         localText += text
                         clipboardService.markAsRead()
-                    }
+                    } label: { Text("Paste to Input", bundle: .module) }
                 case .file:
-                    Button("Attach File") {
+                    Button {
                         attachClipboardSnippet()
-                    }
+                    } label: { Text("Attach File", bundle: .module) }
                 case .image:
-                    Button("Attach Image") {
+                    Button {
                         attachClipboardSnippet()
-                    }
+                    } label: { Text("Attach Image", bundle: .module) }
                 }
             }
         }
@@ -1633,24 +1633,24 @@ extension FloatingInputCard {
                         Button {
                             Task { await folderContextService.selectFolder() }
                         } label: {
-                            Label("Change Folder", systemImage: "folder.badge.gear")
+                            Label { Text("Change Folder", bundle: .module) } icon: { Image(systemName: "folder.badge.gear") }
                         }
                         Button {
                             Task { await folderContextService.refreshContext() }
                         } label: {
-                            Label("Refresh Context", systemImage: "arrow.clockwise")
+                            Label { Text("Refresh Context", bundle: .module) } icon: { Image(systemName: "arrow.clockwise") }
                         }
                         Divider()
                         Button(role: .destructive) {
                             folderContextService.clearFolder()
                         } label: {
-                            Label("Clear Folder", systemImage: "folder.badge.minus")
+                            Label { Text("Clear Folder", bundle: .module) } icon: { Image(systemName: "folder.badge.minus") }
                         }
                     }
                 }
             } else {
                 folderChipContent(hasFolder: hasFolder, canEdit: false)
-                    .help("Folder is locked while task is running")
+                    .help(Text("Folder is locked while task is running", bundle: .module))
             }
 
             if hasFolder && canEdit {
@@ -1665,7 +1665,7 @@ extension FloatingInputCard {
                         .overlay(Circle().strokeBorder(theme.primaryBorder.opacity(0.5), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
-                .help("Clear folder selection")
+                .help(Text("Clear folder selection", bundle: .module))
                 .transition(.opacity.combined(with: .scale(scale: 0.8)))
             }
         }
@@ -1688,7 +1688,7 @@ extension FloatingInputCard {
                     .lineLimit(1)
                     .truncationMode(.middle)
             } else if canEdit {
-                Text("Folder")
+                Text("Folder", bundle: .module)
                     .font(theme.font(size: CGFloat(theme.captionSize), weight: .medium))
                     .foregroundColor(theme.tertiaryText)
             }
@@ -1715,7 +1715,7 @@ extension FloatingInputCard {
         HStack(spacing: 4) {
             Text("⏎")
                 .font(theme.font(size: CGFloat(theme.captionSize) - 2, weight: .medium))
-            Text("to send")
+            Text("to send", bundle: .module)
                 .font(theme.font(size: CGFloat(theme.captionSize) - 1))
         }
         .foregroundColor(theme.tertiaryText.opacity(0.7))
@@ -1980,7 +1980,7 @@ extension FloatingInputCard {
     private func queuedMessageBanner(message: String) -> some View {
         VStack(spacing: 0) {
             HStack(spacing: 6) {
-                Text("Queued:")
+                Text("Queued:", bundle: .module)
                     .font(theme.font(size: CGFloat(theme.captionSize) - 1, weight: .medium))
                     .foregroundColor(theme.tertiaryText)
 
@@ -1997,12 +1997,12 @@ extension FloatingInputCard {
                         text = message
                         onSendNow?()
                     } label: {
-                        Text("Send Now")
+                        Text("Send Now", bundle: .module)
                             .font(theme.font(size: CGFloat(theme.captionSize) - 1, weight: .medium))
                             .foregroundColor(theme.accentColor)
                     }
                     .buttonStyle(.plain)
-                    .help("Interrupt and send immediately")
+                    .help(Text("Interrupt and send immediately", bundle: .module))
                 }
 
                 Button {
@@ -2013,7 +2013,7 @@ extension FloatingInputCard {
                         .foregroundColor(theme.tertiaryText)
                 }
                 .buttonStyle(.plain)
-                .help("Clear queued message")
+                .help(Text("Clear queued message", bundle: .module))
             }
             .padding(.vertical, 6)
 
@@ -2348,7 +2348,7 @@ private struct ContextBreakdownPopover: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 6) {
-                Text("Context Budget")
+                Text("Context Budget", bundle: .module)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(theme.secondaryText)
                 if isStreaming {
@@ -2448,16 +2448,16 @@ private struct ContextBreakdownPopover: View {
     private var totalRow: some View {
         let prefix = isStreaming ? "" : "~"
         return HStack(spacing: 4) {
-            Text("Total")
+            Text("Total", bundle: .module)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundColor(theme.secondaryText)
             Spacer()
-            Text("\(prefix)\(formatTokenCount(breakdown.total))")
+            Text("\(prefix)\(formatTokenCount(breakdown.total))", bundle: .module)
                 .font(.system(size: 11, weight: .semibold, design: .monospaced))
                 .foregroundColor(theme.primaryText)
                 .contentTransition(.numericText())
             if let max = maxTokens {
-                Text("/ \(formatTokenCount(max))")
+                Text("/ \(formatTokenCount(max))", bundle: .module)
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundColor(theme.tertiaryText)
             }
@@ -2468,7 +2468,7 @@ private struct ContextBreakdownPopover: View {
 
     private func cumulativeRow(_ tokens: Int) -> some View {
         HStack(spacing: 4) {
-            Text("Session Total")
+            Text("Session Total", bundle: .module)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundColor(theme.secondaryText)
             Spacer()
@@ -2644,7 +2644,7 @@ private struct ModelOptionsSelectorView: View {
                     HStack(spacing: 3) {
                         Image(systemName: "arrow.uturn.backward")
                             .font(.system(size: 9))
-                        Text("Reset")
+                        Text("Reset", bundle: .module)
                             .font(.system(size: 11, weight: .medium))
                     }
                     .foregroundColor(theme.secondaryText)
@@ -2966,7 +2966,7 @@ private struct StopButton: View {
                 RoundedRectangle(cornerRadius: 2)
                     .fill(.white)
                     .frame(width: 8, height: 8)
-                Text("Stop")
+                Text("Stop", bundle: .module)
                     .font(theme.font(size: CGFloat(theme.captionSize) - 1, weight: .medium))
             }
             .foregroundColor(.white)
@@ -3018,7 +3018,7 @@ private struct ResumeButton: View {
             HStack(spacing: 4) {
                 Image(systemName: "play.fill")
                     .font(theme.font(size: CGFloat(theme.captionSize) - 3, weight: .bold))
-                Text("Resume")
+                Text("Resume", bundle: .module)
                     .font(theme.font(size: CGFloat(theme.captionSize) - 1, weight: .medium))
             }
             .foregroundColor(.white)
@@ -3076,7 +3076,7 @@ private struct EndTaskButton: View {
             HStack(spacing: 4) {
                 Image(systemName: "checkmark")
                     .font(theme.font(size: CGFloat(theme.captionSize) - 3, weight: .bold))
-                Text("Done")
+                Text("Done", bundle: .module)
                     .font(theme.font(size: CGFloat(theme.captionSize) - 1, weight: .medium))
             }
             .foregroundColor(isHovered ? theme.primaryText : theme.secondaryText)

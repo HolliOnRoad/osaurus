@@ -559,7 +559,7 @@ struct OnboardingBackButton: View {
                 HStack(spacing: 6) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 12, weight: .semibold))
-                    Text("Back")
+                    Text("Back", bundle: .module)
                         .font(theme.font(size: 13, weight: .medium))
                 }
                 .foregroundColor(isHovered ? theme.accentColor : theme.secondaryText)
