@@ -113,6 +113,17 @@ final class ChatSession: ObservableObject {
                     self.activeModelOptions = ModelProfileRegistry.defaults(for: model)
                 }
 
+                // Clear pending image attachments when switching to a non-VLM model
+                let newModelSupportsImages: Bool = {
+                    if model.lowercased() == "foundation" { return false }
+                    guard let option = self.pickerItems.first(where: { $0.id == model }) else { return false }
+                    if case .remote = option.source { return true }
+                    return option.isVLM
+                }()
+                if !newModelSupportsImages {
+                    self.pendingAttachments = []
+                }
+
                 Task { @MainActor in
                     let active = ChatWindowManager.shared.activeLocalModelNames()
                     await ModelRuntime.shared.unloadModelsNotIn(active)
@@ -686,7 +697,6 @@ final class ChatSession: ObservableObject {
                 tokenCount: max(1, context.userContent.count / 4)
             )
             Task.detached {
-                await EmbeddingService.awaitStartupInit()
                 await MemorySearchService.shared.indexConversationChunk(userChunk)
             }
             if let assistantContent, !assistantContent.isEmpty {
@@ -709,7 +719,6 @@ final class ChatSession: ObservableObject {
                     tokenCount: max(1, assistantContent.count / 4)
                 )
                 Task.detached {
-                    await EmbeddingService.awaitStartupInit()
                     await MemorySearchService.shared.indexConversationChunk(assistantChunk)
                 }
             }
@@ -946,7 +955,7 @@ final class ChatSession: ObservableObject {
                         )
                     case .user:
                         let messageText = Self.buildUserMessageText(content: t.content, attachments: t.attachments)
-                        let imageData = t.attachments.images
+                        let imageData = selectedModelSupportsImages ? t.attachments.images : []
                         if !imageData.isEmpty {
                             return ChatMessage(role: "user", text: messageText, imageData: imageData)
                         } else {
@@ -1013,6 +1022,7 @@ final class ChatSession: ObservableObject {
                     do {
                         let streamStartTime = Date()
                         var uiDeltaCount = 0
+                        var firstDeltaTime: Date?
 
                         let processor = StreamingDeltaProcessor(
                             turn: assistantTurn,
@@ -1045,7 +1055,13 @@ final class ChatSession: ObservableObject {
                                 }
                                 continue
                             }
+                            if let stats = StreamingStatsHint.decode(delta) {
+                                assistantTurn.generationTokenCount = stats.tokenCount
+                                assistantTurn.generationTokensPerSecond = stats.tokensPerSecond
+                                continue
+                            }
                             if !delta.isEmpty {
+                                if firstDeltaTime == nil { firstDeltaTime = Date() }
                                 uiDeltaCount += 1
                                 processor.receiveDelta(delta)
                             }
@@ -1053,6 +1069,21 @@ final class ChatSession: ObservableObject {
 
                         // Flush any remaining buffered content (including partial tags)
                         processor.finalize()
+
+                        if let first = firstDeltaTime {
+                            assistantTurn.timeToFirstToken = first.timeIntervalSince(streamStartTime)
+                            // Fall back to estimated tok/s when MLX stats weren't propagated (remote APIs).
+                            // Use the codebase's chars/4 heuristic to approximate tokens from generated text
+                            // rather than raw delta count, which doesn't map 1:1 to tokens for most providers.
+                            if assistantTurn.generationTokensPerSecond == nil, !assistantTurn.contentIsEmpty {
+                                let genTime = Date().timeIntervalSince(first)
+                                let estimatedTokens = ContextBudgetManager.estimateTokens(for: assistantTurn.content)
+                                if genTime > 0 && estimatedTokens > 0 {
+                                    assistantTurn.generationTokenCount = estimatedTokens
+                                    assistantTurn.generationTokensPerSecond = Double(estimatedTokens) / genTime
+                                }
+                            }
+                        }
 
                         let totalTime = Date().timeIntervalSince(streamStartTime)
                         print(

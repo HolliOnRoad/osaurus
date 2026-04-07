@@ -254,7 +254,7 @@ actor ModelRuntime {
         // O(1) buffer accesses instead of O(n) graph replays.
         let arraysToEval = cache.flatMap { $0.state }
         if !arraysToEval.isEmpty {
-            eval(arraysToEval)
+            try? withError { eval(arraysToEval) }
         }
 
         kvCacheStore.putCache(sessionId: sessionId, cache: cache, tokens: promptTokens, modelName: modelName)
@@ -380,6 +380,13 @@ actor ModelRuntime {
         _ = await activeGenerationTask?.value
         guard !Task.isCancelled else { return }
 
+        // Acquire exclusive Metal access for the prefix cache build.
+        await MetalGate.shared.enterGeneration()
+        guard !Task.isCancelled else {
+            await MetalGate.shared.exitGeneration()
+            return
+        }
+
         let tokenizerTools = Self.makeTokenizerTools(tools: tools, toolChoice: toolChoice)
         let messages: [MLXLMCommon.Chat.Message] = [
             .init(role: .system, content: systemContent, images: [], videos: []),
@@ -395,7 +402,8 @@ actor ModelRuntime {
                 generation: params,
                 runtime: runtimeConfig,
                 existingCache: nil,
-                cachedTokens: nil
+                cachedTokens: nil,
+                wiredMemoryTicket: nil
             )
             let (stream, cache, newTokens, genTask) = (
                 prefixResult.stream, prefixResult.cache, prefixResult.promptTokens, prefixResult.genTask
@@ -410,20 +418,25 @@ actor ModelRuntime {
                 genTask.cancel()
             }
 
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled else {
+                await MetalGate.shared.exitGeneration()
+                return
+            }
             guard cache.contains(where: { $0.offset > 0 }) else {
                 print("[ModelRuntime] Prefix cache incomplete, skipping persistence")
+                await MetalGate.shared.exitGeneration()
                 return
             }
 
             let prefixArrays = cache.flatMap { $0.state }
-            if !prefixArrays.isEmpty { eval(prefixArrays) }
+            if !prefixArrays.isEmpty { try? withError { eval(prefixArrays) } }
 
             kvCacheStore.putPrefixCache(cache, tokens: newTokens, modelName: modelName, hash: hash)
             print("[ModelRuntime] Prefix cached for \(modelName) (hash: \(hash.prefix(8)))")
         } catch {
             print("[ModelRuntime] Failed to build prefix cache: \(error)")
         }
+        await MetalGate.shared.exitGeneration()
     }
 
     // MARK: - Driver helpers (actor-isolated)
@@ -457,15 +470,15 @@ actor ModelRuntime {
 
         genLog.info("generateEventStream: start model=\(modelName, privacy: .public)")
 
-        // Wait for any startup CoreML embedding work to finish before using the
-        // GPU for MLX inference.  Prevents concurrent Metal command submissions
-        // from CoreML and MLX that can SIGSEGV on Apple Silicon.
-        await EmbeddingService.awaitStartupInit()
-        if Task.isCancelled { throw CancellationError() }
-
         let effectiveStopSequences = stopSequences
         let cfg = await getConfig()
         let holder = try await loadContainer(id: modelId, name: modelName)
+
+        let wiredPolicy = MLXLMCommon.WiredSumPolicy()
+        let wiredTicket = wiredPolicy.ticket(
+            size: Int(holder.weightsSizeBytes),
+            kind: .active
+        )
 
         let sessionId = parameters.sessionId
         let chatMessages = chatBuilder()
@@ -510,6 +523,14 @@ actor ModelRuntime {
             "generateEventStream: prepareAndGenerate existingCache=\(existingCache != nil, privacy: .public) cachedTokens=\(cachedTokens?.count ?? 0, privacy: .public)"
         )
 
+        // Acquire exclusive Metal access after all throwing setup is complete.
+        // This ensures the gate is never left locked by a loadContainer failure.
+        await MetalGate.shared.enterGeneration()
+        if Task.isCancelled {
+            await MetalGate.shared.exitGeneration()
+            throw CancellationError()
+        }
+
         // Signal that a prefill is starting (count unknown until prepareAndGenerate returns).
         // The UI shows a spinner; once the first generated token arrives prefillDidFinish() clears it.
         InferenceProgressManager.shared.prefillWillStartAsync(tokenCount: 0)
@@ -522,7 +543,8 @@ actor ModelRuntime {
                 generation: parameters,
                 runtime: cfg,
                 existingCache: existingCache,
-                cachedTokens: cachedTokens
+                cachedTokens: cachedTokens,
+                wiredMemoryTicket: wiredTicket
             )
             (rawStream, tokenizer, cache, newTokens, genTask, toolCallFormat) = (
                 genResult.stream, genResult.tokenizer, genResult.cache,
@@ -538,6 +560,7 @@ actor ModelRuntime {
             )
             guard existingCache != nil else {
                 InferenceProgressManager.shared.prefillDidFinishAsync()
+                await MetalGate.shared.exitGeneration()
                 throw error
             }
             genLog.warning("Cache incompatible, retrying: \(error.localizedDescription, privacy: .public)")
@@ -552,7 +575,8 @@ actor ModelRuntime {
                     generation: parameters,
                     runtime: cfg,
                     existingCache: nil,
-                    cachedTokens: nil
+                    cachedTokens: nil,
+                    wiredMemoryTicket: wiredTicket
                 )
                 (rawStream, tokenizer, cache, newTokens, genTask, toolCallFormat) = (
                     retryResult.stream, retryResult.tokenizer, retryResult.cache,
@@ -563,6 +587,7 @@ actor ModelRuntime {
                 }
             } catch {
                 InferenceProgressManager.shared.prefillDidFinishAsync()
+                await MetalGate.shared.exitGeneration()
                 throw error
             }
         }
@@ -571,7 +596,19 @@ actor ModelRuntime {
         // generation is warming up (the first token clears the indicator).
         InferenceProgressManager.shared.prefillWillStartAsync(tokenCount: newTokens.count)
 
-        activeGenerationTask = genTask
+        // Wrap genTask so the MetalGate is released when generation finishes
+        // (whether by completion or cancellation).  Propagate cancellation to the
+        // inner genTask so cancelActiveGeneration() stops Metal work promptly.
+        let innerGenTask = genTask
+        let gatedGenTask = Task<Void, Never> {
+            await withTaskCancellationHandler {
+                await innerGenTask.value
+            } onCancel: {
+                innerGenTask.cancel()
+            }
+            await MetalGate.shared.exitGeneration()
+        }
+        activeGenerationTask = gatedGenTask
 
         // Store a pre-generation snapshot of the cache immediately after prefill.
         //
@@ -592,7 +629,7 @@ actor ModelRuntime {
                 snapTokensToStore = newTokens
             }
             let arraysToEval = snapCacheToStore.flatMap { $0.state }
-            if !arraysToEval.isEmpty { eval(arraysToEval) }
+            if !arraysToEval.isEmpty { try? withError { eval(arraysToEval) } }
             kvCacheStore.putCache(
                 sessionId: sid,
                 cache: snapCacheToStore,
@@ -684,6 +721,8 @@ actor ModelRuntime {
                 accumulated += s
             case .toolInvocation(let name, let argsJSON):
                 throw ServiceToolInvocation(toolName: name, jsonArguments: argsJSON)
+            case .completionInfo:
+                break
             }
         }
         return accumulated
@@ -725,6 +764,13 @@ actor ModelRuntime {
                             throwing: ServiceToolInvocation(toolName: name, jsonArguments: argsJSON)
                         )
                         return
+                    case .completionInfo(let tokenCount, let tokensPerSecond):
+                        continuation.yield(
+                            StreamingStatsHint.encode(
+                                tokenCount: tokenCount,
+                                tokensPerSecond: tokensPerSecond
+                            )
+                        )
                     }
                 }
                 continuation.finish()

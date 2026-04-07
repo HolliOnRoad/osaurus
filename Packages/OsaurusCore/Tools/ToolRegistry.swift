@@ -84,7 +84,9 @@ final class ToolRegistry: ObservableObject {
         registerBuiltInTools()
     }
 
-    /// Register built-in tools that are always available
+    /// Register built-in tools that are always available.
+    /// Auto-enables tools on first registration so the UI reflects their actual state
+    /// (built-in tools are always loaded regardless, but this keeps config consistent).
     private func registerBuiltInTools() {
         let builtIns: [OsaurusTool] = [
             CapabilitiesSearchTool(),
@@ -96,9 +98,19 @@ final class ToolRegistry: ObservableObject {
             SearchSummariesTool(),
             SearchGraphTool(),
         ]
+        var configChanged = false
         for tool in builtIns {
             register(tool)
             builtInToolNames.insert(tool.name)
+            // Auto-enable on first registration (same as registerPluginTool).
+            // Preserves user's choice if they later disable it.
+            if !configuration.enabled.keys.contains(tool.name) {
+                configuration.setEnabled(true, for: tool.name)
+                configChanged = true
+            }
+        }
+        if configChanged {
+            ToolConfigurationStore.save(configuration)
         }
     }
 
@@ -345,7 +357,6 @@ final class ToolRegistry: ObservableObject {
         } else {
             builtInSandboxToolNames.remove(tool.name)
             Task {
-                await EmbeddingService.awaitStartupInit()
                 await ToolIndexService.shared.onToolRegistered(
                     name: tool.name,
                     description: tool.description,
@@ -411,7 +422,6 @@ final class ToolRegistry: ObservableObject {
         toolsByName[tool.name] = tool
         mcpToolNames.insert(tool.name)
         Task {
-            await EmbeddingService.awaitStartupInit()
             await ToolIndexService.shared.onToolRegistered(
                 name: tool.name,
                 description: tool.description,
@@ -442,7 +452,6 @@ final class ToolRegistry: ObservableObject {
             setEnabled(true, for: tool.name)
         }
         Task {
-            await EmbeddingService.awaitStartupInit()
             await ToolIndexService.shared.onToolRegistered(
                 name: tool.name,
                 description: tool.description,

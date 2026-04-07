@@ -3,6 +3,94 @@
   <channel>
     <title>Osaurus</title>
         <item>
+            <title>0.16.4</title>
+            <pubDate>Tue, 07 Apr 2026 01:01:08 +0000</pubDate>
+            <sparkle:channel>release</sparkle:channel>
+            <sparkle:version>0.16.4</sparkle:version>
+            <sparkle:shortVersionString>0.16.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://github.com/osaurus-ai/osaurus/releases/download/0.16.4/Osaurus-0.16.4.dmg" length="32821641" type="application/octet-stream" sparkle:edSignature="mMyZNqgah9K2tzmrNEnWmLc2pgyQejO1LUaL8vwjIdshzik9R5za0A42PCT5b9myZ8zO61w79BeVvU5cELtmDw=="/>
+            <description sparkle:format="markdown"><![CDATA[
+## What's Changed
+
+## 🐛 Bug Fixes
+
+- fix: crash on second generation with Gemma 4 hybrid KV cache (#799) by @jjang-ai
+- fix app window focus and activation on launch (#794) by @RaajeevChandran
+- fix: VLM classification false positives and image persistence across model switches (#795) by @jjang-ai
+
+## 🧰 Maintenance
+
+- added osaurus curated models (#800) by @tpae
+- bumped versions on mlx lm library (#797) by @tpae
+- added metal gate to prevent crashes (#796) by @tpae
+
+**Full Changelog**: https://github.com/osaurus-ai/osaurus/compare/0.16.3...0.16.4
+]]></description>
+        </item>
+        <item>
+            <title>0.16.3</title>
+            <pubDate>Mon, 06 Apr 2026 14:49:02 +0000</pubDate>
+            <sparkle:channel>release</sparkle:channel>
+            <sparkle:version>0.16.3</sparkle:version>
+            <sparkle:shortVersionString>0.16.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://github.com/osaurus-ai/osaurus/releases/download/0.16.3/Osaurus-0.16.3.dmg" length="32793218" type="application/octet-stream" sparkle:edSignature="U3u/YuvpaKPp/mrevZE2ZUakXbZZJf0d3vfjEptTfVXicQwINb3ojRgg91ElDFRIEKoZns3WBMo80Qcnt+1aAA=="/>
+            <description sparkle:format="markdown"><![CDATA[
+## What's Changed
+
+## 🧰 Maintenance
+
+- added stats and fixed minor crash issues (#792) by @tpae
+
+**Full Changelog**: https://github.com/osaurus-ai/osaurus/compare/0.16.2...0.16.3
+]]></description>
+        </item>
+        <item>
+            <title>0.16.2</title>
+            <pubDate>Mon, 06 Apr 2026 12:26:28 +0000</pubDate>
+            <sparkle:channel>release</sparkle:channel>
+            <sparkle:version>0.16.2</sparkle:version>
+            <sparkle:shortVersionString>0.16.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://github.com/osaurus-ai/osaurus/releases/download/0.16.2/Osaurus-0.16.2.dmg" length="32793105" type="application/octet-stream" sparkle:edSignature="qYpTRllHq395y4ISJREwL4mu7L/NnFNuw/5U74ksR5FJgT1SzTIoWFjQzb42tOyDMcjN3PGZz5MKSmcYA8CFCw=="/>
+            <description sparkle:format="markdown"><![CDATA[
+## What's Changed
+
+## 🐛 Bug Fixes
+
+- fix: built-in tool discovery and chat view crash (#791) by @jjang-ai
+
+**Full Changelog**: https://github.com/osaurus-ai/osaurus/compare/0.16.1...0.16.2
+]]></description>
+        </item>
+        <item>
+            <title>0.16.1</title>
+            <pubDate>Mon, 06 Apr 2026 03:30:04 +0000</pubDate>
+            <sparkle:channel>release</sparkle:channel>
+            <sparkle:version>0.16.1</sparkle:version>
+            <sparkle:shortVersionString>0.16.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://github.com/osaurus-ai/osaurus/releases/download/0.16.1/Osaurus-0.16.1.dmg" length="32778261" type="application/octet-stream" sparkle:edSignature="vbO/kqiklATuDUdLv/4/X7wtyqBNeiuVc++IhTbtzAAiNn6Xb5XZuOqyto7CtztbRY26M+48o9Ja25YnfQMUCQ=="/>
+            <description sparkle:format="markdown"><![CDATA[
+## What's Changed
+
+## 🐛 Bug Fixes
+
+- updated skills view to be more deterministic with calls (#787) by @tpae
+
+## 🧰 Maintenance
+
+- fix crashes, extend gemma support (#786) by @tpae
+
+**Full Changelog**: https://github.com/osaurus-ai/osaurus/compare/0.16.0...0.16.1
+]]></description>
+        </item>
+        <item>
             <title>0.16.0</title>
             <pubDate>Sun, 05 Apr 2026 18:12:00 +0000</pubDate>
             <sparkle:channel>release</sparkle:channel>

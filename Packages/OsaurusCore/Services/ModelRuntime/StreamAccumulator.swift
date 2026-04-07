@@ -202,7 +202,7 @@ struct StreamAccumulator: AsyncSequence, Sendable {
                     return pendingEvents.isEmpty ? nil : pendingEvents.removeFirst()
                 }
 
-                // Skip info events (just log them).
+                // Log info events and surface generation stats downstream.
                 if let info = event.info {
                     print(
                         String(
@@ -225,6 +225,12 @@ struct StreamAccumulator: AsyncSequence, Sendable {
                     // Also emit as a Logger.info so it appears in `log stream`.
                     accumLog.info(
                         "[perf] mlxStats promptTokens=\(info.promptTokenCount, privacy: .public) promptTps=\(info.promptTokensPerSecond, privacy: .public) promptMs=\(Int(info.promptTime * 1000), privacy: .public) genTokens=\(info.generationTokenCount, privacy: .public) genTps=\(info.tokensPerSecond, privacy: .public) genMs=\(Int(info.generateTime * 1000), privacy: .public)"
+                    )
+                    pendingEvents.append(
+                        .completionInfo(
+                            tokenCount: info.generationTokenCount,
+                            tokensPerSecond: info.tokensPerSecond
+                        )
                     )
                     continue
                 }

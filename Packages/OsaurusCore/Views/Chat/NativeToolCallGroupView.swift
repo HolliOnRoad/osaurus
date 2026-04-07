@@ -488,6 +488,7 @@ final class NativeToolCallRowView: NSView {
     private var cachedArgs: String?
     private var currentItemId: String = ""
     private var currentWidth: CGFloat = 0
+    private var lastConfiguredTheme: (any ThemeProtocol)?
 
     // MARK: Callbacks
 
@@ -538,6 +539,7 @@ final class NativeToolCallRowView: NSView {
         self.onToggle = onToggle
         self.onHeightChanged = onHeightChanged
         self.currentWidth = width
+        self.lastConfiguredTheme = theme
 
         let isNew = item.call.id != currentItemId
         currentItemId = item.call.id
@@ -854,8 +856,23 @@ final class NativeToolCallRowView: NSView {
 
     private func ensureResultView() -> NativeMarkdownView {
         if let v = resultView { return v }
-        guard let rt = resultSectionTitle, argsView != nil else {
-            fatalError("ensureResultView: call ensureResultSectionTitle before ensureResultView")
+        // Lazily create args / result-title if missing (defensive against unexpected
+        // call ordering during rapid cell reconfiguration or reuse).
+        if resultSectionTitle == nil || argsView == nil {
+            assertionFailure("ensureResultView: expected ensureResultSectionTitle to be called first")
+            if argsView == nil {
+                _ = ensureArgsView()
+            }
+            if resultSectionTitle == nil {
+                _ = ensureResultSectionTitle(theme: lastConfiguredTheme ?? LightTheme())
+            }
+        }
+        guard let rt = resultSectionTitle else {
+            // Should never reach here after the above, but return a detached view
+            // rather than crashing in production.
+            let v = NativeMarkdownView()
+            resultView = v
+            return v
         }
         let v = NativeMarkdownView()
         v.translatesAutoresizingMaskIntoConstraints = false

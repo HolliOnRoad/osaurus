@@ -145,11 +145,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelega
             await ModelPickerItemCache.shared.prewarmModelCache()
         }
 
-        // All VecturaKit inits run sequentially in one Task to prevent concurrent
-        // CoreML model loads that can SIGSEGV on Apple Silicon.
-        // Memory DB opens first because MemorySearchService.initialize() needs it
-        // for reverse maps. Registered as startup init task so ModelRuntime can
-        // gate MLX inference until CoreML embedding work finishes.
+        // VecturaKit inits run sequentially. Memory DB opens first because
+        // MemorySearchService.initialize() needs it for reverse maps.
+        // MetalGate serializes CoreML/MLX at runtime; this task is only held
+        // for startup sequencing of orphan recovery + activity tracking below.
         let embeddingInitTask = Task {
             var memoryDBOpened = false
             for attempt in 1 ... 3 {
@@ -182,8 +181,6 @@ public final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelega
             await SkillSearchService.shared.rebuildIndex()
             await MethodSearchService.shared.rebuildIndex()
         }
-        EmbeddingService.setStartupInitTask(embeddingInitTask)
-
         // Start activity tracking and recover orphaned signals once DB is ready
         Task { @MainActor in
             await embeddingInitTask.value
@@ -247,6 +244,24 @@ public final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelega
             Task { @MainActor in
                 try? await Task.sleep(nanoseconds: 300_000_000)  // 300ms
                 showOnboardingWindow()
+            }
+        } else {
+            // Fresh launch from terminated state: explicitly activate and show window
+            Task { @MainActor in
+                // Delay slightly to ensure services are ready
+                try? await Task.sleep(nanoseconds: 300_000_000)  // 300ms
+
+                // Ensure app is unhidden and active
+                NSApp.unhide(nil)
+                _ = NSRunningApplication.current.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+
+                if ChatWindowManager.shared.windowCount > 0 {
+                    ChatWindowManager.shared.focusAllWindows()
+                } else if WindowManager.shared.isVisible(.management) {
+                    WindowManager.shared.show(.management, center: false)
+                } else {
+                    showChatOverlay()
+                }
             }
         }
     }
@@ -436,6 +451,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelega
                 self.showChatOverlay()
             }
         }
+
         return true
     }
 
@@ -703,7 +719,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelega
         print("[AppDelegate] Popover closed, posting chatViewClosed notification")
         // Post notification so VAD can resume
         NotificationCenter.default.post(name: .chatViewClosed, object: nil)
-        
+
         if let action = pendingPopoverAction {
             pendingPopoverAction = nil
             Task { @MainActor in

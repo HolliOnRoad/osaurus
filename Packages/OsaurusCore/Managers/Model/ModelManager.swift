@@ -8,7 +8,6 @@
 import Combine
 import Foundation
 import MLXLLM
-import MLXVLM
 import SwiftUI
 
 extension Notification.Name {
@@ -95,12 +94,34 @@ final class ModelManager: NSObject, ObservableObject {
         }
     }
 
+    // MARK: - Model Deprecation
+
+    struct DeprecationNotice: Identifiable {
+        let id: String
+        let oldId: String
+        let newId: String
+    }
+
+    /// Maps deprecated model IDs to their recommended OsaurusAI replacements.
+    nonisolated static let deprecatedModelReplacements: [String: String] = [
+        "mlx-community/gemma-4-31b-it-4bit": "OsaurusAI/Gemma-4-31B-it-JANG_4M",
+        "mlx-community/gemma-4-26b-a4b-it-4bit": "OsaurusAI/Gemma-4-26B-A4B-it-JANG_2L",
+        "mlx-community/gemma-4-e4b-it-8bit": "OsaurusAI/gemma-4-E4B-it-8bit",
+        "mlx-community/gemma-4-e2b-it-4bit": "OsaurusAI/gemma-4-E2B-it-4bit",
+        "mlx-community/Qwen3.5-27B-4bit": "OsaurusAI/Qwen3.5-122B-A10B-JANG_2S",
+        "mlx-community/Qwen3.5-9B-MLX-4bit": "OsaurusAI/Qwen3.5-35B-A3B-JANG_4K",
+        "mlx-community/Qwen3.5-4B-MLX-4bit": "OsaurusAI/Qwen3.5-35B-A3B-JANG_2S",
+        "mlx-community/Qwen3.5-2B-MLX-4bit": "OsaurusAI/Qwen3.5-35B-A3B-JANG_2S",
+        "mlx-community/Qwen3.5-0.8B-MLX-4bit": "OsaurusAI/Qwen3.5-35B-A3B-JANG_2S",
+    ]
+
     // MARK: - Published Properties
     @Published var availableModels: [MLXModel] = []
     @Published var downloadStates: [String: DownloadState] = [:]
     @Published var isLoadingModels: Bool = false
     @Published var suggestedModels: [MLXModel] = ModelManager.curatedSuggestedModels
     @Published var downloadMetrics: [String: DownloadMetrics] = [:]
+    @Published var deprecationNotices: [DeprecationNotice] = []
 
     // MARK: - Properties
     /// Glob patterns for files to download from a Hugging Face model repo
@@ -166,6 +187,22 @@ final class ModelManager: NSObject, ObservableObject {
         mergeAvailable(with: localModels)
 
         isLoadingModels = false
+
+        checkForDeprecatedModels()
+    }
+
+    /// Scans locally installed models for deprecated entries and populates deprecation notices.
+    func checkForDeprecatedModels() {
+        deprecationNotices = Self.deprecatedModelReplacements.compactMap { oldId, newId in
+            let probe = MLXModel(id: oldId, name: "", description: "", downloadURL: "")
+            guard probe.isDownloaded else { return nil }
+            return DeprecationNotice(id: oldId, oldId: oldId, newId: newId)
+        }
+    }
+
+    /// Returns the replacement model ID if the given model is deprecated, nil otherwise.
+    nonisolated static func replacementForDeprecatedModel(_ modelId: String) -> String? {
+        deprecatedModelReplacements[modelId]
     }
 
     /// Re-evaluate download states for all known models against the current
@@ -182,6 +219,7 @@ final class ModelManager: NSObject, ObservableObject {
         }
         let localModels = Self.discoverLocalModels()
         mergeAvailable(with: localModels)
+        checkForDeprecatedModels()
     }
 
     /// Fetch MLX-compatible models from Hugging Face and merge into availableModels.
@@ -313,6 +351,17 @@ final class ModelManager: NSObject, ObservableObject {
             downloadStates[localModel.id] = .completed
             return localModel
         }
+        // If already present in available or suggested (case-insensitive), return that instance.
+        // Check this before the MLX heuristic so curated OsaurusAI models are always resolvable.
+        if let existing = availableModels.first(where: { $0.id.lowercased() == trimmed.lowercased() }) {
+            return existing
+        }
+        if let existing = suggestedModels.first(where: { $0.id.lowercased() == trimmed.lowercased() }) {
+            availableModels.insert(existing, at: 0)
+            downloadStates[existing.id] = existing.isDownloaded ? .completed : .notStarted
+            return existing
+        }
+
         // Validate MLX compatibility heuristically: org contains "mlx" or id contains "mlx"
         let lower = trimmed.lowercased()
         guard lower.contains("mlx") || lower.hasPrefix("mlx-community/") || lower.contains("-mlx")
@@ -323,14 +372,6 @@ final class ModelManager: NSObject, ObservableObject {
         // Only allow models supported by the SDK
         let allow = Self.sdkSupportedModelIds()
         guard allow.contains(lower) else { return nil }
-
-        // If already present in available or suggested (case-insensitive), return that instance
-        if let existing = availableModels.first(where: { $0.id.lowercased() == trimmed.lowercased() }) {
-            return existing
-        }
-        if let existing = suggestedModels.first(where: { $0.id.lowercased() == trimmed.lowercased() }) {
-            return existing
-        }
 
         // Construct a minimal MLXModel entry
         let name = Self.friendlyName(from: trimmed)
@@ -832,21 +873,30 @@ extension ModelManager {
         // MARK: Top Picks
 
         MLXModel(
-            id: "LiquidAI/LFM2.5-1.2B-Thinking-MLX-8bit",
-            name: friendlyName(from: "LiquidAI/LFM2.5-1.2B-Thinking-MLX-8bit"),
-            description: "Reasoning model with chain-of-thought. 128K context, runs on any Mac.",
-            downloadURL: "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Thinking-MLX-8bit",
+            id: "OsaurusAI/gemma-4-E2B-it-4bit",
+            name: friendlyName(from: "OsaurusAI/gemma-4-E2B-it-4bit"),
+            description: "Smallest multimodal Gemma 4 model. Runs on any Mac.",
+            downloadURL: "https://huggingface.co/OsaurusAI/gemma-4-E2B-it-4bit",
             isTopSuggestion: true,
-            downloadSizeBytes: 1_240_000_000
+            downloadSizeBytes: 1_000_000_000
         ),
 
         MLXModel(
-            id: "mlx-community/Qwen3-VL-4B-Instruct-8bit",
-            name: friendlyName(from: "mlx-community/Qwen3-VL-4B-Instruct-8bit"),
-            description: "See and understand images. Best vision model for most users.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3-VL-4B-Instruct-8bit",
+            id: "OsaurusAI/gemma-4-E4B-it-4bit",
+            name: friendlyName(from: "OsaurusAI/gemma-4-E4B-it-4bit"),
+            description: "Multimodal edge model. Handles images, video, and audio. 128K context.",
+            downloadURL: "https://huggingface.co/OsaurusAI/gemma-4-E4B-it-4bit",
             isTopSuggestion: true,
-            downloadSizeBytes: 8_500_000_000
+            downloadSizeBytes: 2_000_000_000
+        ),
+
+        MLXModel(
+            id: "OsaurusAI/Gemma-4-26B-A4B-it-JANG_2L",
+            name: friendlyName(from: "OsaurusAI/Gemma-4-26B-A4B-it-JANG_2L"),
+            description: "Efficient MoE vision model. Only 4B active params. 256K context.",
+            downloadURL: "https://huggingface.co/OsaurusAI/Gemma-4-26B-A4B-it-JANG_2L",
+            isTopSuggestion: true,
+            downloadSizeBytes: 3_000_000_000
         ),
 
         MLXModel(
@@ -858,31 +908,7 @@ extension ModelManager {
             downloadSizeBytes: 23_600_000_000
         ),
 
-        // MARK: Coding Models
-
-        MLXModel(
-            id: "lmstudio-community/qwen3-coder-30b-a3b-instruct-mlx-4bit",
-            name: friendlyName(from: "lmstudio-community/qwen3-coder-30b-a3b-instruct-mlx-4bit"),
-            description: "Elite coding assistant. Excels at complex programming tasks. Needs 32GB+ RAM.",
-            downloadURL:
-                "https://huggingface.co/lmstudio-community/qwen3-coder-30b-a3b-instruct-mlx-4bit"
-        ),
-
         // MARK: Large Models
-
-        MLXModel(
-            id: "mlx-community/Qwen3-235B-A22B-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3-235B-A22B-4bit"),
-            description: "Massive MoE model with frontier-level intelligence. Requires 64GB+ RAM.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3-235B-A22B-4bit"
-        ),
-
-        MLXModel(
-            id: "mlx-community/Qwen3-Next-80B-A3B-Thinking-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3-Next-80B-A3B-Thinking-4bit"),
-            description: "Advanced reasoning with thinking capability. Great for complex problems.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3-Next-80B-A3B-Thinking-4bit"
-        ),
 
         MLXModel(
             id: "lmstudio-community/gpt-oss-20b-MLX-8bit",
@@ -899,116 +925,71 @@ extension ModelManager {
         ),
 
         MLXModel(
-            id: "mlx-community/gemma-4-31b-it-4bit",
-            name: friendlyName(from: "mlx-community/gemma-4-31b-it-4bit"),
-            description: "Google's flagship dense model. Vision + text with top-tier quality. Needs 32GB+ RAM.",
-            downloadURL: "https://huggingface.co/mlx-community/gemma-4-31b-it-4bit",
-            downloadSizeBytes: 18_400_000_000
+            id: "OsaurusAI/Gemma-4-31B-it-JANG_4M",
+            name: friendlyName(from: "OsaurusAI/Gemma-4-31B-it-JANG_4M"),
+            description: "Gemma 4 31B dense vision model. Top-tier quality with optimized quantization.",
+            downloadURL: "https://huggingface.co/OsaurusAI/Gemma-4-31B-it-JANG_4M",
+            downloadSizeBytes: 6_000_000_000
         ),
 
         // MARK: Vision Language Models (VLM)
 
         MLXModel(
-            id: "mlx-community/gemma-4-26b-a4b-it-4bit",
-            name: friendlyName(from: "mlx-community/gemma-4-26b-a4b-it-4bit"),
-            description: "Google's efficient MoE vision model. Only 4B active params. 256K context.",
-            downloadURL: "https://huggingface.co/mlx-community/gemma-4-26b-a4b-it-4bit",
-            downloadSizeBytes: 15_600_000_000
+            id: "OsaurusAI/Gemma-4-26B-A4B-it-JANG_4M",
+            name: friendlyName(from: "OsaurusAI/Gemma-4-26B-A4B-it-JANG_4M"),
+            description: "Higher-quality MoE vision model. 4B active params with 256K context.",
+            downloadURL: "https://huggingface.co/OsaurusAI/Gemma-4-26B-A4B-it-JANG_4M",
+            downloadSizeBytes: 5_000_000_000
         ),
 
         MLXModel(
-            id: "mlx-community/gemma-4-e4b-it-8bit",
-            name: friendlyName(from: "mlx-community/gemma-4-e4b-it-8bit"),
-            description: "Google's multimodal edge model. Handles images, video, and audio. 128K context.",
-            downloadURL: "https://huggingface.co/mlx-community/gemma-4-e4b-it-8bit",
-            downloadSizeBytes: 9_000_000_000
+            id: "OsaurusAI/gemma-4-E4B-it-8bit",
+            name: friendlyName(from: "OsaurusAI/gemma-4-E4B-it-8bit"),
+            description: "Multimodal edge model at 8-bit precision. Best quality for the E4B family.",
+            downloadURL: "https://huggingface.co/OsaurusAI/gemma-4-E4B-it-8bit",
+            downloadSizeBytes: 3_000_000_000
         ),
 
         MLXModel(
-            id: "mlx-community/Ministral-3-8B-Instruct-2512-4bit",
-            name: friendlyName(from: "mlx-community/Ministral-3-8B-Instruct-2512-4bit"),
-            description: "Mistral's compact vision model. Multilingual support across 11 languages.",
-            downloadURL: "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit"
+            id: "OsaurusAI/Qwen3.5-122B-A10B-JANG_4K",
+            name: friendlyName(from: "OsaurusAI/Qwen3.5-122B-A10B-JANG_4K"),
+            description: "Largest Qwen3.5 MoE vision model. 10B active params with top-tier reasoning.",
+            downloadURL: "https://huggingface.co/OsaurusAI/Qwen3.5-122B-A10B-JANG_4K",
+            downloadSizeBytes: 18_000_000_000
         ),
 
         MLXModel(
-            id: "mlx-community/LFM2-VL-3B-5bit",
-            name: friendlyName(from: "mlx-community/LFM2-VL-3B-5bit"),
-            description: "Liquid AI's compact vision model. 3B params with 10 language support.",
-            downloadURL: "https://huggingface.co/mlx-community/LFM2-VL-3B-5bit"
+            id: "OsaurusAI/Qwen3.5-122B-A10B-JANG_2S",
+            name: friendlyName(from: "OsaurusAI/Qwen3.5-122B-A10B-JANG_2S"),
+            description: "Qwen3.5 122B MoE vision model. Compact quantization, smaller download.",
+            downloadURL: "https://huggingface.co/OsaurusAI/Qwen3.5-122B-A10B-JANG_2S",
+            downloadSizeBytes: 11_000_000_000
         ),
 
         MLXModel(
-            id: "mlx-community/Qwen3.5-27B-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3.5-27B-4bit"),
-            description: "Largest Qwen3.5 vision model. Top-tier multimodal reasoning.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3.5-27B-4bit",
-            downloadSizeBytes: 16_100_000_000
+            id: "OsaurusAI/Qwen3.5-35B-A3B-JANG_4K",
+            name: friendlyName(from: "OsaurusAI/Qwen3.5-35B-A3B-JANG_4K"),
+            description: "Efficient Qwen3.5 MoE vision model. Only 3B active params.",
+            downloadURL: "https://huggingface.co/OsaurusAI/Qwen3.5-35B-A3B-JANG_4K",
+            downloadSizeBytes: 5_000_000_000
         ),
 
         MLXModel(
-            id: "mlx-community/Qwen3.5-9B-MLX-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3.5-9B-MLX-4bit"),
-            description: "Most capable Qwen3.5 vision model. Strong multimodal understanding.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit",
-            downloadSizeBytes: 5_950_000_000
-        ),
-
-        MLXModel(
-            id: "mlx-community/Qwen3.5-4B-MLX-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3.5-4B-MLX-4bit"),
-            description: "Balanced Qwen3.5 vision model. Good multimodal capabilities with modest resources.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit",
-            downloadSizeBytes: 3_030_000_000
-        ),
-
-        MLXModel(
-            id: "mlx-community/Qwen3.5-2B-MLX-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3.5-2B-MLX-4bit"),
-            description: "Lightweight Qwen3.5 vision model. Fast and runs on any Mac.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3.5-2B-MLX-4bit",
-            downloadSizeBytes: 1_720_000_000
-        ),
-
-        MLXModel(
-            id: "mlx-community/Qwen3.5-0.8B-MLX-4bit",
-            name: friendlyName(from: "mlx-community/Qwen3.5-0.8B-MLX-4bit"),
-            description: "Ultra-compact Qwen3.5 vision model. Smallest footprint, runs anywhere.",
-            downloadURL: "https://huggingface.co/mlx-community/Qwen3.5-0.8B-MLX-4bit",
-            downloadSizeBytes: 625_000_000
+            id: "OsaurusAI/Qwen3.5-35B-A3B-JANG_2S",
+            name: friendlyName(from: "OsaurusAI/Qwen3.5-35B-A3B-JANG_2S"),
+            description: "Compact Qwen3.5 MoE vision model. Fast and lightweight.",
+            downloadURL: "https://huggingface.co/OsaurusAI/Qwen3.5-35B-A3B-JANG_2S",
+            downloadSizeBytes: 3_000_000_000
         ),
 
         // MARK: Compact Models
 
         MLXModel(
-            id: "mlx-community/gemma-4-e2b-it-4bit",
-            name: friendlyName(from: "mlx-community/gemma-4-e2b-it-4bit"),
-            description: "Google's smallest multimodal model. Runs on any Mac.",
-            downloadURL: "https://huggingface.co/mlx-community/gemma-4-e2b-it-4bit",
-            downloadSizeBytes: 3_600_000_000
-        ),
-
-        MLXModel(
-            id: "LiquidAI/LFM2.5-1.2B-Instruct-MLX-8bit",
-            name: friendlyName(from: "LiquidAI/LFM2.5-1.2B-Instruct-MLX-8bit"),
-            description: "Liquid AI's efficient 1.2B model. 128K context with 10 language support.",
-            downloadURL: "https://huggingface.co/LiquidAI/LFM2.5-1.2B-Instruct-MLX-8bit"
-        ),
-
-        MLXModel(
-            id: "mlx-community/GLM-4.7-Flash-4bit",
-            name: friendlyName(from: "mlx-community/GLM-4.7-Flash-4bit"),
-            description: "Fast and lightweight MoE model. Great for quick responses.",
-            downloadURL: "https://huggingface.co/mlx-community/GLM-4.7-Flash-4bit",
-            downloadSizeBytes: 16_900_000_000
-        ),
-
-        MLXModel(
-            id: "mlx-community/Nanbeige4.1-3B-8bit",
-            name: friendlyName(from: "mlx-community/Nanbeige4.1-3B-8bit"),
-            description: "Compact 3B model with English and Chinese support. Runs on any Mac.",
-            downloadURL: "https://huggingface.co/mlx-community/Nanbeige4.1-3B-8bit",
-            downloadSizeBytes: 4_180_000_000
+            id: "OsaurusAI/gemma-4-E2B-it-8bit",
+            name: friendlyName(from: "OsaurusAI/gemma-4-E2B-it-8bit"),
+            description: "Smallest Gemma 4 at 8-bit precision. Better quality, still runs on any Mac.",
+            downloadURL: "https://huggingface.co/OsaurusAI/gemma-4-E2B-it-8bit",
+            downloadSizeBytes: 2_000_000_000
         ),
 
     ]
@@ -1313,8 +1294,7 @@ extension ModelManager {
     ///
     /// Reads config.json from the local model directory and checks:
     /// 1. Structural keys (vision_config, image_processor, etc.)
-    /// 2. model_type against `VLMTypeRegistry.supportedModelTypes` from mlx-swift-lm
-    /// 3. preprocessor_config.json as a final fallback
+    /// 2. preprocessor_config.json as a final fallback
     nonisolated static func isVisionModel(modelId: String) -> Bool {
         guard let localDir = findLocalModelDirectory(forModelId: modelId) else {
             return false
@@ -1332,8 +1312,9 @@ extension ModelManager {
         }
 
         // Structural keys that indicate vision capability in config.json.
-        // Checked first to disambiguate dual-registered model types (e.g. gemma4
-        // appears in both VLM and LLM registries; vision_config distinguishes them).
+        // This is the primary signal — it correctly disambiguates dual-registered
+        // model types (e.g. gemma4 appears in both VLM and LLM registries, but only
+        // the VLM variant has vision_config).
         let visionKeys: Set<String> = [
             "vision_config",
             "image_processor",
@@ -1346,13 +1327,6 @@ extension ModelManager {
         ]
 
         if json.keys.contains(where: { visionKeys.contains($0) }) {
-            return true
-        }
-
-        // model_type check against the library's canonical VLM type registry.
-        if let modelType = json["model_type"] as? String,
-            VLMTypeRegistry.supportedModelTypes.contains(modelType)
-        {
             return true
         }
 
@@ -1391,13 +1365,6 @@ extension ModelManager {
         return nil
     }
 
-    /// Check if the currently selected model (by name) supports vision
-    nonisolated static func isVisionModel(named name: String) -> Bool {
-        guard let found = findInstalledModel(named: name) else {
-            return false
-        }
-        return isVisionModel(modelId: found.id)
-    }
 }
 
 // MARK: - Direct file downloader with session-level delegate
