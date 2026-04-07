@@ -65,32 +65,32 @@ struct EmptyStateView: View {
     /// Title text that adapts to search state and selected tab
     private var title: String {
         if !searchText.isEmpty {
-            return String(localized: "No models found")
+            return L("No models found")
         }
 
         switch selectedTab {
         case .all:
-            return String(localized: "No models available")
+            return L("No models available")
         case .suggested:
-            return String(localized: "No suggested models")
+            return L("No suggested models")
         case .downloaded:
-            return String(localized: "No downloaded models")
+            return L("No downloaded models")
         }
     }
 
     /// Description text that provides helpful context
     private var description: String {
         if !searchText.isEmpty {
-            return String(localized: "Try adjusting your search terms")
+            return L("Try adjusting your search terms")
         }
 
         switch selectedTab {
         case .all:
-            return String(localized: "Language models will appear here")
+            return L("Language models will appear here")
         case .suggested:
-            return String(localized: "Suggested models will appear here")
+            return L("Suggested models will appear here")
         case .downloaded:
-            return String(localized: "Downloaded models will appear here")
+            return L("Downloaded models will appear here")
         }
     }
 }

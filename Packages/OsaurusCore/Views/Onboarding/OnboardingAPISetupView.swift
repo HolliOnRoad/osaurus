@@ -71,8 +71,8 @@ struct OnboardingAPISetupView: View {
         }
     }
 
-    private var buttonLoadingTitle: String {
-        isSaving ? String(localized: "Connecting...") : String(localized: "Testing...")
+    private var buttonLoadingTitle: LocalizedStringKey {
+        isSaving ? "Connecting..." : "Testing..."
     }
 
     var body: some View {
@@ -396,10 +396,10 @@ struct OnboardingAPISetupView: View {
     private var actionButtons: some View {
         OnboardingStatefulButton(
             state: buttonState,
-            idleTitle: String(localized: "Test Connection"),
+            idleTitle: "Test Connection",
             loadingTitle: buttonLoadingTitle,
-            successTitle: String(localized: "Continue"),
-            errorTitle: String(localized: "Try Again"),
+            successTitle: "Continue",
+            errorTitle: "Try Again",
             action: {
                 if isSuccess {
                     saveProviderAndContinue()
@@ -560,12 +560,12 @@ private struct OnboardingProviderCard: View {
 
     /// Display name override for custom preset in onboarding context
     private var displayName: String {
-        preset == .custom ? String(localized: "Any OpenAI-compatible API") : preset.name
+        preset == .custom ? L("Any OpenAI-compatible API") : preset.name
     }
 
     /// Description override for custom preset in onboarding context
     private var displayDescription: String {
-        preset == .custom ? String(localized: "OpenRouter, MiniMax, etc.") : preset.description
+        preset == .custom ? L("OpenRouter, MiniMax, etc.") : preset.description
     }
 
     var body: some View {

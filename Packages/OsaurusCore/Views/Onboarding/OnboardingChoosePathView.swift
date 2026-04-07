@@ -16,17 +16,17 @@ enum OnboardingSetupPath: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .appleFoundation: return String(localized: "Use Apple Intelligence")
-        case .local: return String(localized: "Download a Local Model")
-        case .apiProvider: return String(localized: "Connect an AI Provider")
+        case .appleFoundation: return L("Use Apple Intelligence")
+        case .local: return L("Download a Local Model")
+        case .apiProvider: return L("Connect an AI Provider")
         }
     }
 
     var description: String {
         switch self {
-        case .appleFoundation: return String(localized: "Built into macOS. Private, fast, and ready to use.")
-        case .local: return String(localized: "Runs entirely on your Mac. No account needed.")
-        case .apiProvider: return String(localized: "Use OpenAI, Anthropic, xAI, or another provider you trust. Requires an API key.")
+        case .appleFoundation: return L("Built into macOS. Private, fast, and ready to use.")
+        case .local: return L("Runs entirely on your Mac. No account needed.")
+        case .apiProvider: return L("Use OpenAI, Anthropic, xAI, or another provider you trust. Requires an API key.")
         }
     }
 
@@ -53,7 +53,7 @@ struct OnboardingChoosePathView: View {
 
     private var helpContent: String {
         if foundationAvailable {
-            return String(localized: """
+            return L("""
                 Apple Intelligence is built into macOS and runs privately on your device. It's ready to use immediately.
 
                 Local models run on your Mac using your hardware. They're private and free to use, but require a download.
@@ -63,7 +63,7 @@ struct OnboardingChoosePathView: View {
                 Not sure? Apple Intelligence is recommended for most users.
                 """)
         } else {
-            return String(localized: """
+            return L("""
                 Local models run on your Mac using your hardware. They're private and free to use, but less capable than cloud models for complex tasks.
 
                 Cloud providers like Claude and ChatGPT are more powerful but require an account and charge per use.

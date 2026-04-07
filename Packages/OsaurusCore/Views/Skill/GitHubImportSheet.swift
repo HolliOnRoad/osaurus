@@ -125,21 +125,21 @@ struct GitHubImportSheet: View {
 
     private var headerTitle: String {
         switch importState {
-        case .urlInput: return String(localized: "Import from GitHub")
-        case .loading: return String(localized: "Connecting...")
+        case .urlInput: return L("Import from GitHub")
+        case .loading: return L("Connecting...")
         case .skillSelection(let result): return result.repoName
-        case .importing: return String(localized: "Importing...")
-        case .error: return String(localized: "Import Failed")
+        case .importing: return L("Importing...")
+        case .error: return L("Import Failed")
         }
     }
 
     private var headerSubtitle: String {
         switch importState {
-        case .urlInput: return String(localized: "Paste a repository URL to get started")
-        case .loading: return String(localized: "Fetching repository information")
+        case .urlInput: return L("Paste a repository URL to get started")
+        case .loading: return L("Fetching repository information")
         case .skillSelection(let result):
-            return "\(result.skills.count) skill\(result.skills.count == 1 ? "" : "s") available"
-        case .importing(let progress, let total): return "Importing skill \(progress) of \(total)"
+            return L("\(result.skills.count) skills available")
+        case .importing(let progress, let total): return L("Importing skill \(progress) of \(total)")
         case .error(let error): return error.localizedDescription
         }
     }

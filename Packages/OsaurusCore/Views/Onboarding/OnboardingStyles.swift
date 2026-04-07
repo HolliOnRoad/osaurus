@@ -73,7 +73,7 @@ enum OnboardingStyle {
 
 /// Primary action button for onboarding with depth and polish
 struct OnboardingPrimaryButton: View {
-    let title: String
+    let title: LocalizedStringKey
     let action: () -> Void
     var isEnabled: Bool = true
 
@@ -145,7 +145,7 @@ struct OnboardingPrimaryButton: View {
                     )
 
                 // Text
-                Text(LocalizedStringKey(title))
+                Text(title)
                     .font(theme.font(size: 15, weight: .semibold))
                     .foregroundColor(theme.isDark ? theme.primaryText : .white)
             }
@@ -187,17 +187,17 @@ enum OnboardingButtonState: Equatable {
 /// Stateful button that reflects connection test results with depth and polish
 struct OnboardingStatefulButton: View {
     let state: OnboardingButtonState
-    let idleTitle: String
-    let loadingTitle: String
-    let successTitle: String
-    let errorTitle: String
+    let idleTitle: LocalizedStringKey
+    let loadingTitle: LocalizedStringKey
+    let successTitle: LocalizedStringKey
+    let errorTitle: LocalizedStringKey
     let action: () -> Void
     var isEnabled: Bool = true
 
     @Environment(\.theme) private var theme
     @State private var isHovered = false
 
-    private var currentTitle: String {
+    private var currentTitle: LocalizedStringKey {
         switch state {
         case .idle: return idleTitle
         case .loading: return loadingTitle
@@ -305,7 +305,7 @@ struct OnboardingStatefulButton: View {
                             .font(.system(size: 13, weight: .semibold))
                     }
 
-                    Text(LocalizedStringKey(currentTitle))
+                    Text(currentTitle)
                         .font(theme.font(size: 15, weight: .semibold))
                 }
                 .foregroundColor(theme.isDark ? theme.primaryText : .white)

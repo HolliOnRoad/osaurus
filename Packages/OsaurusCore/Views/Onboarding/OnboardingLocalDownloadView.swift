@@ -86,16 +86,16 @@ struct OnboardingLocalDownloadView: View {
                 let minutes = Int(eta) / 60
                 let seconds = Int(eta) % 60
                 if minutes > 0 {
-                    parts.append(String(localized: "\(minutes)m \(seconds)s remaining"))
+                    parts.append(L("\(minutes)m \(seconds)s remaining"))
                 } else {
-                    parts.append(String(localized: "\(seconds)s remaining"))
+                    parts.append(L("\(seconds)s remaining"))
                 }
             }
 
             return parts.joined(separator: " · ")
         }
 
-        return String(localized: "Preparing download...")
+        return L("Preparing download...")
     }
 
     var body: some View {

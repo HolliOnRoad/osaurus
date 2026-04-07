@@ -102,11 +102,11 @@ struct VoiceView: View {
 
     private var headerSubtitle: String {
         if !isSetupComplete {
-            return String(localized: "Complete setup to enable voice")
+            return L("Complete setup to enable voice")
         } else if modelManager.downloadedModelsCount > 0 {
             return "\(modelManager.downloadedModelsCount) models • \(modelManager.totalDownloadedSizeString)"
         } else {
-            return String(localized: "Voice transcription ready")
+            return L("Voice transcription ready")
         }
     }
 

@@ -82,7 +82,7 @@ struct RemoteProvidersView: View {
         let totalCount = manager.configuration.providers.count
 
         if totalCount == 0 {
-            return String(localized: "Connect to remote API providers")
+            return L("Connect to remote API providers")
         } else if connectedCount == 0 {
             return "\(totalCount) provider\(totalCount == 1 ? "" : "s") configured"
         } else {

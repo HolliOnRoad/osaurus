@@ -64,28 +64,28 @@ struct StatusPanelView: View {
     private var statusText: String {
         switch server.serverHealth {
         case .stopped:
-            return String(localized: "Run LLMs locally")
+            return L("Run LLMs locally")
         case .starting:
-            return String(localized: "Starting...")
+            return L("Starting...")
         case .running:
-            return String(localized: "Running on port \(String(server.port))")
+            return L("Running on port \(String(server.port))")
         case .restarting:
-            return String(localized: "Restarting...")
+            return L("Restarting...")
         case .stopping:
-            return String(localized: "Stopping...")
+            return L("Stopping...")
         case .error(let message):
-            return String(localized: "Error: \(message)")
+            return L("Error: \(message)")
         }
     }
 
     private var statusBadgeText: String {
         switch server.serverHealth {
-        case .stopped: return String(localized: "Stopped")
-        case .starting: return String(localized: "Starting")
-        case .running: return String(localized: "Running")
-        case .restarting: return String(localized: "Restarting")
-        case .stopping: return String(localized: "Stopping")
-        case .error: return String(localized: "Error")
+        case .stopped: return L("Stopped")
+        case .starting: return L("Starting")
+        case .running: return L("Running")
+        case .restarting: return L("Restarting")
+        case .stopping: return L("Stopping")
+        case .error: return L("Error")
         }
     }
 
@@ -409,25 +409,25 @@ private struct VADToggleButton: View {
 
     private var tooltipText: String {
         if !canToggleVAD {
-            return String(localized: "Voice Detection: No model selected")
+            return L("Voice Detection: No model selected")
         }
         if !isVADConfigured {
-            return String(localized: "Voice Detection: Not configured (Select agents in settings)")
+            return L("Voice Detection: Not configured (Select agents in settings)")
         }
 
         if !isVADEnabledGlobally {
-            return String(localized: "Voice Detection: Disabled — Click to enable")
+            return L("Voice Detection: Disabled — Click to enable")
         }
 
         switch vadService.state {
         case .idle:
-            return String(localized: "Voice Detection: Ready — Click to disable")
+            return L("Voice Detection: Ready — Click to disable")
         case .starting:
-            return String(localized: "Voice Detection: Starting...")
+            return L("Voice Detection: Starting...")
         case .listening:
-            return String(localized: "Voice Detection: Listening — Click to disable")
+            return L("Voice Detection: Listening — Click to disable")
         case .error(let msg):
-            return String(localized: "Voice Detection Error: \(msg)")
+            return L("Voice Detection Error: \(msg)")
         }
     }
 

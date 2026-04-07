@@ -26,34 +26,34 @@ private enum WalkthroughStepType: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .modes: return String(localized: "Chat or let it run")
-        case .tools: return String(localized: "Tools, skills, and plugins")
-        case .sandbox: return String(localized: "Safe, isolated execution")
-        case .personalization: return String(localized: "Agents, voice, and themes")
-        case .memory: return String(localized: "Gets smarter over time")
-        case .privacy: return String(localized: "Private by default")
+        case .modes: return L("Chat or let it run")
+        case .tools: return L("Tools, skills, and plugins")
+        case .sandbox: return L("Safe, isolated execution")
+        case .personalization: return L("Agents, voice, and themes")
+        case .memory: return L("Gets smarter over time")
+        case .privacy: return L("Private by default")
         }
     }
 
     var body: String {
         switch self {
         case .modes:
-            return String(localized:
-                "Chat Mode — Talk back and forth, like a conversation.\nWork Mode — Give it a task and let it work in the background.")
+            return L(
+"Chat Mode — Talk back and forth, like a conversation.\nWork Mode — Give it a task and let it work in the background.")
         case .tools:
-            return String(localized:
-                "20+ built-in plugins for Mail, Calendar, Browser, Files, and more. Import skills from GitHub. Connect MCP servers. All with your permission.")
+            return L(
+"20+ built-in plugins for Mail, Calendar, Browser, Files, and more. Import skills from GitHub. Connect MCP servers. All with your permission.")
         case .sandbox:
-            return String(localized:
-                "The Sandbox runs code in a Linux container on your Mac. Agents can execute commands, install packages, and work with files — fully isolated from your system.")
+            return L(
+"The Sandbox runs code in a Linux container on your Mac. Agents can execute commands, install packages, and work with files — fully isolated from your system.")
         case .personalization:
-            return String(localized:
-                "Create different agents for different tasks. Talk hands-free with voice. Customize how everything looks.")
+            return L(
+"Create different agents for different tasks. Talk hands-free with voice. Customize how everything looks.")
         case .memory:
-            return String(localized:
-                "Osaurus builds a layered memory from your conversations — profile, working context, summaries, and a knowledge graph. Agents recall relevant facts automatically. Your memory stays with you, not a provider.")
+            return L(
+"Osaurus builds a layered memory from your conversations — profile, working context, summaries, and a knowledge graph. Agents recall relevant facts automatically. Your memory stays with you, not a provider.")
         case .privacy:
-            return String(localized: "Conversations stay on your Mac. Switch providers anytime — your history comes with you.")
+            return L("Conversations stay on your Mac. Switch providers anytime — your history comes with you.")
         }
     }
 
@@ -376,8 +376,8 @@ private struct WalkthroughModesIllustration: View {
             windowCard(
                 id: "chat",
                 icon: "bubble.left.and.bubble.right",
-                label: String(localized: "Chat"),
-                sublabel: String(localized: "Conversation"),
+                label: L("Chat"),
+                sublabel: L("Conversation"),
                 rotation: -6,
                 offsetX: -40,
                 offsetY: 8,
@@ -388,8 +388,8 @@ private struct WalkthroughModesIllustration: View {
             windowCard(
                 id: "work",
                 icon: "bolt.fill",
-                label: String(localized: "Work"),
-                sublabel: String(localized: "Background"),
+                label: L("Work"),
+                sublabel: L("Background"),
                 rotation: 5,
                 offsetX: 40,
                 offsetY: -4,

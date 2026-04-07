@@ -708,10 +708,10 @@ private struct AddProviderFlow: View {
     }
 
     private var actionButtonTitle: String {
-        if isTesting { return String(localized: "Testing...") }
-        if testResult?.isSuccess == true { return String(localized: "Add Provider") }
-        if case .failure = testResult { return String(localized: "Retry") }
-        return String(localized: "Test Connection")
+        if isTesting { return L("Testing...") }
+        if testResult?.isSuccess == true { return L("Add Provider") }
+        if case .failure = testResult { return L("Retry") }
+        return L("Test Connection")
     }
 
     private var actionButtonColor: Color {
@@ -1394,14 +1394,14 @@ private struct EditProviderFlow: View {
     }
 
     private var testButtonLabel: String {
-        if isTesting { return String(localized: "Testing...") }
+        if isTesting { return L("Testing...") }
         if let result = testResult {
             switch result {
             case .success(let models): return "\(models.count) models"
-            case .failure: return String(localized: "Retry")
+            case .failure: return L("Retry")
             }
         }
-        return String(localized: "Test")
+        return L("Test")
     }
 
     private var testButtonColor: Color {

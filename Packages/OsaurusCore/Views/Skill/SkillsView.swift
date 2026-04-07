@@ -439,11 +439,11 @@ private struct SkillRow: View {
 
     /// Display name of the source plugin, or "Plugin" as fallback
     private var pluginDisplayName: String {
-        guard let pluginId = skill.pluginId else { return String(localized: "Plugin") }
+        guard let pluginId = skill.pluginId else { return L("Plugin") }
         if let plugin = PluginRepositoryService.shared.plugins.first(where: { $0.pluginId == pluginId }) {
-            return String(localized: "From: \(plugin.displayName)")
+            return L("From: \(plugin.displayName)")
         }
-        return String(localized: "Plugin")
+        return L("Plugin")
     }
 
     private var skillColor: Color {
