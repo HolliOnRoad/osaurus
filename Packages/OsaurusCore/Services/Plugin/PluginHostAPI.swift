@@ -328,16 +328,36 @@ final class PluginHostContext: @unchecked Sendable {
         let maxTokens: Int?
         let tools: [Tool]?
         let executionMode: WorkExecutionMode
+        var cacheHint: String?
+        var staticPrefix: String?
 
         func prependingSystemContent(_ content: String) -> AgentContext {
-            AgentContext(
+            var ctx = self
+            ctx = AgentContext(
                 agentId: agentId,
                 systemPrompt: content + "\n\n" + systemPrompt,
                 model: model,
                 temperature: temperature,
                 maxTokens: maxTokens,
                 tools: tools,
-                executionMode: executionMode
+                executionMode: executionMode,
+                cacheHint: cacheHint,
+                staticPrefix: staticPrefix
+            )
+            return ctx
+        }
+
+        func withSystemPrompt(_ newPrompt: String) -> AgentContext {
+            AgentContext(
+                agentId: agentId,
+                systemPrompt: newPrompt,
+                model: model,
+                temperature: temperature,
+                maxTokens: maxTokens,
+                tools: tools,
+                executionMode: executionMode,
+                cacheHint: cacheHint,
+                staticPrefix: staticPrefix
             )
         }
     }
@@ -412,7 +432,7 @@ final class PluginHostContext: @unchecked Sendable {
                 return PluginManager.shared.loadedPlugin(for: pid)?.plugin.manifest.instructions
             }
             if let instructions {
-                SystemPromptBuilder.appendSystemContent(instructions, into: &enriched.request.messages)
+                SystemPromptComposer.appendSystemContent(instructions, into: &enriched.request.messages)
             }
         }
         let resolvedAgentId = agentCtx?.agentId ?? Agent.defaultId
@@ -430,7 +450,7 @@ final class PluginHostContext: @unchecked Sendable {
         if isManual,
             let section = await SkillManager.shared.manualSkillPromptSection(for: resolvedAgentId)
         {
-            SystemPromptBuilder.appendSystemContent(section, into: &enriched.request.messages)
+            SystemPromptComposer.appendSystemContent(section, into: &enriched.request.messages)
         }
 
         let engine = ChatEngine(source: .plugin)
@@ -463,52 +483,22 @@ final class PluginHostContext: @unchecked Sendable {
             await SandboxToolRegistrar.shared.registerTools(for: agentId)
         }
 
-        var ctx: AgentContext = await MainActor.run {
+        let execMode = await MainActor.run { ToolRegistry.shared.resolveWorkExecutionMode(folderContext: nil) }
+        let composed = await SystemPromptComposer.composeChatContext(agentId: agentId, executionMode: execMode)
+        return await MainActor.run {
             let mgr = AgentManager.shared
-            let execMode = ToolRegistry.shared.resolveWorkExecutionMode(folderContext: nil)
-            let isManual = mgr.effectiveToolSelectionMode(for: agentId) == .manual
-            var tools = ToolRegistry.shared.alwaysLoadedSpecs(
-                mode: execMode,
-                excludeCapabilityTools: isManual
-            )
-
-            if isManual, let manualNames = mgr.effectiveManualToolNames(for: agentId) {
-                let manualSpecs = ToolRegistry.shared.specs(forTools: manualNames)
-                for spec in manualSpecs
-                where !tools.contains(where: { $0.function.name == spec.function.name }) {
-                    tools.append(spec)
-                }
-            }
-
-            var systemPrompt = mgr.effectiveSystemPrompt(for: agentId)
-            if execMode.usesSandboxTools {
-                let secretNames = Array(AgentSecretsKeychain.getAllSecrets(agentId: agentId).keys)
-                let section = WorkExecutionEngine.chatSandboxPromptSection(secretNames: secretNames)
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                if !section.isEmpty {
-                    systemPrompt = systemPrompt.isEmpty ? section : systemPrompt + "\n\n" + section
-                }
-            }
-
             return AgentContext(
                 agentId: agentId,
-                systemPrompt: systemPrompt,
+                systemPrompt: composed.prompt,
                 model: mgr.effectiveModel(for: agentId),
                 temperature: mgr.effectiveTemperature(for: agentId),
                 maxTokens: mgr.effectiveMaxTokens(for: agentId),
-                tools: tools.isEmpty ? nil : tools,
-                executionMode: execMode
+                tools: composed.tools.isEmpty ? nil : composed.tools,
+                executionMode: execMode,
+                cacheHint: composed.cacheHint,
+                staticPrefix: composed.staticPrefix
             )
         }
-
-        let memoryCtx = await MemoryContextAssembler.assembleContext(
-            agentId: agentId.uuidString,
-            config: MemoryConfigurationStore.load()
-        )
-        if !memoryCtx.isEmpty {
-            ctx = ctx.prependingSystemContent(memoryCtx)
-        }
-        return ctx
     }
 
     // MARK: Request Enrichment
@@ -531,7 +521,7 @@ final class PluginHostContext: @unchecked Sendable {
         }
 
         var messages = request.messages
-        SystemPromptBuilder.injectSystemContent(ctx.systemPrompt, into: &messages)
+        SystemPromptComposer.injectSystemContent(ctx.systemPrompt, into: &messages)
 
         let effectiveTools: [Tool]?
         if let explicit = request.tools, !explicit.isEmpty {
@@ -542,7 +532,7 @@ final class PluginHostContext: @unchecked Sendable {
             effectiveTools = nil
         }
 
-        let enriched = ChatCompletionRequest(
+        var enriched = ChatCompletionRequest(
             model: model,
             messages: messages,
             temperature: request.temperature ?? ctx.temperature,
@@ -557,6 +547,8 @@ final class PluginHostContext: @unchecked Sendable {
             tool_choice: request.tool_choice,
             session_id: request.session_id
         )
+        enriched.cache_hint = ctx.cacheHint
+        enriched.staticPrefix = ctx.staticPrefix
         return EnrichedInference(request: enriched, tools: effectiveTools)
     }
 
@@ -675,7 +667,7 @@ final class PluginHostContext: @unchecked Sendable {
 
         var messages = inference.request.messages
         if !preflight.contextSnippet.isEmpty {
-            SystemPromptBuilder.appendSystemContent(preflight.contextSnippet, into: &messages)
+            SystemPromptComposer.appendSystemContent(preflight.contextSnippet, into: &messages)
         }
 
         let effectiveTools = tools.isEmpty ? nil : tools

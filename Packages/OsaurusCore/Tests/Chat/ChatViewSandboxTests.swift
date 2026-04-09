@@ -8,10 +8,8 @@ import Testing
 struct ChatViewSandboxTests {
     @Test
     func buildToolSpecs_sandboxDisabledExcludesBuiltInSandboxTools() {
-        let session = ChatSession()
-
         withRegisteredSandboxBuiltins {
-            let specs = session.buildToolSpecs(executionMode: .none)
+            let specs = ToolRegistry.shared.alwaysLoadedSpecs(mode: .none)
 
             #expect(specs.contains(where: { $0.function.name == "sandbox_exec" }) == false)
             #expect(specs.contains(where: { $0.function.name == "sandbox_read_file" }) == false)
@@ -21,8 +19,7 @@ struct ChatViewSandboxTests {
     @Test
     func buildToolSpecs_sandboxEnabledIncludesBuiltIns() {
         withRegisteredSandboxBuiltins {
-            let session = ChatSession()
-            let specs = session.buildToolSpecs(executionMode: .sandbox)
+            let specs = ToolRegistry.shared.alwaysLoadedSpecs(mode: .sandbox)
 
             #expect(specs.contains(where: { $0.function.name == "capabilities_search" }))
             #expect(specs.contains(where: { $0.function.name == "capabilities_load" }))
@@ -30,22 +27,20 @@ struct ChatViewSandboxTests {
     }
 
     @Test
-    func buildSystemPrompt_includesSandboxContextOnlyWhenExpected() {
-        let session = ChatSession()
-
-        let standardPrompt = session.buildSystemPrompt(
-            base: "Base prompt",
+    func buildSystemPrompt_includesSandboxContextOnlyWhenExpected() async {
+        let standardCtx = await SystemPromptComposer.composeChatContext(
             agentId: Agent.defaultId,
             executionMode: .none
         )
-        let sandboxPrompt = session.buildSystemPrompt(
-            base: "Base prompt",
+        let sandboxCtx = await SystemPromptComposer.composeChatContext(
             agentId: Agent.defaultId,
             executionMode: .sandbox
         )
+        let standardPrompt = standardCtx.prompt
+        let sandboxPrompt = sandboxCtx.prompt
 
-        #expect(standardPrompt.contains(WorkExecutionEngine.sandboxSectionHeading) == false)
-        #expect(sandboxPrompt.contains(WorkExecutionEngine.sandboxSectionHeading))
+        #expect(standardPrompt.contains(SystemPromptTemplates.sandboxSectionHeading) == false)
+        #expect(sandboxPrompt.contains(SystemPromptTemplates.sandboxSectionHeading))
         #expect(sandboxPrompt.contains("sandbox_run_script"))
     }
 
@@ -77,9 +72,14 @@ struct ChatViewSandboxTests {
             let inactiveBreakdown = inactiveSession.estimatedContextBreakdown
             let sandboxBreakdown = sandboxSession.estimatedContextBreakdown
 
-            #expect(sandboxBreakdown.systemPrompt > inactiveBreakdown.systemPrompt)
-            #expect(sandboxBreakdown.tools > inactiveBreakdown.tools)
-            #expect(sandboxBreakdown.tools >= ToolRegistry.shared.estimatedTokens(for: "sandbox_exec"))
+            let inactiveContextTokens = inactiveBreakdown.context.reduce(0) { $0 + $1.tokens }
+            let sandboxContextTokens = sandboxBreakdown.context.reduce(0) { $0 + $1.tokens }
+            #expect(sandboxContextTokens > inactiveContextTokens)
+
+            let sandboxToolTokens = sandboxBreakdown.context.first { $0.id == "tools" }?.tokens ?? 0
+            let inactiveToolTokens = inactiveBreakdown.context.first { $0.id == "tools" }?.tokens ?? 0
+            #expect(sandboxToolTokens > inactiveToolTokens)
+            #expect(sandboxToolTokens >= ToolRegistry.shared.estimatedTokens(for: "sandbox_exec"))
         }
     }
 
@@ -120,7 +120,7 @@ struct ChatViewSandboxTests {
         #expect(inactiveMode.usesSandboxTools == false)
         #expect(sandboxMode.usesSandboxTools)
 
-        let specs = session.buildToolSpecs(executionMode: sandboxMode)
+        let specs = ToolRegistry.shared.alwaysLoadedSpecs(mode: sandboxMode)
         #expect(specs.contains(where: { $0.function.name == "sandbox_exec" }))
 
         ToolRegistry.shared.unregisterAllSandboxTools()
@@ -159,9 +159,14 @@ struct ChatViewSandboxTests {
             let sandboxBreakdown = sandboxSession.estimateContextBreakdown(for: issue)
             let sandboxTools = ToolRegistry.shared.alwaysLoadedSpecs(mode: .sandbox)
 
-            #expect(sandboxBreakdown.systemPrompt > inactiveBreakdown.systemPrompt)
-            #expect(sandboxBreakdown.tools > inactiveBreakdown.tools)
-            #expect(sandboxBreakdown.tools == ToolRegistry.shared.totalEstimatedTokens(for: sandboxTools))
+            let inactiveContextTokens = inactiveBreakdown.context.reduce(0) { $0 + $1.tokens }
+            let sandboxContextTokens = sandboxBreakdown.context.reduce(0) { $0 + $1.tokens }
+            #expect(sandboxContextTokens > inactiveContextTokens)
+
+            let sandboxToolTokens = sandboxBreakdown.context.first { $0.id == "tools" }?.tokens ?? 0
+            let inactiveToolTokens = inactiveBreakdown.context.first { $0.id == "tools" }?.tokens ?? 0
+            #expect(sandboxToolTokens > inactiveToolTokens)
+            #expect(sandboxToolTokens == ToolRegistry.shared.totalEstimatedTokens(for: sandboxTools))
         }
     }
 }

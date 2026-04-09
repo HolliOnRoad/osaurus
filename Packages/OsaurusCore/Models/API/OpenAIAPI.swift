@@ -339,6 +339,8 @@ struct ChatCompletionRequest: Codable, Sendable {
     var messages: [ChatMessage]
     let temperature: Float?
     let max_tokens: Int?
+    /// OpenAI newer alias for max_tokens; accepted on inbound requests alongside max_tokens.
+    var max_completion_tokens: Int? = nil
     let stream: Bool?
     let top_p: Float?
     let frequency_penalty: Float?
@@ -355,9 +357,14 @@ struct ChatCompletionRequest: Codable, Sendable {
     var cache_hint: String? = nil
     /// Model-specific options from the active ModelProfile (not serialized to JSON).
     var modelOptions: [String: ModelOptionValue]? = nil
+    /// Static system prompt content for prefix cache building (not serialized to JSON).
+    var staticPrefix: String? = nil
+
+    /// Resolved max tokens, preferring max_tokens then max_completion_tokens.
+    var resolvedMaxTokens: Int? { max_tokens ?? max_completion_tokens }
 
     private enum CodingKeys: String, CodingKey {
-        case model, messages, temperature, max_tokens, stream, top_p
+        case model, messages, temperature, max_tokens, max_completion_tokens, stream, top_p
         case frequency_penalty, presence_penalty, stop, n
         case tools, tool_choice, session_id, cache_hint
     }
@@ -380,6 +387,7 @@ struct ChatCompletionRequest: Codable, Sendable {
             cache_hint: cache_hint
         )
         copy.modelOptions = modelOptions
+        copy.staticPrefix = staticPrefix
         return copy
     }
 }

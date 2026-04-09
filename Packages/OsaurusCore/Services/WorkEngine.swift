@@ -122,7 +122,9 @@ public actor WorkEngine {
         model: String?,
         systemPrompt: String,
         tools: [Tool],
-        executionMode: WorkExecutionMode
+        executionMode: WorkExecutionMode,
+        cacheHint: String? = nil,
+        staticPrefix: String? = nil
     ) async throws -> ExecutionResult {
         guard !isExecuting else {
             throw WorkEngineError.alreadyExecuting
@@ -138,7 +140,9 @@ public actor WorkEngine {
             systemPrompt: systemPrompt,
             tools: tools,
             executionMode: executionMode,
-            attemptResume: true
+            attemptResume: true,
+            cacheHint: cacheHint,
+            staticPrefix: staticPrefix
         )
     }
 
@@ -337,7 +341,9 @@ public actor WorkEngine {
         tools: [Tool],
         executionMode: WorkExecutionMode,
         images: [Data] = [],
-        attemptResume: Bool = false
+        attemptResume: Bool = false,
+        cacheHint: String? = nil,
+        staticPrefix: String? = nil
     ) async throws -> ExecutionResult {
         isExecuting = true
         interruptRequested = false
@@ -385,20 +391,9 @@ public actor WorkEngine {
                 WorkExecutionSession(issueId: issue.id, messages: initialMessages)
             }
 
-        let compact = SystemPromptBuilder.isLocalModel(model)
-        let secretNames: [String] = {
-            guard let name = sandboxAgentName,
-                let uuid = SandboxAgentMap.resolve(linuxName: name)
-            else { return [] }
-            return Array(AgentSecretsKeychain.getAllSecrets(agentId: uuid).keys)
-        }()
-
-        let agentSystemPrompt = WorkExecutionEngine.buildAgentSystemPrompt(
-            base: systemPrompt,
-            executionMode: resolvedExecutionMode,
-            compact: compact,
-            secretNames: secretNames
-        )
+        let agentSystemPrompt = systemPrompt
+        let agentCacheHint = cacheHint
+        let agentStaticPrefix = staticPrefix
 
         // Log execution started
         _ = try? IssueStore.createEvent(
@@ -453,6 +448,8 @@ public actor WorkEngine {
                 executionMode: resolvedExecutionMode,
                 sandboxAgentName: sandboxAgentName,
                 agentId: agentId,
+                cacheHint: agentCacheHint,
+                staticPrefix: agentStaticPrefix,
                 shouldInterrupt: { await self.shouldInterruptExecution(for: issue.id) },
                 onIterationStart: { [weak self] iteration in
                     guard let self = self else { return }
@@ -855,7 +852,9 @@ public actor WorkEngine {
         systemPrompt: String,
         tools: [Tool],
         executionMode: WorkExecutionMode,
-        images: [Data] = []
+        images: [Data] = [],
+        cacheHint: String? = nil,
+        staticPrefix: String? = nil
     ) async throws -> ExecutionResult {
         guard let issue = try IssueStore.getIssue(id: issueId) else {
             throw WorkEngineError.issueNotFound(issueId)
@@ -885,7 +884,9 @@ public actor WorkEngine {
                     tools: tools,
                     executionMode: executionMode,
                     images: images,
-                    attemptResume: attempt > 0
+                    attemptResume: attempt > 0,
+                    cacheHint: cacheHint,
+                    staticPrefix: staticPrefix
                 )
 
                 // Success - clear any error state

@@ -299,6 +299,22 @@ final class HTTPHandler: ChannelInboundHandler, Sendable {
                 handleMemoryIngest(head: head, context: context, startTime: startTime, userAgent: userAgent)
             } else if head.method == .GET, path == "/agents" {
                 handleListAgents(head: head, context: context, startTime: startTime, userAgent: userAgent)
+            } else if head.method == .GET, path.hasPrefix("/agents/") {
+                handleGetAgentEndpoint(
+                    head: head,
+                    context: context,
+                    path: path,
+                    startTime: startTime,
+                    userAgent: userAgent
+                )
+            } else if head.method == .POST, path.hasPrefix("/agents/"), path.hasSuffix("/run") {
+                handleAgentRunEndpoint(
+                    head: head,
+                    context: context,
+                    path: path,
+                    startTime: startTime,
+                    userAgent: userAgent
+                )
             } else if head.method == .POST, path.hasPrefix("/agents/"), path.hasSuffix("/dispatch") {
                 handleDispatchEndpoint(
                     head: head,
@@ -1296,27 +1312,21 @@ final class HTTPHandler: ChannelInboundHandler, Sendable {
         _ request: ChatCompletionRequest,
         agentId: String?
     ) async -> ChatCompletionRequest {
-        guard let agentId, !agentId.isEmpty else { return request }
+        guard let agentId, !agentId.isEmpty,
+            let agentUUID = UUID(uuidString: agentId)
+        else { return request }
 
         var enriched = request
-
-        if let agentUUID = UUID(uuidString: agentId) {
-            let agentPrompt = await MainActor.run {
-                SystemPromptBuilder.effectiveBasePrompt(
-                    AgentManager.shared.effectiveSystemPrompt(for: agentUUID)
-                )
-            }
-            SystemPromptBuilder.injectSystemContent(agentPrompt, into: &enriched.messages)
-        }
-
         let query = request.messages.last(where: { $0.role == "user" })?.content ?? ""
-        let memoryContext = await MemoryContextAssembler.assembleContext(
-            agentId: agentId,
-            config: MemoryConfigurationStore.load(),
-            query: query
+        let (hint, prefix) = await SystemPromptComposer.injectAgentContext(
+            agentId: agentUUID,
+            query: query,
+            into: &enriched.messages
         )
-        SystemPromptBuilder.injectMemoryContext(memoryContext, into: &enriched.messages)
-
+        if enriched.cache_hint == nil {
+            enriched.cache_hint = hint
+            enriched.staticPrefix = prefix
+        }
         return enriched
     }
 
@@ -1547,6 +1557,360 @@ final class HTTPHandler: ChannelInboundHandler, Sendable {
                 responseBody: json,
                 responseStatus: 200,
                 startTime: logStartTime
+            )
+        }
+    }
+
+    // MARK: - Agent Info & Run Endpoints
+
+    /// GET /agents/{id} — return info for a single agent
+    private func handleGetAgentEndpoint(
+        head: HTTPRequestHead,
+        context: ChannelHandlerContext,
+        path: String,
+        startTime: Date,
+        userAgent: String?
+    ) {
+        let loop = context.eventLoop
+        let ctx = NIOLoopBound(context, eventLoop: loop)
+        let cors = stateRef.value.corsHeaders
+        let hop = makeHop(channel: context.channel, loop: loop)
+        let logSelf = self
+        let logStartTime = startTime
+        let logUserAgent = userAgent
+
+        // Extract agent ID: /agents/{id}
+        let components = path.split(separator: "/")
+        guard components.count == 2, components[0] == "agents", let agentId = UUID(uuidString: String(components[1]))
+        else {
+            hop {
+                var headers = [("Content-Type", "application/json; charset=utf-8")]
+                headers.append(contentsOf: cors)
+                self.sendResponse(
+                    context: ctx.value,
+                    version: head.version,
+                    status: .badRequest,
+                    headers: headers,
+                    body: #"{"error":"invalid_agent_id","message":"Invalid agent UUID in path"}"#
+                )
+            }
+            return
+        }
+
+        Task(priority: .userInitiated) {
+            guard let agent = await MainActor.run(body: { AgentManager.shared.agent(for: agentId) }) else {
+                hop {
+                    var headers = [("Content-Type", "application/json; charset=utf-8")]
+                    headers.append(contentsOf: cors)
+                    self.sendResponse(
+                        context: ctx.value,
+                        version: head.version,
+                        status: .notFound,
+                        headers: headers,
+                        body: #"{"error":"agent_not_found","message":"No agent found for the given ID"}"#
+                    )
+                }
+                return
+            }
+
+            let formatter = ISO8601DateFormatter()
+            let item = AgentListItem(
+                id: agent.id.uuidString,
+                name: agent.name,
+                description: agent.description,
+                default_model: agent.defaultModel,
+                is_built_in: agent.isBuiltIn,
+                memory_entry_count: 0,
+                created_at: formatter.string(from: agent.createdAt),
+                updated_at: formatter.string(from: agent.updatedAt)
+            )
+            let json =
+                (try? JSONEncoder().encode(item)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+
+            hop {
+                var headers = [("Content-Type", "application/json; charset=utf-8")]
+                headers.append(contentsOf: cors)
+                self.sendResponse(
+                    context: ctx.value,
+                    version: head.version,
+                    status: .ok,
+                    headers: headers,
+                    body: json
+                )
+            }
+            logSelf.logRequest(
+                method: "GET",
+                path: path,
+                userAgent: logUserAgent,
+                requestBody: nil,
+                responseBody: json,
+                responseStatus: 200,
+                startTime: logStartTime
+            )
+        }
+    }
+
+    /// POST /agents/{id}/run — run the full agent chat loop server-side.
+    ///
+    /// Accepts a `ChatCompletionRequest` body. Runs inference with the agent's
+    /// system prompt and executes any tool calls locally on the server, looping
+    /// until the model produces a final text response. Streams SSE text deltas
+    /// back to the caller — tool invocations are never forwarded to the client.
+    private func handleAgentRunEndpoint(
+        head: HTTPRequestHead,
+        context: ChannelHandlerContext,
+        path: String,
+        startTime: Date,
+        userAgent: String?
+    ) {
+        let data: Data
+        let requestBodyString: String?
+        if let body = stateRef.value.requestBodyBuffer {
+            var bodyCopy = body
+            let bytes = bodyCopy.readBytes(length: bodyCopy.readableBytes) ?? []
+            data = Data(bytes)
+            requestBodyString = String(decoding: data, as: UTF8.self)
+        } else {
+            data = Data()
+            requestBodyString = nil
+        }
+
+        guard let req = try? JSONDecoder().decode(ChatCompletionRequest.self, from: data) else {
+            sendResponse(
+                context: context,
+                version: head.version,
+                status: .badRequest,
+                headers: [("Content-Type", "text/plain; charset=utf-8")],
+                body: "Invalid request format"
+            )
+            logRequest(
+                method: "POST",
+                path: path,
+                userAgent: userAgent,
+                requestBody: requestBodyString,
+                responseStatus: 400,
+                startTime: startTime,
+                errorMessage: "Invalid request format"
+            )
+            return
+        }
+
+        // Extract agent ID: /agents/{id}/run
+        let pathComponents = path.split(separator: "/")
+        guard pathComponents.count >= 2, let agentId = UUID(uuidString: String(pathComponents[1])) else {
+            sendResponse(
+                context: context,
+                version: head.version,
+                status: .badRequest,
+                headers: [("Content-Type", "application/json; charset=utf-8")],
+                body: #"{"error":"invalid_agent_id","message":"Invalid agent UUID in path"}"#
+            )
+            return
+        }
+
+        let cors = stateRef.value.corsHeaders
+        let loop = context.eventLoop
+        let writer = SSEResponseWriter()
+        let writerBound = NIOLoopBound(writer, eventLoop: loop)
+        let ctx = NIOLoopBound(context, eventLoop: loop)
+        let hop = makeHop(channel: context.channel, loop: loop)
+        let logSelf = self
+        let logStartTime = startTime
+        let logUserAgent = userAgent
+        let logRequestBody = requestBodyString
+        let chatEngine = self.chatEngine
+
+        let responseId = "chatcmpl-\(UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(12))"
+        let created = Int(Date().timeIntervalSince1970)
+
+        hop { writerBound.value.writeHeaders(ctx.value, extraHeaders: cors) }
+
+        Task(priority: .userInitiated) {
+            // Resolve model: client sends "default" when no specific model was known
+            let model: String
+            if req.model.isEmpty || req.model == "default" {
+                let agentModel = await MainActor.run { AgentManager.shared.effectiveModel(for: agentId) }
+                model = agentModel ?? req.model
+            } else {
+                model = req.model
+            }
+
+            // Enrich with agent context (system prompt + memory)
+            var messages = await Self.enrichWithAgentContext(req, agentId: agentId.uuidString).messages
+
+            // Load tools: use sandbox mode when the agent has Autonomous Execution enabled
+            let tools = await MainActor.run {
+                let autonomousEnabled = AgentManager.shared.effectiveAutonomousExec(for: agentId)?.enabled == true
+                let mode: WorkExecutionMode =
+                    autonomousEnabled ? ToolRegistry.shared.resolveWorkExecutionMode(folderContext: nil) : .none
+                return ToolRegistry.shared.alwaysLoadedSpecs(mode: mode)
+            }
+
+            let maxIterations = 30
+            var iteration = 0
+            let requestId = UUID().uuidString
+
+            hop {
+                writerBound.value.writeRole(
+                    "assistant",
+                    model: model,
+                    responseId: responseId,
+                    created: created,
+                    prefixHash: nil,
+                    context: ctx.value
+                )
+            }
+
+            while iteration < maxIterations {
+                iteration += 1
+
+                let iterationReq = ChatCompletionRequest(
+                    model: model,
+                    messages: messages,
+                    temperature: req.temperature,
+                    max_tokens: req.resolvedMaxTokens,
+                    stream: true,
+                    top_p: req.top_p,
+                    frequency_penalty: req.frequency_penalty,
+                    presence_penalty: req.presence_penalty,
+                    stop: req.stop,
+                    n: nil,
+                    tools: tools.isEmpty ? nil : tools,
+                    tool_choice: nil,
+                    session_id: req.session_id
+                )
+
+                var responseContent = ""
+                var toolInvoked: ServiceToolInvocation?
+
+                do {
+                    let stream = try await chatEngine.streamChat(request: iterationReq)
+                    for try await delta in stream {
+                        if StreamingToolHint.isSentinel(delta) { continue }
+                        responseContent += delta
+                        hop {
+                            writerBound.value.writeContent(
+                                delta,
+                                model: model,
+                                responseId: responseId,
+                                created: created,
+                                context: ctx.value
+                            )
+                        }
+                    }
+                } catch let inv as ServiceToolInvocation {
+                    toolInvoked = inv
+                } catch {
+                    hop {
+                        writerBound.value.writeError(error.localizedDescription, context: ctx.value)
+                        writerBound.value.writeEnd(ctx.value)
+                    }
+                    logSelf.logRequest(
+                        method: "POST",
+                        path: path,
+                        userAgent: logUserAgent,
+                        requestBody: logRequestBody,
+                        responseStatus: 500,
+                        startTime: logStartTime,
+                        errorMessage: error.localizedDescription
+                    )
+                    return
+                }
+
+                guard let invocation = toolInvoked else {
+                    // Final text response — done
+                    messages.append(ChatMessage(role: "assistant", content: responseContent))
+                    break
+                }
+
+                // Notify the client that a tool is being called so it can show it in the chat log
+                hop {
+                    writerBound.value.writeContent(
+                        StreamingToolHint.encode(invocation.toolName),
+                        model: model,
+                        responseId: responseId,
+                        created: created,
+                        context: ctx.value
+                    )
+                    writerBound.value.writeContent(
+                        StreamingToolHint.encodeArgs(invocation.jsonArguments),
+                        model: model,
+                        responseId: responseId,
+                        created: created,
+                        context: ctx.value
+                    )
+                }
+
+                // Execute the tool on the server and append result to messages
+                let callId =
+                    invocation.toolCallId
+                    ?? "call_\(UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(24))"
+
+                let toolResult: String
+                do {
+                    toolResult = try await WorkExecutionContext.$currentIssueId.withValue(requestId) {
+                        try await WorkExecutionContext.$currentAgentId.withValue(agentId) {
+                            try await ToolRegistry.shared.execute(
+                                name: invocation.toolName,
+                                argumentsJSON: invocation.jsonArguments
+                            )
+                        }
+                    }
+                } catch {
+                    toolResult = "[REJECTED] \(error.localizedDescription)"
+                }
+
+                // Notify the client the tool call is complete with its result so it can
+                // display the call card and result in the chat log
+                hop {
+                    writerBound.value.writeContent(
+                        StreamingToolHint.encodeDone(
+                            callId: callId,
+                            name: invocation.toolName,
+                            arguments: invocation.jsonArguments,
+                            result: toolResult
+                        ),
+                        model: model,
+                        responseId: responseId,
+                        created: created,
+                        context: ctx.value
+                    )
+                }
+
+                messages.append(
+                    ChatMessage(
+                        role: "assistant",
+                        content: responseContent.isEmpty ? nil : responseContent,
+                        tool_calls: [
+                            ToolCall(
+                                id: callId,
+                                type: "function",
+                                function: ToolCallFunction(
+                                    name: invocation.toolName,
+                                    arguments: invocation.jsonArguments
+                                )
+                            )
+                        ],
+                        tool_call_id: nil
+                    )
+                )
+                messages.append(
+                    ChatMessage(role: "tool", content: toolResult, tool_calls: nil, tool_call_id: callId)
+                )
+            }
+
+            hop {
+                writerBound.value.writeFinish(model, responseId: responseId, created: created, context: ctx.value)
+                writerBound.value.writeEnd(ctx.value)
+            }
+            logSelf.logRequest(
+                method: "POST",
+                path: path,
+                userAgent: logUserAgent,
+                requestBody: logRequestBody,
+                responseStatus: 200,
+                startTime: logStartTime,
+                model: model
             )
         }
     }

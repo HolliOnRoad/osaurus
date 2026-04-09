@@ -76,6 +76,10 @@ public final class WorkSession: ObservableObject {
     /// Tracks the active request's token breakdown during execution.
     private let budgetTracker = ContextBudgetTracker()
 
+    /// Cached manifest from the last prompt composition for offline estimation.
+    private var cachedManifest: PromptManifest?
+    private var cachedToolTokens: Int = 0
+
     // MARK: - Block Caching
 
     private let blockMemoizer = BlockMemoizer()
@@ -336,9 +340,7 @@ public final class WorkSession: ObservableObject {
     }
 
     /// Per-category context token breakdown for the current work-mode request context.
-    /// During execution, returns the snapshot from the active request with live
-    /// output tokens (O(1)). Otherwise falls back to full recomputation.
-    var estimatedContextBreakdown: ContextTokenBreakdown {
+    var estimatedContextBreakdown: ContextBreakdown {
         if let active = budgetTracker.activeBreakdown(
             isActive: isExecuting,
             outputTurn: liveExecutionTurns.last
@@ -348,61 +350,56 @@ public final class WorkSession: ObservableObject {
         return estimateContextBreakdown(for: activeIssue ?? selectedIssue)
     }
 
-    func estimateContextBreakdown(for issue: Issue?) -> ContextTokenBreakdown {
-        let baseSystemPrompt = SystemPromptBuilder.effectiveBasePrompt(
-            windowState?.cachedSystemPrompt
-                ?? AgentManager.shared.effectiveSystemPrompt(for: agentId)
-        )
+    func estimateContextBreakdown(for issue: Issue?) -> ContextBreakdown {
         let executionMode = estimatedExecutionModeForBudget()
-        let toolSpecs = ToolRegistry.shared.alwaysLoadedSpecs(mode: executionMode)
 
-        var breakdown = ContextTokenBreakdown()
-        let secretNames = Array(AgentSecretsKeychain.getAllSecrets(agentId: agentId).keys)
-        let prompt = WorkExecutionEngine.buildAgentSystemPrompt(
-            base: baseSystemPrompt,
-            executionMode: executionMode,
-            secretNames: secretNames
-        )
-        breakdown.systemPrompt = ContextBudgetManager.estimateTokens(for: prompt)
-        breakdown.memory = windowState?.session.estimatedContextBreakdown.memory ?? 0
-        breakdown.tools = ToolRegistry.shared.totalEstimatedTokens(for: toolSpecs)
+        let manifest: PromptManifest
+        let toolTokens: Int
+        if let cached = cachedManifest {
+            manifest = cached
+            toolTokens = cachedToolTokens
+        } else {
+            let secretNames = Array(AgentSecretsKeychain.getAllSecrets(agentId: agentId).keys)
+            let (_, m) = SystemPromptComposer.composeWorkPrompt(
+                agentId: agentId,
+                executionMode: executionMode,
+                secretNames: secretNames
+            )
+            manifest = m
+            toolTokens = ToolRegistry.shared.totalEstimatedTokens(
+                for: ToolRegistry.shared.alwaysLoadedSpecs(mode: executionMode)
+            )
+        }
 
         var conversationTokens = 0
-
-        // Add the initial message context (folder tree, task details) to the conversation tokens
         var firstMessageContent = ""
         switch executionMode {
         case .hostFolder(let ctx):
             firstMessageContent += WorkExecutionEngine.buildFolderContextSection(from: ctx)
         default: break
         }
-
         if let issue {
             if let context = issue.context {
                 firstMessageContent += "\n[Prior Context]:\n\(context)\n"
             }
             firstMessageContent += "\n**Goal:** \(issue.title)\n"
-            if let desc = issue.description {
-                firstMessageContent += "\(desc)\n"
-            }
+            if let desc = issue.description { firstMessageContent += "\(desc)\n" }
         }
-
         conversationTokens += ContextBudgetManager.estimateTokens(for: firstMessageContent)
-
         conversationTokens += ContextBudgetManager.estimateTokens(for: currentTurns)
-        breakdown.output = ContextBudgetManager.estimateOutputTokens(for: currentTurns)
-        breakdown.conversation = conversationTokens - breakdown.output
 
+        let outputTokens = ContextBudgetManager.estimateOutputTokens(for: currentTurns)
         var inputTokens = 0
-        if !input.isEmpty {
-            inputTokens += ContextBudgetManager.estimateTokens(for: input)
-        }
-        for attachment in pendingAttachments {
-            inputTokens += attachment.estimatedTokens
-        }
-        breakdown.input = inputTokens
+        if !input.isEmpty { inputTokens += ContextBudgetManager.estimateTokens(for: input) }
+        for attachment in pendingAttachments { inputTokens += attachment.estimatedTokens }
 
-        return breakdown
+        return .from(
+            manifest: manifest,
+            toolTokens: toolTokens,
+            conversationTokens: conversationTokens - outputTokens,
+            inputTokens: inputTokens,
+            outputTokens: outputTokens
+        )
     }
 
     // MARK: - Cumulative Token Usage
@@ -771,53 +768,24 @@ public final class WorkSession: ObservableObject {
 
         resetExecutionState(for: issue)
 
-        let config = await buildExecutionConfig()
-        let toolMode = AgentManager.shared.effectiveToolSelectionMode(for: agentId)
-        let isManualTools = toolMode == .manual
-        var tools = ToolRegistry.shared.alwaysLoadedSpecs(
-            mode: config.executionMode,
-            excludeCapabilityTools: isManualTools
+        let executionMode = ToolRegistry.shared.resolveWorkExecutionMode(
+            folderContext: WorkFolderContextService.shared.currentContext
         )
+        let model = resolveModel()
+        let issueQuery = [issue.title, issue.description].compactMap { $0 }.joined(separator: " ")
 
-        // Pre-flight RAG: search capabilities based on issue (skipped in manual mode)
-        var preflightSnippet = ""
-        if isManualTools {
-            if let manualNames = AgentManager.shared.effectiveManualToolNames(for: agentId) {
-                let manualSpecs = ToolRegistry.shared.specs(forTools: manualNames)
-                for spec in manualSpecs
-                where !tools.contains(where: { $0.function.name == spec.function.name }) {
-                    tools.append(spec)
-                }
-            }
-        } else {
-            let preflightMode = ChatConfigurationStore.load().preflightSearchMode ?? .balanced
-            let preflightQuery = [issue.title, issue.description].compactMap { $0 }.joined(separator: " ")
-            let preflight = await PreflightCapabilitySearch.search(query: preflightQuery, mode: preflightMode)
-            pendingPreflightCapabilities = preflight.items.isEmpty ? nil : preflight.items
-            preflightSnippet = preflight.contextSnippet
-
-            for spec in preflight.toolSpecs
-            where !tools.contains(where: { $0.function.name == spec.function.name }) {
-                tools.append(spec)
-            }
-        }
-
-        var systemPrompt = config.systemPrompt
-        if !preflightSnippet.isEmpty {
-            systemPrompt += "\n\n" + preflightSnippet
-        }
-
-        if isManualTools,
-            let section = await SkillManager.shared.manualSkillPromptSection(for: agentId)
-        {
-            systemPrompt += "\n\n" + section
-        }
-
-        budgetTracker.snapshot(
-            systemPromptChars: systemPrompt.count,
-            memoryTokens: windowState?.session.estimatedContextBreakdown.memory ?? 0,
-            toolTokens: ToolRegistry.shared.totalEstimatedTokens(for: tools)
+        let workCtx = await SystemPromptComposer.composeWorkContext(
+            agentId: agentId,
+            executionMode: executionMode,
+            model: model,
+            secretNames: Array(AgentSecretsKeychain.getAllSecrets(agentId: agentId).keys),
+            query: issueQuery
         )
+        pendingPreflightCapabilities = workCtx.preflightItems.isEmpty ? nil : workCtx.preflightItems
+        cachedManifest = workCtx.manifest
+        cachedToolTokens = workCtx.toolTokens
+
+        budgetTracker.snapshot(manifest: workCtx.manifest, toolTokens: workCtx.toolTokens)
         objectWillChange.send()
 
         executionTask = Task { [weak self, engine] in
@@ -826,19 +794,23 @@ public final class WorkSession: ObservableObject {
                     if withRetry {
                         try await engine.executeWithRetry(
                             issueId: issue.id,
-                            model: config.model,
-                            systemPrompt: systemPrompt,
-                            tools: tools,
-                            executionMode: config.executionMode,
-                            images: images
+                            model: model,
+                            systemPrompt: workCtx.prompt,
+                            tools: workCtx.tools,
+                            executionMode: executionMode,
+                            images: images,
+                            cacheHint: workCtx.cacheHint,
+                            staticPrefix: workCtx.staticPrefix
                         )
                     } else {
                         try await engine.resume(
                             issueId: issue.id,
-                            model: config.model,
-                            systemPrompt: systemPrompt,
-                            tools: tools,
-                            executionMode: config.executionMode
+                            model: model,
+                            systemPrompt: workCtx.prompt,
+                            tools: workCtx.tools,
+                            executionMode: executionMode,
+                            cacheHint: workCtx.cacheHint,
+                            staticPrefix: workCtx.staticPrefix
                         )
                     }
                 await MainActor.run { self?.handleExecutionResult(result) }
@@ -856,6 +828,7 @@ public final class WorkSession: ObservableObject {
         deltaProcessor?.finalize()
         deltaProcessor = nil
         budgetTracker.clear()
+        cachedManifest = nil
         currentStep = 0
         let configuredMaxIterations =
             ChatConfigurationStore.load().workMaxIterations ?? WorkExecutionEngine.defaultMaxIterations
@@ -872,38 +845,10 @@ public final class WorkSession: ObservableObject {
         pausedExecutionReason = nil
     }
 
-    /// Builds execution configuration from current state
-    private func buildExecutionConfig() async -> (
-        model: String,
-        systemPrompt: String,
-        executionMode: WorkExecutionMode
-    ) {
-        let baseSystemPrompt = SystemPromptBuilder.effectiveBasePrompt(
-            windowState?.cachedSystemPrompt
-                ?? AgentManager.shared.effectiveSystemPrompt(for: agentId)
-        )
-
-        let memoryConfig = MemoryConfigurationStore.load()
-        let memoryContext = await MemoryContextAssembler.assembleContext(
-            agentId: agentId.uuidString,
-            config: memoryConfig
-        )
-        let systemPrompt = SystemPromptBuilder.prependMemoryContext(memoryContext, to: baseSystemPrompt)
-
-        let model =
-            if let selected = selectedModel, !selected.isEmpty {
-                selected
-            } else if let wsModel = windowState?.session.selectedModel, !wsModel.isEmpty {
-                wsModel
-            } else {
-                AgentManager.shared.agent(for: agentId)?.defaultModel ?? "default"
-            }
-
-        let executionMode = ToolRegistry.shared.resolveWorkExecutionMode(
-            folderContext: WorkFolderContextService.shared.currentContext
-        )
-
-        return (model, systemPrompt, executionMode)
+    private func resolveModel() -> String {
+        if let selected = selectedModel, !selected.isEmpty { return selected }
+        if let wsModel = windowState?.session.selectedModel, !wsModel.isEmpty { return wsModel }
+        return AgentManager.shared.agent(for: agentId)?.defaultModel ?? "default"
     }
 
     private func estimatedExecutionModeForBudget() -> WorkExecutionMode {
@@ -1337,62 +1282,36 @@ public final class WorkSession: ObservableObject {
             return
         }
 
-        let config = await buildExecutionConfig()
-        let resumeToolMode = AgentManager.shared.effectiveToolSelectionMode(for: agentId)
-        let resumeIsManual = resumeToolMode == .manual
-        var tools = ToolRegistry.shared.alwaysLoadedSpecs(
-            mode: config.executionMode,
-            excludeCapabilityTools: resumeIsManual
+        let executionMode = ToolRegistry.shared.resolveWorkExecutionMode(
+            folderContext: WorkFolderContextService.shared.currentContext
         )
+        let model = resolveModel()
+        let resumeQuery = [issue.title, issue.description].compactMap { $0 }.joined(separator: " ")
 
-        var resumePreflightSnippet = ""
-        if resumeIsManual {
-            if let manualNames = AgentManager.shared.effectiveManualToolNames(for: agentId) {
-                let manualSpecs = ToolRegistry.shared.specs(forTools: manualNames)
-                for spec in manualSpecs
-                where !tools.contains(where: { $0.function.name == spec.function.name }) {
-                    tools.append(spec)
-                }
-            }
-        } else {
-            let preflightMode = ChatConfigurationStore.load().preflightSearchMode ?? .balanced
-            let preflightQuery = [issue.title, issue.description].compactMap { $0 }.joined(separator: " ")
-            let preflight = await PreflightCapabilitySearch.search(query: preflightQuery, mode: preflightMode)
-            pendingPreflightCapabilities = preflight.items.isEmpty ? nil : preflight.items
-            resumePreflightSnippet = preflight.contextSnippet
-
-            for spec in preflight.toolSpecs
-            where !tools.contains(where: { $0.function.name == spec.function.name }) {
-                tools.append(spec)
-            }
-        }
-
-        var systemPrompt = config.systemPrompt
-        if !resumePreflightSnippet.isEmpty {
-            systemPrompt += "\n\n" + resumePreflightSnippet
-        }
-
-        if resumeIsManual,
-            let section = await SkillManager.shared.manualSkillPromptSection(for: agentId)
-        {
-            systemPrompt += "\n\n" + section
-        }
-
-        budgetTracker.snapshot(
-            systemPromptChars: systemPrompt.count,
-            memoryTokens: windowState?.session.estimatedContextBreakdown.memory ?? 0,
-            toolTokens: ToolRegistry.shared.totalEstimatedTokens(for: tools)
+        let resumeCtx = await SystemPromptComposer.composeWorkContext(
+            agentId: agentId,
+            executionMode: executionMode,
+            model: model,
+            secretNames: Array(AgentSecretsKeychain.getAllSecrets(agentId: agentId).keys),
+            query: resumeQuery
         )
+        pendingPreflightCapabilities = resumeCtx.preflightItems.isEmpty ? nil : resumeCtx.preflightItems
+        cachedManifest = resumeCtx.manifest
+        cachedToolTokens = resumeCtx.toolTokens
+
+        budgetTracker.snapshot(manifest: resumeCtx.manifest, toolTokens: resumeCtx.toolTokens)
         objectWillChange.send()
 
         executionTask = Task { [weak self, engine] in
             do {
                 let result = try await engine.resume(
                     issueId: issue.id,
-                    model: config.model,
-                    systemPrompt: systemPrompt,
-                    tools: tools,
-                    executionMode: config.executionMode
+                    model: model,
+                    systemPrompt: resumeCtx.prompt,
+                    tools: resumeCtx.tools,
+                    executionMode: executionMode,
+                    cacheHint: resumeCtx.cacheHint,
+                    staticPrefix: resumeCtx.staticPrefix
                 )
                 await MainActor.run { self?.handleExecutionResult(result) }
             } catch {

@@ -21,6 +21,11 @@ struct GenerationParameters: Sendable {
     /// Explicit prefix cache key override (API callers can use this to share a
     /// prefix cache across requests with varying system prompts).
     let cacheHint: String?
+    /// Static system prompt content for prefix cache building.
+    /// When set, the prefix cache is built from this content only (excluding
+    /// dynamic sections like memory), producing a KV cache that exactly matches
+    /// the reusable portion across requests.
+    let staticPrefix: String?
 
     init(
         temperature: Float?,
@@ -29,7 +34,8 @@ struct GenerationParameters: Sendable {
         repetitionPenalty: Float? = nil,
         modelOptions: [String: ModelOptionValue] = [:],
         sessionId: String? = nil,
-        cacheHint: String? = nil
+        cacheHint: String? = nil,
+        staticPrefix: String? = nil
     ) {
         self.temperature = temperature
         self.maxTokens = maxTokens
@@ -38,6 +44,7 @@ struct GenerationParameters: Sendable {
         self.modelOptions = modelOptions
         self.sessionId = sessionId
         self.cacheHint = cacheHint
+        self.staticPrefix = staticPrefix
     }
 }
 
@@ -66,9 +73,37 @@ enum StreamingToolHint: Sendable {
     private static let sentinel: Character = "\u{FFFE}"
     private static let toolPrefix = "\u{FFFE}tool:"
     private static let argsPrefix = "\u{FFFE}args:"
+    private static let donePrefix = "\u{FFFE}done:"
 
     static func encode(_ toolName: String) -> String { toolPrefix + toolName }
     static func encodeArgs(_ fragment: String) -> String { argsPrefix + fragment }
+
+    /// Encodes a completed server-side tool call so the client can display it in the chat log.
+    static func encodeDone(callId: String, name: String, arguments: String, result: String) -> String {
+        struct Payload: Encodable { let id, name, arguments, result: String }
+        let json =
+            (try? JSONEncoder().encode(Payload(id: callId, name: name, arguments: arguments, result: result)))
+            .map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+        return donePrefix + json
+    }
+
+    /// Decoded payload from a done sentinel.
+    struct ToolCallDone {
+        let callId: String
+        let name: String
+        let arguments: String
+        let result: String
+    }
+
+    static func decodeDone(_ delta: String) -> ToolCallDone? {
+        guard delta.hasPrefix(donePrefix) else { return nil }
+        let json = String(delta.dropFirst(donePrefix.count))
+        struct Payload: Decodable { let id, name, arguments, result: String }
+        guard let data = json.data(using: .utf8),
+            let p = try? JSONDecoder().decode(Payload.self, from: data)
+        else { return nil }
+        return ToolCallDone(callId: p.id, name: p.name, arguments: p.arguments, result: p.result)
+    }
 
     /// O(1) check — only inspects the first character. Covers both tool and args sentinels.
     static func isSentinel(_ delta: String) -> Bool { delta.first == sentinel }
