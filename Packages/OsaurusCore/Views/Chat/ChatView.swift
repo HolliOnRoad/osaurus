@@ -235,7 +235,7 @@ final class ChatSession: ObservableObject {
     /// Cheap to call repeatedly — BlockMemoizer fast-paths when nothing changed.
     func rebuildVisibleBlocks() {
         let agent = AgentManager.shared.agent(for: agentId ?? Agent.defaultId)
-        let displayName = agent?.isBuiltIn == true ? "Assistant" : (agent?.name ?? "Assistant")
+        let displayName = agent?.isBuiltIn == true ? L("Assistant") : (agent?.name ?? L("Assistant"))
         let streamingTurnId = isStreaming ? turns.last?.id : nil
 
         if MockChatData.isEnabled {

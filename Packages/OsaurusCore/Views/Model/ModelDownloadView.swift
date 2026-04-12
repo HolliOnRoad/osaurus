@@ -118,7 +118,7 @@ struct ModelDownloadView: View {
     private var headerView: some View {
         ManagerHeaderWithTabs(
             title: L("Models"),
-            subtitle: "\(completedDownloadedModelsCount) downloaded • \(modelManager.totalDownloadedSizeString)"
+            subtitle: "\(completedDownloadedModelsCount) \(L("downloaded")) • \(modelManager.totalDownloadedSizeString)"
         ) {
             HStack(spacing: 12) {
                 // Filter button
@@ -181,7 +181,7 @@ struct ModelDownloadView: View {
                     ? [.downloaded: modelManager.activeDownloadsCount]
                     : nil,
                 searchText: $searchText,
-                searchPlaceholder: "Search models"
+                searchPlaceholder: L("Search models")
             )
         }
     }
@@ -213,7 +213,7 @@ struct ModelDownloadView: View {
                 .padding(.bottom, 4)
 
                 Group {
-                    FilterSection(title: "Model Type") {
+                    FilterSection(title: L("Model Type")) {
                         HStack(spacing: 8) {
                             FilterChip(label: "LLM", isSelected: filterState.typeFilter.isLLM) {
                                 filterState.typeFilter = filterState.typeFilter.isLLM ? .all : .llm
@@ -224,17 +224,17 @@ struct ModelDownloadView: View {
                         }
                     }
 
-                    FilterSection(title: "Model Size") {
+                    FilterSection(title: L("Model Size")) {
                         FlowLayout(spacing: 8) {
                             ForEach(ModelManager.ModelFilterState.SizeCategory.allCases) { cat in
-                                FilterChip(label: cat.rawValue, isSelected: filterState.sizeCategory == cat) {
+                                FilterChip(label: cat.displayName, isSelected: filterState.sizeCategory == cat) {
                                     filterState.sizeCategory = filterState.sizeCategory == cat ? nil : cat
                                 }
                             }
                         }
                     }
 
-                    FilterSection(title: "Parameters") {
+                    FilterSection(title: L("Parameters")) {
                         HStack(spacing: 8) {
                             ForEach(ModelManager.ModelFilterState.ParamCategory.allCases) { cat in
                                 FilterChip(label: cat.rawValue, isSelected: filterState.paramCategory == cat) {
@@ -243,7 +243,7 @@ struct ModelDownloadView: View {
                             }
                         }
                     }
-                    FilterSection(title: "Model Family") {
+                    FilterSection(title: L("Model Family")) {
                         let families = Array(Set(modelManager.availableModels.map { $0.family })).sorted()
                         if families.isEmpty {
                             Text("No families found", bundle: .module)
@@ -808,23 +808,23 @@ private struct SystemStatusBar: View {
     var body: some View {
         HStack(spacing: 20) {
             ResourceGauge(
-                label: "Memory",
+                label: L("RAM"),
                 icon: "memorychip",
                 usedFraction: totalMemoryGB > 0 ? usedMemoryGB / totalMemoryGB : 0,
                 detail: String(
-                    format: "%.0f GB free / %.0f GB",
+                    format: L("%.0f GB free / %.0f GB"),
                     max(0, totalMemoryGB - usedMemoryGB),
                     totalMemoryGB
                 )
             )
 
             ResourceGauge(
-                label: "Storage",
+                label: L("Disk"),
                 icon: DirectoryPickerService.shared.hasValidDirectory ? "externaldrive" : "internaldrive",
                 usedFraction: totalStorageGB > 0
                     ? (totalStorageGB - availableStorageGB) / totalStorageGB : 0,
                 detail: String(
-                    format: "%.0f GB free / %.0f GB",
+                    format: L("%.0f GB free / %.0f GB"),
                     availableStorageGB,
                     totalStorageGB
                 )

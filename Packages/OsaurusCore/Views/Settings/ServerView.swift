@@ -15,7 +15,12 @@ enum ServerTab: String, CaseIterable, AnimatedTabItem {
     case overview = "Overview"
     case apiReference = "API Reference"
 
-    var title: String { rawValue }
+    var title: String {
+        switch self {
+        case .overview: return L("Overview")
+        case .apiReference: return L("API Reference")
+        }
+    }
 }
 
 // MARK: - Cached Formatters

@@ -18,7 +18,16 @@ enum VoiceTab: String, CaseIterable, AnimatedTabItem {
     case vadMode = "VAD Mode"
     case models = "Models"
 
-    var title: String { rawValue }
+    var title: String {
+        switch self {
+        case .setup: return L("Setup")
+        case .audioSettings: return L("Audio")
+        case .voiceInput: return L("Voice Input")
+        case .transcription: return L("Transcription")
+        case .vadMode: return L("VAD Mode")
+        case .models: return L("Models")
+        }
+    }
 }
 
 // MARK: - Voice View
@@ -104,7 +113,7 @@ struct VoiceView: View {
         if !isSetupComplete {
             return L("Complete setup to enable voice")
         } else if modelManager.downloadedModelsCount > 0 {
-            return "\(modelManager.downloadedModelsCount) models • \(modelManager.totalDownloadedSizeString)"
+            return "\(modelManager.downloadedModelsCount) \(modelManager.downloadedModelsCount == 1 ? L("model") : L("models")) • \(modelManager.totalDownloadedSizeString)"
         } else {
             return L("Voice transcription ready")
         }
@@ -196,7 +205,7 @@ private struct VoiceModelsTab: View {
                 }
 
                 // Search
-                SearchField(text: $searchText, placeholder: "Search models")
+                SearchField(text: $searchText, placeholder: L("Search models"))
                     .padding(.horizontal, 24)
 
                 // Recommended section

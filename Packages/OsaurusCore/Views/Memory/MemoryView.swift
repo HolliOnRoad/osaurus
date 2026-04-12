@@ -241,8 +241,8 @@ struct MemoryView: View {
     // MARK: - User Profile Section
 
     private var profileSection: some View {
-        MemorySection(title: "User Profile", icon: "person.text.rectangle") {
-            SectionActionButton(isSyncing ? "Syncing..." : "Sync", icon: "arrow.triangle.2.circlepath") {
+        MemorySection(title: L("User Profile"), icon: "person.text.rectangle") {
+            SectionActionButton(isSyncing ? L("Syncing...") : L("Sync"), icon: "arrow.triangle.2.circlepath") {
                 guard !isSyncing else { return }
                 isSyncing = true
                 Task.detached {
@@ -256,7 +256,7 @@ struct MemoryView: View {
             }
             .disabled(isSyncing || !config.enabled)
 
-            SectionActionButton("Edit", icon: "pencil") {
+            SectionActionButton(L("Edit"), icon: "pencil") {
                 showProfileEditor = true
             }
         } content: {
@@ -318,8 +318,8 @@ struct MemoryView: View {
     // MARK: - Overrides Section
 
     private var overridesSection: some View {
-        MemorySection(title: "Your Overrides", icon: "pin.fill", count: userEdits.isEmpty ? nil : userEdits.count) {
-            SectionActionButton("Add", icon: "plus") {
+        MemorySection(title: L("Your Overrides"), icon: "pin.fill", count: userEdits.isEmpty ? nil : userEdits.count) {
+            SectionActionButton(L("Add"), icon: "plus") {
                 showAddOverride = true
             }
         } content: {
@@ -502,7 +502,7 @@ struct MemoryView: View {
     // MARK: - Agents Section
 
     private var agentsSection: some View {
-        MemorySection(title: "Agents", icon: "person.2") {
+        MemorySection(title: L("Agents"), icon: "person.2") {
             VStack(spacing: 0) {
                 defaultAgentMemoryGroup
 
@@ -548,17 +548,17 @@ struct MemoryView: View {
     // MARK: - Statistics Section
 
     private var statsSection: some View {
-        MemorySection(title: "Statistics", icon: "chart.bar") {
+        MemorySection(title: L("Statistics"), icon: "chart.bar") {
             HStack(spacing: 0) {
-                statBlock(label: "Total Calls", value: "\(processingStats.totalCalls)")
+                statBlock(label: L("Total Calls"), value: "\(processingStats.totalCalls)")
                 Divider().frame(height: 36).opacity(0.5)
-                statBlock(label: "Avg Latency", value: "\(processingStats.avgDurationMs)ms")
+                statBlock(label: L("Avg Latency"), value: "\(processingStats.avgDurationMs)ms")
                 Divider().frame(height: 36).opacity(0.5)
-                statBlock(label: "Success", value: "\(processingStats.successCount)")
+                statBlock(label: L("Success"), value: "\(processingStats.successCount)")
                 Divider().frame(height: 36).opacity(0.5)
-                statBlock(label: "Errors", value: "\(processingStats.errorCount)")
+                statBlock(label: L("Errors"), value: "\(processingStats.errorCount)")
                 Divider().frame(height: 36).opacity(0.5)
-                statBlock(label: "Database", value: formatBytes(dbSizeBytes))
+                statBlock(label: L("Database"), value: formatBytes(dbSizeBytes))
             }
         }
     }
@@ -566,7 +566,7 @@ struct MemoryView: View {
     // MARK: - Configuration Section
 
     private var configurationSection: some View {
-        MemorySection(title: "Configuration", icon: "gearshape") {
+        MemorySection(title: L("Configuration"), icon: "gearshape") {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 12) {
                     Text("Core Model", bundle: .module)
@@ -619,7 +619,7 @@ struct MemoryView: View {
                         Circle()
                             .fill(config.enabled ? Color.green : Color.red)
                             .frame(width: 8, height: 8)
-                        Text(config.enabled ? "Active" : "Disabled")
+                        Text(config.enabled ? L("Active") : L("Disabled"))
                             .font(.system(size: 13))
                             .foregroundColor(theme.primaryText)
                     }
@@ -1101,12 +1101,12 @@ private struct AgentMemoryRow: View {
                         .frame(width: 8, height: 8)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(agent.name)
+                        Text(agent.displayName)
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(theme.primaryText)
 
-                        if !agent.description.isEmpty {
-                            Text(agent.description)
+                        if !agent.displayDescription.isEmpty {
+                            Text(agent.displayDescription)
                                 .font(.system(size: 11))
                                 .foregroundColor(theme.tertiaryText)
                                 .lineLimit(1)

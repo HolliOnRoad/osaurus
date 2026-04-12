@@ -201,7 +201,7 @@ struct PluginsView: View {
                     ? [.installed: updatesAvailableCount]
                     : nil,
                 searchText: $searchText,
-                searchPlaceholder: "Search plugins"
+                searchPlaceholder: L("Search plugins")
             )
         }
     }
@@ -215,8 +215,8 @@ struct PluginsView: View {
                     icon: "puzzlepiece.extension",
                     title: L("No plugins installed"),
                     subtitle: searchText.isEmpty
-                        ? "Browse the repository to install plugins"
-                        : "Try a different search term"
+                        ? L("Browse the repository to install plugins")
+                        : L("Try a different search term")
                 )
             } else {
                 ScrollView {
@@ -681,7 +681,7 @@ private struct PluginCard: View {
         } else if plugin.hasUpdate {
             StatusCapsuleBadge(icon: "arrow.up.circle.fill", text: "Update", color: .orange)
         } else if plugin.isInstalled {
-            StatusCapsuleBadge(icon: "checkmark.circle.fill", text: "Installed", color: .green)
+            StatusCapsuleBadge(icon: "checkmark.circle.fill", text: L("Installed"), color: .green)
         }
     }
 

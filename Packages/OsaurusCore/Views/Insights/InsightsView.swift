@@ -309,7 +309,7 @@ private struct MethodFilterPills: View {
         HStack(spacing: 2) {
             ForEach(MethodFilter.allCases, id: \.self) { filter in
                 Button(action: { selection = filter }) {
-                    Text(filter.rawValue)
+                    Text(filter.displayName)
                         .font(.system(size: 11, weight: selection == filter ? .semibold : .medium))
                         .foregroundColor(selection == filter ? .white : theme.secondaryText)
                         .padding(.horizontal, 10)
@@ -348,7 +348,7 @@ private struct SourceFilterPills: View {
         HStack(spacing: 2) {
             ForEach(SourceFilter.allCases, id: \.self) { filter in
                 Button(action: { selection = filter }) {
-                    Text(filter.rawValue)
+                    Text(filter.displayName)
                         .font(.system(size: 11, weight: selection == filter ? .semibold : .medium))
                         .foregroundColor(selection == filter ? .white : theme.secondaryText)
                         .padding(.horizontal, 10)
@@ -834,7 +834,7 @@ private struct SourceBadge: View {
 extension RequestSource {
     var shortName: String {
         switch self {
-        case .chatUI: return "Chat"
+        case .chatUI: return L("Chat")
         case .httpAPI: return "HTTP"
         case .plugin: return "Plugin"
         }

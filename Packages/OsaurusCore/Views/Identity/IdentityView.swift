@@ -71,13 +71,13 @@ struct IdentityView: View {
     private var subtitleText: String {
         switch phase {
         case .checking:
-            "Loading identity..."
+            L("Loading identity...")
         case .noIdentity:
-            "Set up your Osaurus Identity"
+            L("Set up your Osaurus Identity")
         case .recoveryPrompt:
-            "Save your recovery code"
+            L("Save your recovery code")
         case .ready:
-            "Your identity is active"
+            L("Your identity is active")
         }
     }
 
@@ -431,7 +431,7 @@ private struct MasterAddressSection: View {
                         HStack(spacing: 4) {
                             Image(systemName: copied ? "checkmark" : "doc.on.doc")
                                 .font(.system(size: 11, weight: .medium))
-                            Text(copied ? "Copied" : "Copy")
+                            Text(copied ? L("Copied") : L("Copy"))
                                 .font(.system(size: 11, weight: .medium))
                         }
                         .foregroundColor(copied ? theme.successColor : theme.secondaryText)
@@ -449,12 +449,12 @@ private struct MasterAddressSection: View {
 
                 HStack(spacing: 24) {
                     statusField(
-                        label: "Recovery",
-                        value: "Recovery code saved",
+                        label: L("Recovery"),
+                        value: L("Recovery code saved"),
                         icon: "checkmark.shield.fill",
                         color: theme.successColor
                     )
-                    statusField(label: "Status", value: "Active", icon: "circle.fill", color: theme.successColor)
+                    statusField(label: L("Status"), value: L("Active"), icon: "circle.fill", color: theme.successColor)
                 }
             }
         }

@@ -40,20 +40,20 @@ struct WatchersView: View {
                             .init(
                                 icon: "arrow.down.circle",
                                 title: L("Downloads Organizer"),
-                                description: "Auto-sort files into folders by type"
+                                description: L("Auto-sort files into folders by type")
                             ),
                             .init(
                                 icon: "camera",
                                 title: L("Screenshot Manager"),
-                                description: "Rename and organize screenshots"
+                                description: L("Rename and organize screenshots")
                             ),
                             .init(
                                 icon: "externaldrive.connected.to.line.below",
                                 title: L("Dropbox Automation"),
-                                description: "Process shared files on change"
+                                description: L("Process shared files on change")
                             ),
                         ],
-                        primaryAction: .init(title: "Create Watcher", icon: "plus", handler: { isCreating = true }),
+                        primaryAction: .init(title: L("Create Watcher"), icon: "plus", handler: { isCreating = true }),
                         hasAppeared: hasAppeared
                     )
                 } else {
@@ -575,7 +575,7 @@ struct WatcherEditorSheet: View {
             .frame(width: 40, height: 40)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(isEditing ? "Edit Watcher" : "Create Watcher")
+                Text(isEditing ? L("Edit Watcher") : L("Create Watcher"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(theme.primaryText)
 
@@ -877,7 +877,7 @@ struct WatcherEditorSheet: View {
             Button( action: onCancel) { Text("Cancel", bundle: .module) }
                 .buttonStyle(WatcherSecondaryButtonStyle())
 
-            Button(isEditing ? "Save Changes" : "Create Watcher") {
+            Button(isEditing ? L("Save Changes") : L("Create Watcher")) {
                 saveWatcher()
             }
             .buttonStyle(WatcherPrimaryButtonStyle())
@@ -1057,7 +1057,7 @@ private struct WatcherAgentPicker: View {
     }
 
     private var selectedAgentName: String {
-        selectedAgent?.name ?? "Default"
+        selectedAgent?.name ?? L("Default")
     }
 
     private func agentColor(for name: String) -> Color {
@@ -1155,11 +1155,11 @@ private struct WatcherAgentOptionRow: View {
     @State private var isHovering = false
 
     private var displayName: String {
-        agent?.name ?? "Default"
+        agent?.name ?? L("Default")
     }
 
     private var displayDescription: String {
-        agent?.description ?? "Uses the default system behavior"
+        agent?.description ?? L("Uses the default system behavior")
     }
 
     var body: some View {

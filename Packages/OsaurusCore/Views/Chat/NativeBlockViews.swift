@@ -625,7 +625,7 @@ final class NativeCodeBlockView: NSView {
     // MARK: Subviews
 
     private let headerView = NSView()
-    private let langLabel = NSTextField(labelWithString: "code")
+    private let langLabel = NSTextField(labelWithString: L("code"))
     private let copyButton = NSButton()
     private var codeView: CodeNSTextView?
     private var codeHeightConstraint: NSLayoutConstraint?

@@ -462,7 +462,7 @@ private struct FrequencySelector: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(theme.accentColor)
 
-                Text(selection.rawValue)
+                Text(selection.displayName)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(theme.primaryText)
 
@@ -534,7 +534,7 @@ private struct FrequencyOptionRow: View {
                     .foregroundColor(isSelected ? theme.accentColor : theme.secondaryText)
                     .frame(width: 16)
 
-                Text(type.rawValue)
+                Text(type.displayName)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(theme.primaryText)
 
@@ -1310,12 +1310,12 @@ private struct AgentPicker: View {
     }
 
     private var selectedAgentName: String {
-        selectedAgent?.name ?? "Default"
+        selectedAgent?.name ?? L("Default")
     }
 
     private var selectedAgentDescription: String? {
         if selectedAgentId == nil {
-            return "Uses the default system behavior"
+            return L("Uses the default system behavior")
         }
         let desc = selectedAgent?.description ?? ""
         return desc.isEmpty ? nil : desc
@@ -1392,8 +1392,8 @@ private struct AgentPicker: View {
         .popover(isPresented: $showingPopover, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 0) {
                 AgentOptionRow(
-                    name: "Default",
-                    description: "Uses the default system behavior",
+                    name: L("Default"),
+                    description: L("Uses the default system behavior"),
                     isSelected: selectedAgentId == nil,
                     action: {
                         selectedAgentId = nil
@@ -1407,8 +1407,8 @@ private struct AgentPicker: View {
 
                     ForEach(agents, id: \.id) { agent in
                         AgentOptionRow(
-                            name: agent.name,
-                            description: agent.description,
+                            name: agent.displayName,
+                            description: agent.displayDescription,
                             isSelected: selectedAgentId == agent.id,
                             action: {
                                 selectedAgentId = agent.id

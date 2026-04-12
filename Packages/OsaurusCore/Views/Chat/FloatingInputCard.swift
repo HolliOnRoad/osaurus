@@ -1186,7 +1186,7 @@ extension FloatingInputCard {
             if case .bool(let v) = current { return v ? option.label : nil }
             return nil
         }
-        if nonDefault.isEmpty { return "Default" }
+        if nonDefault.isEmpty { return L("Default") }
         return nonDefault.joined(separator: ", ")
     }
 
@@ -1253,13 +1253,13 @@ extension FloatingInputCard {
 
     private var sandboxHelpText: String {
         if isSandboxLoading {
-            return "Sandbox is starting up…"
+            return L("Sandbox is starting up…")
         } else if isSandboxEnabled && isSandboxRunning {
-            return "Sandbox is active — click to disable. Right-click for settings."
+            return L("Sandbox is active — click to disable. Right-click for settings.")
         } else if isSandboxEnabled {
-            return "Sandbox enabled — container not running"
+            return L("Sandbox enabled — container not running")
         } else {
-            return "Enable Sandbox for autonomous code execution"
+            return L("Enable Sandbox for autonomous code execution")
         }
     }
 
@@ -1897,17 +1897,17 @@ extension FloatingInputCard {
         if let state = workInputState {
             switch state {
             case .noTask:
-                return "What do you want done?"
+                return L("What do you want done?")
             case .executing:
                 return pendingQueuedMessage != nil
-                    ? "Message queued"
-                    : "Queue a follow-up message..."
+                    ? L("Message queued")
+                    : L("Queue a follow-up message...")
             case .idle:
-                return "What's next?"
+                return L("What's next?")
             }
         }
         // Chat mode placeholder
-        return "Message or attach files..."
+        return L("Message or attach files...")
     }
 
     private var textInputArea: some View {

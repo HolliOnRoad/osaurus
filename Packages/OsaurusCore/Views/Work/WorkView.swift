@@ -352,10 +352,10 @@ private struct WorkStatusButton: View {
     }
 
     private var statusText: String {
-        if isExecuting { return "Running" }
-        if allDone { return "Done" }
+        if isExecuting { return L("Running") }
+        if allDone { return L("Done") }
         if issues.count > 1 { return "\(completedCount)/\(issues.count) tasks" }
-        return "Progress"
+        return L("Progress")
     }
 
     var body: some View {
@@ -637,29 +637,34 @@ extension WorkView {
 
         if lowercased.contains("javascript") || lowercased.contains("browser") {
             return (
-                "Browser Error",
-                "Something went wrong while interacting with the browser. This might be a temporary issue."
+                L("Browser Error"),
+                L("Something went wrong while interacting with the browser. This might be a temporary issue.")
             )
         } else if lowercased.contains("timeout") {
-            return ("Request Timed Out", "The operation took too long to complete. Please try again.")
+            return (L("Request Timed Out"), L("The operation took too long to complete. Please try again."))
+        } else if lowercased.contains("context window") || lowercased.contains("context length") {
+            return (
+                L("Context Too Long"),
+                L("The model exceeded its context window. Try a shorter message or start a new chat.")
+            )
         } else if lowercased.contains("network") || lowercased.contains("connection") {
-            return ("Connection Issue", "Unable to connect to the service. Please check your internet connection.")
+            return (L("Connection Issue"), L("Unable to connect to the service. Please check your internet connection."))
         } else if lowercased.contains("rate limit") || lowercased.contains("too many") {
-            return ("Rate Limited", "Too many requests. Please wait a moment before trying again.")
+            return (L("Rate Limited"), L("Too many requests. Please wait a moment before trying again."))
         } else if lowercased.contains("api") || lowercased.contains("unauthorized") || lowercased.contains("401") {
-            return ("Authentication Error", "There was an issue with the API credentials. Please check your settings.")
+            return (L("Authentication Error"), L("There was an issue with the API credentials. Please check your settings."))
         } else if lowercased.contains("cancelled") || lowercased.contains("canceled") {
-            return ("Task Cancelled", "The operation was stopped before it could complete.")
+            return (L("Task Cancelled"), L("The operation was stopped before it could complete."))
         } else if lowercased.contains("not found") || lowercased.contains("404") {
-            return ("Not Found", "The requested resource could not be found.")
+            return (L("Not Found"), L("The requested resource could not be found."))
         } else if lowercased.contains("server") || lowercased.contains("500") || lowercased.contains("502")
             || lowercased.contains("503")
         {
-            return ("Server Error", "The service is temporarily unavailable. Please try again later.")
+            return (L("Server Error"), L("The service is temporarily unavailable. Please try again later."))
         } else {
             // Generic fallback - show truncated original error
             let truncated = error.count > 80 ? String(error.prefix(80)) + "..." : error
-            return ("Something Went Wrong", truncated)
+            return (L("Something Went Wrong"), truncated)
         }
     }
 

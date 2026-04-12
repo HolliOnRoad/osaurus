@@ -58,7 +58,7 @@ final class ChatWindowState: ObservableObject {
     @Published private(set) var filteredSessions: [ChatSessionData] = []
     @Published private(set) var cachedSystemPrompt: String = ""
     @Published private(set) var cachedActiveAgent: Agent = .default
-    @Published private(set) var cachedAgentDisplayName: String = "Assistant"
+    @Published private(set) var cachedAgentDisplayName: String = L("Assistant")
 
     // MARK: - Private
 
@@ -82,7 +82,7 @@ final class ChatWindowState: ObservableObject {
         // Pre-compute view values
         self.cachedSystemPrompt = AgentManager.shared.effectiveSystemPrompt(for: agentId)
         self.cachedActiveAgent = agents.first { $0.id == agentId } ?? .default
-        self.cachedAgentDisplayName = cachedActiveAgent.isBuiltIn ? "Assistant" : cachedActiveAgent.name
+        self.cachedAgentDisplayName = cachedActiveAgent.isBuiltIn ? L("Assistant") : cachedActiveAgent.name
         decodeBackgroundImageAsync(themeConfig: theme.customThemeConfig)
 
         // Configure session
@@ -112,7 +112,7 @@ final class ChatWindowState: ObservableObject {
         self.filteredSessions = ChatSessionsManager.shared.sessions(for: context.agentId)
         self.cachedSystemPrompt = AgentManager.shared.effectiveSystemPrompt(for: context.agentId)
         self.cachedActiveAgent = agents.first { $0.id == context.agentId } ?? .default
-        self.cachedAgentDisplayName = cachedActiveAgent.isBuiltIn ? "Assistant" : cachedActiveAgent.name
+        self.cachedAgentDisplayName = cachedActiveAgent.isBuiltIn ? L("Assistant") : cachedActiveAgent.name
         decodeBackgroundImageAsync(themeConfig: theme.customThemeConfig)
 
         self.session.onSessionChanged = { [weak self] in
@@ -248,7 +248,7 @@ final class ChatWindowState: ObservableObject {
     func refreshAgents() {
         agents = AgentManager.shared.agents
         cachedActiveAgent = agents.first { $0.id == agentId } ?? .default
-        cachedAgentDisplayName = cachedActiveAgent.isBuiltIn ? "Assistant" : cachedActiveAgent.name
+        cachedAgentDisplayName = cachedActiveAgent.isBuiltIn ? L("Assistant") : cachedActiveAgent.name
     }
 
     func refreshSessions() {
@@ -285,7 +285,7 @@ final class ChatWindowState: ObservableObject {
     func refreshAgentConfig() {
         cachedSystemPrompt = AgentManager.shared.effectiveSystemPrompt(for: agentId)
         cachedActiveAgent = agents.first { $0.id == agentId } ?? .default
-        cachedAgentDisplayName = cachedActiveAgent.isBuiltIn ? "Assistant" : cachedActiveAgent.name
+        cachedAgentDisplayName = cachedActiveAgent.isBuiltIn ? L("Assistant") : cachedActiveAgent.name
         session.invalidateTokenCache()
     }
 

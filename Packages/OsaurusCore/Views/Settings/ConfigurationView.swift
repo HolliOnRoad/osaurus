@@ -119,19 +119,19 @@ struct ConfigurationView: View {
 
                                     // Start at Login
                                     SettingsToggle(
-                                        title: L("Start at Login"),
+                                        title: "Start at Login",
                                         description: "Launch Osaurus when you sign in",
                                         isOn: $tempStartAtLogin
                                     )
 
                                     SettingsToggle(
-                                        title: L("Hide Dock Icon"),
+                                        title: "Hide Dock Icon",
                                         description: "Run in menu bar only (requires restart)",
                                         isOn: $tempHideDockIcon
                                     )
 
                                     SettingsToggle(
-                                        title: L("Beta Updates"),
+                                        title: "Beta Updates",
                                         description:
                                             "Receive pre-release updates with new features before they're generally available",
                                         isOn: $updater.isBetaChannel
@@ -303,7 +303,7 @@ struct ConfigurationView: View {
                                         VStack(alignment: .leading, spacing: 10) {
                                             Picker("", selection: $tempPreflightSearchMode) {
                                                 ForEach(PreflightSearchMode.allCases, id: \.self) { mode in
-                                                    Text(mode.rawValue.capitalized).tag(mode)
+                                                    Text(mode.displayName).tag(mode)
                                                 }
                                             }
                                             .pickerStyle(.segmented)
@@ -398,7 +398,7 @@ struct ConfigurationView: View {
 
                                     // Network Exposure Toggle
                                     SettingsToggle(
-                                        title: L("Expose to Network"),
+                                        title: "Expose to Network",
                                         description: "Allow devices on your network to connect",
                                         isOn: $tempExposeToNetwork
                                     )
@@ -468,7 +468,7 @@ struct ConfigurationView: View {
                                                     "KV cache compression for ~5x memory savings. Auto-detected based on available RAM.",
                                                 badge: tempTurboQuant == nil
                                                     ? (turboQuantAutoEnabled ? "(Auto-Enabled)" : "(Auto-Disabled)")
-                                                    : nil,
+                                                    : nil as LocalizedStringKey?,
                                                 isOn: turboQuantBinding
                                             )
                                             DisclosureGroup("Advanced") {
@@ -518,7 +518,7 @@ struct ConfigurationView: View {
                                         VStack(alignment: .leading, spacing: 10) {
                                             Picker("", selection: $tempEvictionPolicy) {
                                                 ForEach(ModelEvictionPolicy.allCases, id: \.self) { policy in
-                                                    Text(policy.rawValue).tag(policy)
+                                                    Text(policy.displayName).tag(policy)
                                                 }
                                             }
                                             .pickerStyle(.segmented)
@@ -552,7 +552,7 @@ struct ConfigurationView: View {
                                 VStack(alignment: .leading, spacing: 20) {
                                     // Enable Toasts Toggle
                                     SettingsToggle(
-                                        title: L("Show Toast Notifications"),
+                                        title: "Show Toast Notifications",
                                         description: "Display notifications for background tasks and events",
                                         isOn: $tempToastEnabled
                                     )
@@ -1354,7 +1354,7 @@ private struct ToastPositionPicker: View {
 private struct SettingsSection<Content: View>: View {
     @ObservedObject private var themeManager = ThemeManager.shared
 
-    let title: String
+    let title: String.LocalizationValue
     let icon: String
     @ViewBuilder let content: () -> Content
 
@@ -1366,7 +1366,7 @@ private struct SettingsSection<Content: View>: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(themeManager.currentTheme.accentColor)
 
-                Text(title.uppercased())
+                Text(String(localized: title, bundle: .module).uppercased())
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(themeManager.currentTheme.secondaryText)
                     .tracking(0.5)
@@ -1389,20 +1389,20 @@ private struct SettingsSection<Content: View>: View {
 private struct SettingsField<Content: View>: View {
     @ObservedObject private var themeManager = ThemeManager.shared
 
-    let label: String
-    var hint: String? = nil
+    let label: LocalizedStringKey
+    var hint: LocalizedStringKey? = nil
     @ViewBuilder let content: () -> Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(label)
+            Text(label, bundle: .module)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundColor(themeManager.currentTheme.secondaryText)
 
             content()
 
             if let hint = hint {
-                Text(hint)
+                Text(hint, bundle: .module)
                     .font(.system(size: 11))
                     .foregroundColor(themeManager.currentTheme.tertiaryText)
             }
@@ -1413,7 +1413,9 @@ private struct SettingsField<Content: View>: View {
 private struct SettingsSubsection<Content: View>: View {
     @ObservedObject private var themeManager = ThemeManager.shared
 
-    let label: String
+    // LocalizationValue so we can call `String(localized:bundle:)` and still
+    // render an uppercased label from the package catalog.
+    let label: String.LocalizationValue
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -1425,7 +1427,7 @@ private struct SettingsSubsection<Content: View>: View {
                     .frame(width: 3, height: 14)
                     .clipShape(RoundedRectangle(cornerRadius: 1.5))
 
-                Text(label.uppercased())
+                Text(String(localized: label, bundle: .module).uppercased())
                     .font(.system(size: 10, weight: .bold))
                     .foregroundColor(themeManager.currentTheme.tertiaryText)
                     .tracking(0.5)
@@ -1442,21 +1444,21 @@ private struct SettingsSubsection<Content: View>: View {
 private struct StyledSettingsTextArea: View {
     @ObservedObject private var themeManager = ThemeManager.shared
 
-    let label: String
+    let label: LocalizedStringKey
     @Binding var text: String
-    let placeholder: String
-    let hint: String
+    let placeholder: LocalizedStringKey
+    let hint: LocalizedStringKey
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(label)
+            Text(label, bundle: .module)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundColor(themeManager.currentTheme.secondaryText)
 
             ZStack(alignment: .topLeading) {
                 // Themed placeholder overlay
                 if text.isEmpty {
-                    Text(placeholder)
+                    Text(placeholder, bundle: .module)
                         .font(.system(size: 13, design: .monospaced))
                         .foregroundColor(themeManager.currentTheme.placeholderText)
                         .padding(.top, 12)
@@ -1480,7 +1482,7 @@ private struct StyledSettingsTextArea: View {
                     )
             )
 
-            Text(hint)
+            Text(hint, bundle: .module)
                 .font(.system(size: 11))
                 .foregroundColor(themeManager.currentTheme.tertiaryText)
         }
@@ -1492,23 +1494,28 @@ private struct StyledSettingsTextArea: View {
 private struct StyledSettingsTextField: View {
     @ObservedObject private var themeManager = ThemeManager.shared
 
-    let label: String
+    let label: LocalizedStringKey
     @Binding var text: String
-    let placeholder: String
-    let help: String
+    // Placeholder often contains user-visible example strings that must
+    // also come from the catalog; keep as LocalizedStringKey.
+    let placeholder: LocalizedStringKey
+    // Empty-check is done via a separate `placeholderIsEmpty` flag since
+    // `LocalizedStringKey` has no `.isEmpty`. Callers always provide a
+    // non-empty placeholder today.
+    let help: LocalizedStringKey
 
     @State private var isFocused = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(label)
+                Text(label, bundle: .module)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(themeManager.currentTheme.secondaryText)
 
                 Spacer()
 
-                Text(help)
+                Text(help, bundle: .module)
                     .font(.system(size: 10))
                     .foregroundColor(themeManager.currentTheme.tertiaryText)
                     .lineLimit(1)
@@ -1517,8 +1524,8 @@ private struct StyledSettingsTextField: View {
             HStack(spacing: 10) {
                 ZStack(alignment: .leading) {
                     // Themed placeholder overlay
-                    if text.isEmpty && !placeholder.isEmpty {
-                        Text(placeholder)
+                    if text.isEmpty {
+                        Text(placeholder, bundle: .module)
                             .font(.system(size: 13, design: .monospaced))
                             .foregroundColor(themeManager.currentTheme.placeholderText)
                             .allowsHitTesting(false)
@@ -1562,8 +1569,8 @@ private struct StyledSettingsTextField: View {
 private struct SettingsSliderField: View {
     @ObservedObject private var themeManager = ThemeManager.shared
 
-    let label: String
-    let help: String
+    let label: LocalizedStringKey
+    let help: LocalizedStringKey
     @Binding var text: String
     let range: ClosedRange<Float>
     let step: Float
@@ -1587,13 +1594,13 @@ private struct SettingsSliderField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(label)
+                Text(label, bundle: .module)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(themeManager.currentTheme.secondaryText)
 
                 Spacer()
 
-                Text(help)
+                Text(help, bundle: .module)
                     .font(.system(size: 10))
                     .foregroundColor(themeManager.currentTheme.tertiaryText)
                     .lineLimit(1)
@@ -1669,8 +1676,8 @@ private struct SettingsSliderField: View {
 private struct SettingsStepperField: View {
     @ObservedObject private var themeManager = ThemeManager.shared
 
-    let label: String
-    let help: String
+    let label: LocalizedStringKey
+    let help: LocalizedStringKey
     @Binding var text: String
     let range: ClosedRange<Int>
     let step: Int
@@ -1688,13 +1695,13 @@ private struct SettingsStepperField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(label)
+                Text(label, bundle: .module)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(themeManager.currentTheme.secondaryText)
 
                 Spacer()
 
-                Text(help)
+                Text(help, bundle: .module)
                     .font(.system(size: 10))
                     .foregroundColor(themeManager.currentTheme.tertiaryText)
                     .lineLimit(1)
@@ -1792,25 +1799,25 @@ private struct SettingsStepperField: View {
 private struct SettingsToggle: View {
     @ObservedObject private var themeManager = ThemeManager.shared
 
-    let title: String
-    let description: String
-    var badge: String? = nil
+    let title: LocalizedStringKey
+    let description: LocalizedStringKey
+    var badge: LocalizedStringKey? = nil
     @Binding var isOn: Bool
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
-                    Text(title)
+                    Text(title, bundle: .module)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(themeManager.currentTheme.primaryText)
                     if let badge {
-                        Text(badge)
+                        Text(badge, bundle: .module)
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(themeManager.currentTheme.accentColor)
                     }
                 }
-                Text(description)
+                Text(description, bundle: .module)
                     .font(.system(size: 11))
                     .foregroundStyle(themeManager.currentTheme.tertiaryText)
             }
@@ -1940,18 +1947,18 @@ private struct VoiceSettingsSection: View {
 
     private var modelStatusText: String {
         if speechService.isLoadingModel {
-            return "Loading model..."
+            return L("Loading model...")
         } else if speechService.isModelLoaded {
             if let modelId = speechService.loadedModelId,
                 let model = modelManager.availableModels.first(where: { $0.id == modelId })
             {
                 return model.name
             }
-            return "Model Loaded"
+            return L("Model Loaded")
         } else if modelManager.downloadedModelsCount == 0 {
-            return "No models downloaded"
+            return L("No models downloaded")
         } else {
-            return "Model not loaded"
+            return L("Model not loaded")
         }
     }
 

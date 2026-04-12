@@ -147,11 +147,11 @@ struct AgentsView: View {
                     title: L("Create Your First Agent"),
                     subtitle: L("Custom AI assistants with unique prompts, tools, and styles."),
                     examples: [
-                        .init(icon: "calendar", title: "Daily Planner", description: "Manage your schedule"),
-                        .init(icon: "message.fill", title: "Message Assistant", description: "Draft and send texts"),
-                        .init(icon: "map.fill", title: "Local Guide", description: "Find places nearby"),
+                        .init(icon: "calendar", title: L("Daily Planner"), description: L("Manage your schedule")),
+                        .init(icon: "message.fill", title: L("Message Assistant"), description: L("Draft and send texts")),
+                        .init(icon: "map.fill", title: L("Local Guide"), description: L("Find places nearby")),
                     ],
-                    primaryAction: .init(title: "Create Agent", icon: "plus", handler: { isCreating = true }),
+                    primaryAction: .init(title: L("Create Agent"), icon: "plus", handler: { isCreating = true }),
                     secondaryAction: .init(
                         title: L("Import"),
                         icon: "square.and.arrow.down",
@@ -398,7 +398,7 @@ private struct AgentCard: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 6) {
-                            Text(agent.name)
+                            Text(agent.displayName)
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(theme.primaryText)
                                 .lineLimit(1)
@@ -416,8 +416,8 @@ private struct AgentCard: View {
                             }
                         }
 
-                        if !agent.description.isEmpty {
-                            Text(agent.description)
+                        if !agent.displayDescription.isEmpty {
+                            Text(agent.displayDescription)
                                 .font(.system(size: 11))
                                 .foregroundColor(theme.secondaryText)
                                 .lineLimit(1)
@@ -581,10 +581,10 @@ private enum DetailTab: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .configure: return "Configure"
-        case .sandbox: return "Sandbox"
-        case .automation: return "Automation"
-        case .memory: return "Memory"
+        case .configure: return L("Configure")
+        case .sandbox: return L("Sandbox")
+        case .automation: return L("Automation")
+        case .memory: return L("Memory")
         }
     }
 
@@ -599,10 +599,10 @@ private enum DetailTab: String, CaseIterable {
 
     var helperText: String {
         switch self {
-        case .configure: return "Set up instructions, model settings, shortcuts, and appearance."
-        case .sandbox: return "Configure sandbox execution and relay tunnel access."
-        case .automation: return "Set up schedules and file watchers for autonomous behavior."
-        case .memory: return "View conversation history, working memory, and summaries."
+        case .configure: return L("Set up instructions, model settings, shortcuts, and appearance.")
+        case .sandbox: return L("Configure sandbox execution and relay tunnel access.")
+        case .automation: return L("Set up schedules and file watchers for autonomous behavior.")
+        case .memory: return L("View conversation history, working memory, and summaries.")
         }
     }
 }
@@ -2328,7 +2328,7 @@ struct AgentDetailView: View {
     private var themePickerGrid: some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 12)], spacing: 12) {
             ThemeOptionCard(
-                name: "Default",
+                name: L("Default"),
                 colors: [theme.accentColor, theme.primaryBackground, theme.successColor],
                 isSelected: selectedThemeId == nil,
                 onSelect: {
@@ -2649,7 +2649,7 @@ struct AgentDetailView: View {
                                         .foregroundColor(theme.tertiaryText)
                                 }
                                 Spacer()
-                                Text(task.status.rawValue.capitalized)
+                                Text(task.status.displayName)
                                     .font(.system(size: 10, weight: .medium))
                                     .foregroundColor(taskStatusColor(task.status))
                             }
@@ -3073,7 +3073,7 @@ private struct AgentEditorSheet: View {
                         VStack(alignment: .leading, spacing: 12) {
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 12)], spacing: 12) {
                                 ThemeOptionCard(
-                                    name: "Default",
+                                    name: L("Default"),
                                     colors: [theme.accentColor, theme.primaryBackground, theme.successColor],
                                     isSelected: selectedThemeId == nil,
                                     onSelect: { selectedThemeId = nil }

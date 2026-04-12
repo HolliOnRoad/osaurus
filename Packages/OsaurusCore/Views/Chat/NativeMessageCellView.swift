@@ -927,7 +927,7 @@ final class NativeMessageCellView: NSTableCellView {
             nativeHeaderView = hv
         }
 
-        let displayName = role == .user ? "You" : (name.isEmpty ? "Assistant" : name)
+        let displayName = role == .user ? L("You") : (name.isEmpty ? L("Assistant") : name)
         nativeHeaderView?.configure(
             turnId: block.turnId,
             role: role,
@@ -1222,7 +1222,7 @@ final class NativeMessageCellView: NSTableCellView {
         nativeHeaderView?.configure(
             turnId: block.turnId,
             role: .user,
-            name: "You",
+            name: L("You"),
             isEditing: context.editingTurnId == block.turnId,
             isHovered: context.isTurnHovered,
             theme: theme,

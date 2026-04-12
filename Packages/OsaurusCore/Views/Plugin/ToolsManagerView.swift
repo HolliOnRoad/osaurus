@@ -1146,7 +1146,7 @@ private struct ToolPolicyMenu: View {
                     HStack {
                         Image(systemName: ToolPolicyStyle.icon(for: policy))
                             .foregroundColor(ToolPolicyStyle.color(for: policy, theme: theme))
-                        Text(policy.rawValue.capitalized)
+                        Text(policy.displayName)
                             .foregroundColor(ToolPolicyStyle.color(for: policy, theme: theme))
                     }
                 }
@@ -1156,7 +1156,7 @@ private struct ToolPolicyMenu: View {
                 Image(systemName: ToolPolicyStyle.icon(for: info.effectivePolicy))
                     .font(.system(size: 9))
                     .foregroundColor(ToolPolicyStyle.color(for: info.effectivePolicy, theme: theme))
-                Text(info.effectivePolicy.rawValue.capitalized)
+                Text(info.effectivePolicy.displayName)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(ToolPolicyStyle.color(for: info.effectivePolicy, theme: theme))
                 Image(systemName: "chevron.up.chevron.down")
