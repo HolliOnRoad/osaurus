@@ -145,7 +145,12 @@ enum PluginsTab: String, CaseIterable, AnimatedTabItem {
     case installed = "Installed"
     case browse = "Browse"
 
-    var title: String { rawValue }
+    var title: String {
+        switch self {
+        case .installed: return L("Installed")
+        case .browse: return L("Browse")
+        }
+    }
 }
 
 // MARK: - Sandbox Tab (for SandboxView)
