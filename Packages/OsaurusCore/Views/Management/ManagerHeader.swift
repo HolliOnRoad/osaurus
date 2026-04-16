@@ -211,13 +211,13 @@ struct ManagerHeaderWithTabs<Actions: View, TabsRow: View>: View {
 struct HeaderPrimaryButton: View {
     @Environment(\.theme) private var theme
 
-    let title: String
+    let title: LocalizedStringKey
     let icon: String?
     let action: () -> Void
 
     @State private var isHovering = false
 
-    init(_ title: String, icon: String? = nil, action: @escaping () -> Void) {
+    init(_ title: LocalizedStringKey, icon: String? = nil, action: @escaping () -> Void) {
         self.title = title
         self.icon = icon
         self.action = action
@@ -230,7 +230,7 @@ struct HeaderPrimaryButton: View {
                     Image(systemName: icon)
                         .font(.system(size: 12, weight: .semibold))
                 }
-                Text(title)
+                Text(title, bundle: .module)
                     .font(.system(size: 13, weight: .semibold))
             }
             .foregroundColor(.white)
@@ -257,13 +257,13 @@ struct HeaderPrimaryButton: View {
 struct HeaderSecondaryButton: View {
     @Environment(\.theme) private var theme
 
-    let title: String
+    let title: LocalizedStringKey
     let icon: String?
     let action: () -> Void
 
     @State private var isHovering = false
 
-    init(_ title: String, icon: String? = nil, action: @escaping () -> Void) {
+    init(_ title: LocalizedStringKey, icon: String? = nil, action: @escaping () -> Void) {
         self.title = title
         self.icon = icon
         self.action = action
@@ -276,7 +276,7 @@ struct HeaderSecondaryButton: View {
                     Image(systemName: icon)
                         .font(.system(size: 12, weight: .medium))
                 }
-                Text(title)
+                Text(title, bundle: .module)
                     .font(.system(size: 13, weight: .medium))
             }
             .foregroundColor(theme.primaryText)

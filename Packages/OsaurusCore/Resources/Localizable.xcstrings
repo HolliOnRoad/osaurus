@@ -151,12 +151,42 @@
         }
       }
     },
+    "API Reference": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Referenz"
+          }
+        }
+      }
+    },
+    "ARGUMENTS": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ARGUMENTE"
+          }
+        }
+      }
+    },
     "AUTHENTICATION": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "AUTHENTIFIZIERUNG"
+          }
+        }
+      }
+    },
+    "About Osaurus": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über Osaurus"
           }
         }
       }
@@ -197,6 +227,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Danksagungen"
+          }
+        }
+      }
+    },
+    "Acknowledgements…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Danksagungen…"
           }
         }
       }
@@ -421,6 +461,16 @@
         }
       }
     },
+    "Aggressive search. Up to 15 tools loaded, may increase prompt size.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggressive Suche. Bis zu 15 Tools geladen, kann Prompt-Größe erhöhen."
+          }
+        }
+      }
+    },
     "All": {
       "localizations": {
         "de": {
@@ -631,6 +681,16 @@
         }
       }
     },
+    "Anthropic": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anthropic"
+          }
+        }
+      }
+    },
     "Any OpenAI-compatible API": {
       "localizations": {
         "de": {
@@ -821,6 +881,16 @@
         }
       }
     },
+    "Authentication Error": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Authentifizierungsfehler"
+          }
+        }
+      }
+    },
     "Author": {
       "localizations": {
         "de": {
@@ -871,6 +941,16 @@
         }
       }
     },
+    "Auto-sort files into folders by type": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dateien automatisch nach Typ sortieren"
+          }
+        }
+      }
+    },
     "Automate recurring AI tasks with custom schedules": {
       "localizations": {
         "de": {
@@ -887,6 +967,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Automatische Benachrichtigungen zu festgelegten Zeiten"
+          }
+        }
+      }
+    },
+    "Automatic": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisch"
+          }
+        }
+      }
+    },
+    "Automatically sends message after a brief pause": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sendet Nachricht automatisch nach kurzer Pause"
+          }
+        }
+      }
+    },
+    "Automatically unloads other models. Recommended for standard use.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entlädt andere Modelle automatisch. Empfohlen für Standardnutzung."
           }
         }
       }
@@ -981,6 +1091,16 @@
         }
       }
     },
+    "Avg Latency": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ø Latenz"
+          }
+        }
+      }
+    },
     "Back": {
       "localizations": {
         "de": {
@@ -1017,6 +1137,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hintergrundaufgabe läuft"
+          }
+        }
+      }
+    },
+    "Balanced": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewogen"
+          }
+        }
+      }
+    },
+    "Balanced for normal conversation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgewogen für normale Konversation"
           }
         }
       }
@@ -1101,12 +1241,42 @@
         }
       }
     },
+    "Browser Error": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browser-Fehler"
+          }
+        }
+      }
+    },
     "Bubble Style": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Blasen-Stil"
+          }
+        }
+      }
+    },
+    "Build a landing page for ": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baue eine Landing Page für "
+          }
+        }
+      }
+    },
+    "Build a site": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Website bauen"
           }
         }
       }
@@ -1271,6 +1441,16 @@
         }
       }
     },
+    "Cancelled": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgebrochen"
+          }
+        }
+      }
+    },
     "Cannot be retrieved by Osaurus": {
       "localizations": {
         "de": {
@@ -1367,6 +1547,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chat-Modus — Unterhalte dich wie in einem Gespräch.\nWork-Modus — Gib eine Aufgabe und lass sie im Hintergrund erledigen."
+          }
+        }
+      }
+    },
+    "Chat UI": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chat-Oberfläche"
           }
         }
       }
@@ -1611,6 +1801,16 @@
         }
       }
     },
+    "Commitment": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zusage"
+          }
+        }
+      }
+    },
     "Complete setup to enable voice": {
       "localizations": {
         "de": {
@@ -1641,6 +1841,16 @@
         }
       }
     },
+    "Completed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgeschlossen"
+          }
+        }
+      }
+    },
     "Components": {
       "localizations": {
         "de": {
@@ -1657,6 +1867,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Computer-Audio"
+          }
+        }
+      }
+    },
+    "Configuration": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konfiguration"
           }
         }
       }
@@ -1717,6 +1937,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ressourcen für den Linux-Container konfigurieren. Diese können später geändert werden."
+          }
+        }
+      }
+    },
+    "Configure sandbox execution and relay tunnel access.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox-Ausführung und Relay-Tunnel-Zugriff konfigurieren."
           }
         }
       }
@@ -1861,6 +2091,16 @@
         }
       }
     },
+    "Connection Issue": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbindungsproblem"
+          }
+        }
+      }
+    },
     "Contacts": {
       "localizations": {
         "de": {
@@ -1887,6 +2127,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kontextlänge"
+          }
+        }
+      }
+    },
+    "Context Too Long": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontext zu lang"
           }
         }
       }
@@ -2077,6 +2327,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eckenradius"
+          }
+        }
+      }
+    },
+    "Correction": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Korrektur"
           }
         }
       }
@@ -2401,6 +2661,16 @@
         }
       }
     },
+    "Daily": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Täglich"
+          }
+        }
+      }
+    },
     "Daily Planner": {
       "localizations": {
         "de": {
@@ -2417,6 +2687,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dunkel"
+          }
+        }
+      }
+    },
+    "Database": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datenbank"
           }
         }
       }
@@ -2461,6 +2741,16 @@
         }
       }
     },
+    "Decision": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entscheidung"
+          }
+        }
+      }
+    },
     "Default": {
       "localizations": {
         "de": {
@@ -2497,6 +2787,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Standard-Modell"
+          }
+        }
+      }
+    },
+    "Default. Up to 8 relevant tools loaded.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard. Bis zu 8 relevante Tools geladen."
           }
         }
       }
@@ -2621,6 +2921,16 @@
         }
       }
     },
+    "Disable pre-flight search. Only explicit tool calls are used.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorflug-Suche deaktivieren. Nur explizite Tool-Aufrufe werden verwendet."
+          }
+        }
+      }
+    },
     "Disable tools": {
       "localizations": {
         "de": {
@@ -2647,6 +2957,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Trennen"
+          }
+        }
+      }
+    },
+    "Discord Community": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discord-Community"
           }
         }
       }
@@ -2901,6 +3221,16 @@
         }
       }
     },
+    "Edit Watcher": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watcher bearbeiten"
+          }
+        }
+      }
+    },
     "Editing": {
       "localizations": {
         "de": {
@@ -2917,6 +3247,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aktivieren"
+          }
+        }
+      }
+    },
+    "Enable Sandbox for autonomous code execution": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox für autonome Code-Ausführung aktivieren"
           }
         }
       }
@@ -2957,6 +3297,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aktiviert"
+          }
+        }
+      }
+    },
+    "English-only model with highest recall": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur-Englisch-Modell mit höchster Trefferquote"
           }
         }
       }
@@ -3031,6 +3381,16 @@
         }
       }
     },
+    "Errors": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehler"
+          }
+        }
+      }
+    },
     "Estimated Size": {
       "localizations": {
         "de": {
@@ -3057,6 +3417,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ablauf"
+          }
+        }
+      }
+    },
+    "Explain ": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erkläre "
+          }
+        }
+      }
+    },
+    "Explain a concept": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konzept erklären"
           }
         }
       }
@@ -3097,6 +3477,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Im Netzwerk freigeben"
+          }
+        }
+      }
+    },
+    "Fact": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fakt"
           }
         }
       }
@@ -3187,6 +3577,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plugin konnte nicht geladen werden"
+          }
+        }
+      }
+    },
+    "Fast": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schnell"
           }
         }
       }
@@ -3297,6 +3697,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Beheben"
+          }
+        }
+      }
+    },
+    "Flexible (Multi Model)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flexibel (mehrere Modelle)"
           }
         }
       }
@@ -3601,6 +4011,16 @@
         }
       }
     },
+    "Google Gemini": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Gemini"
+          }
+        }
+      }
+    },
     "Gradient": {
       "localizations": {
         "de": {
@@ -3631,12 +4051,62 @@
         }
       }
     },
+    "Granted": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erteilt"
+          }
+        }
+      }
+    },
+    "HTTP API": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP-API"
+          }
+        }
+      }
+    },
     "Hello": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Hallo"
+          }
+        }
+      }
+    },
+    "Help me organize ": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hilf mir zu organisieren: "
+          }
+        }
+      }
+    },
+    "Help me write": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Schreiben helfen"
+          }
+        }
+      }
+    },
+    "Help me write ": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hilf mir beim Schreiben von "
           }
         }
       }
@@ -3651,12 +4121,32 @@
         }
       }
     },
+    "High": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoch"
+          }
+        }
+      }
+    },
     "History": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Verlauf"
+          }
+        }
+      }
+    },
+    "Hourly": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stündlich"
           }
         }
       }
@@ -4041,12 +4531,32 @@
         }
       }
     },
+    "Keeps models loaded until manually unloaded. Requires 32GB+ RAM.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hält Modelle geladen bis zum manuellen Entladen. Erfordert 32 GB+ RAM."
+          }
+        }
+      }
+    },
     "Key": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Schlüssel"
+          }
+        }
+      }
+    },
+    "Keyboard Shortcuts": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tastenkürzel"
           }
         }
       }
@@ -4087,6 +4597,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Groß"
+          }
+        }
+      }
+    },
+    "Large (4 GB+)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groß (4 GB+)"
           }
         }
       }
@@ -4261,6 +4781,16 @@
         }
       }
     },
+    "Loading identity...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identität wird geladen…"
+          }
+        }
+      }
+    },
     "Loading image...": {
       "localizations": {
         "de": {
@@ -4277,6 +4807,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gedächtnis wird geladen..."
+          }
+        }
+      }
+    },
+    "Loading model...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell wird geladen…"
           }
         }
       }
@@ -4361,6 +4901,16 @@
         }
       }
     },
+    "Low": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niedrig"
+          }
+        }
+      }
+    },
     "MCP Providers": {
       "localizations": {
         "de": {
@@ -4401,12 +4951,52 @@
         }
       }
     },
+    "Manage Agents…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agenten verwalten…"
+          }
+        }
+      }
+    },
+    "Manage Schedules…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeitpläne verwalten…"
+          }
+        }
+      }
+    },
+    "Manage Themes…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Themes verwalten…"
+          }
+        }
+      }
+    },
     "Manage Tools": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Tools verwalten"
+          }
+        }
+      }
+    },
+    "Manage Watchers…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watcher verwalten…"
           }
         }
       }
@@ -4551,6 +5141,16 @@
         }
       }
     },
+    "Medium (2-4 GB)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mittel (2-4 GB)"
+          }
+        }
+      }
+    },
     "Memory": {
       "localizations": {
         "de": {
@@ -4591,12 +5191,32 @@
         }
       }
     },
+    "Message or attach files...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachricht oder Dateien anhängen…"
+          }
+        }
+      }
+    },
     "Message or paste image...": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Nachricht oder Bild einfügen…"
+          }
+        }
+      }
+    },
+    "Message queued": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachricht in Warteschlange"
           }
         }
       }
@@ -4611,12 +5231,32 @@
         }
       }
     },
+    "Minimal tool injection. Up to 3 tools loaded.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimale Tool-Einbindung. Bis zu 3 Tools geladen."
+          }
+        }
+      }
+    },
     "Minute of Hour": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Minute der Stunde"
+          }
+        }
+      }
+    },
+    "Minutes": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minuten"
           }
         }
       }
@@ -4647,6 +5287,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modelldetails"
+          }
+        }
+      }
+    },
+    "Model Family": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modellfamilie"
+          }
+        }
+      }
+    },
+    "Model Loaded": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell geladen"
+          }
+        }
+      }
+    },
+    "Model Size": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modellgröße"
+          }
+        }
+      }
+    },
+    "Model Type": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelltyp"
+          }
+        }
+      }
+    },
+    "Model not loaded": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell nicht geladen"
           }
         }
       }
@@ -4751,6 +5441,16 @@
         }
       }
     },
+    "Monthly": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monatlich"
+          }
+        }
+      }
+    },
     "Morning Briefing": {
       "localizations": {
         "de": {
@@ -4761,12 +5461,32 @@
         }
       }
     },
+    "Multilingual model supporting 25 European languages": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehrsprachiges Modell mit 25 europäischen Sprachen"
+          }
+        }
+      }
+    },
     "Name": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Name"
+          }
+        }
+      }
+    },
+    "Narrow": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schmal"
           }
         }
       }
@@ -4831,6 +5551,16 @@
         }
       }
     },
+    "New Schedule…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuer Zeitplan…"
+          }
+        }
+      }
+    },
     "New Skill": {
       "localizations": {
         "de": {
@@ -4847,6 +5577,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Neues Tool"
+          }
+        }
+      }
+    },
+    "New Watcher…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuer Watcher…"
+          }
+        }
+      }
+    },
+    "New Window": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neues Fenster"
+          }
+        }
+      }
+    },
+    "New Window with Agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neues Fenster mit Agent"
           }
         }
       }
@@ -5141,6 +5901,16 @@
         }
       }
     },
+    "No models downloaded": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Modelle heruntergeladen"
+          }
+        }
+      }
+    },
     "No models found": {
       "localizations": {
         "de": {
@@ -5351,6 +6121,36 @@
         }
       }
     },
+    "Not Found": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht gefunden"
+          }
+        }
+      }
+    },
+    "Not Granted": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht erteilt"
+          }
+        }
+      }
+    },
+    "Not Provisioned": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht bereitgestellt"
+          }
+        }
+      }
+    },
     "Not available": {
       "localizations": {
         "de": {
@@ -5431,6 +6231,16 @@
         }
       }
     },
+    "Once": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmalig"
+          }
+        }
+      }
+    },
     "Once this finishes, you'll have an AI running entirely on your Mac — no account, no cloud, no data leaving your machine.": {
       "localizations": {
         "de": {
@@ -5497,6 +6307,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vollbild öffnen"
+          }
+        }
+      }
+    },
+    "Open Responses": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Responses"
           }
         }
       }
@@ -5611,6 +6431,16 @@
         }
       }
     },
+    "OpenAI Compatible": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenAI-kompatibel"
+          }
+        }
+      }
+    },
     "OpenRouter, MiniMax, etc.": {
       "localizations": {
         "de": {
@@ -5647,6 +6477,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Optional ein visuelles Theme für diesen Agenten zuweisen."
+          }
+        }
+      }
+    },
+    "Or type a custom response...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oder eigene Antwort eingeben…"
+          }
+        }
+      }
+    },
+    "Organize my files": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dateien organisieren"
+          }
+        }
+      }
+    },
+    "Osaurus Agent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osaurus-Agent"
+          }
+        }
+      }
+    },
+    "Osaurus Help": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osaurus-Hilfe"
           }
         }
       }
@@ -5751,12 +6621,42 @@
         }
       }
     },
+    "Parakeet v2 (English)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parakeet v2 (Englisch)"
+          }
+        }
+      }
+    },
+    "Parakeet v3 (Multilingual)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parakeet v3 (Mehrsprachig)"
+          }
+        }
+      }
+    },
     "Parameters": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Parameter"
+          }
+        }
+      }
+    },
+    "Paste %@ From": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus %@ einfügen"
           }
         }
       }
@@ -5787,6 +6687,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Über Zwischenablage einfügen (empfohlen)"
+          }
+        }
+      }
+    },
+    "Patient": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geduldig"
           }
         }
       }
@@ -5871,6 +6781,16 @@
         }
       }
     },
+    "Picks up quiet speech, waits longer for pauses": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erkennt leises Sprechen, wartet länger auf Pausen"
+          }
+        }
+      }
+    },
     "Please fill in all required fields": {
       "localizations": {
         "de": {
@@ -5947,6 +6867,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Plugins"
+          }
+        }
+      }
+    },
+    "Preference": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Präferenz"
           }
         }
       }
@@ -6051,6 +6981,16 @@
         }
       }
     },
+    "Process shared files on change": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geteilte Dateien bei Änderung verarbeiten"
+          }
+        }
+      }
+    },
     "Processing": {
       "localizations": {
         "de": {
@@ -6117,6 +7057,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bietet:"
+          }
+        }
+      }
+    },
+    "Queue a follow-up message...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folgenachricht einreihen…"
           }
         }
       }
@@ -6217,6 +7167,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "RESSOURCEN"
+          }
+        }
+      }
+    },
+    "RESULT": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ERGEBNIS"
+          }
+        }
+      }
+    },
+    "Rate Limited": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu viele Anfragen"
           }
         }
       }
@@ -6421,6 +7391,16 @@
         }
       }
     },
+    "Relationship": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beziehung"
+          }
+        }
+      }
+    },
     "Relays": {
       "localizations": {
         "de": {
@@ -6501,12 +7481,32 @@
         }
       }
     },
+    "Rename and organize screenshots": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshots umbenennen und organisieren"
+          }
+        }
+      }
+    },
     "Replace path parameters with real values. Test via curl or your HTTP client.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Ersetze Pfad-Parameter durch echte Werte. Teste mit curl oder deinem HTTP-Client."
+          }
+        }
+      }
+    },
+    "Report an Issue…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Problem melden…"
           }
         }
       }
@@ -6521,6 +7521,16 @@
         }
       }
     },
+    "Request Timed Out": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeitüberschreitung"
+          }
+        }
+      }
+    },
     "Required Files": {
       "localizations": {
         "de": {
@@ -6531,12 +7541,42 @@
         }
       }
     },
+    "Requires louder speech, faster response": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfordert lauteres Sprechen, schnellere Reaktion"
+          }
+        }
+      }
+    },
+    "Research ": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recherchiere "
+          }
+        }
+      }
+    },
     "Research Analyst": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Forschungsanalyst"
+          }
+        }
+      }
+    },
+    "Research a topic": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thema recherchieren"
           }
         }
       }
@@ -6671,12 +7711,32 @@
         }
       }
     },
+    "Restarting Server...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server wird neugestartet…"
+          }
+        }
+      }
+    },
     "Restarting...": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Startet neu…"
+          }
+        }
+      }
+    },
+    "Restore View Defaults": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ansicht zurücksetzen"
           }
         }
       }
@@ -6851,6 +7911,16 @@
         }
       }
     },
+    "Runs Well": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Läuft gut"
+          }
+        }
+      }
+    },
     "Runs entirely on your Mac. No account needed.": {
       "localizations": {
         "de": {
@@ -6941,6 +8011,46 @@
         }
       }
     },
+    "Sandbox enabled — container not running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox aktiviert — Container läuft nicht"
+          }
+        }
+      }
+    },
+    "Sandbox is active — click to disable. Right-click for settings.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox ist aktiv — klicken zum Deaktivieren. Rechtsklick für Einstellungen."
+          }
+        }
+      }
+    },
+    "Sandbox is not available on this system": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox ist auf diesem System nicht verfügbar"
+          }
+        }
+      }
+    },
+    "Sandbox is starting up…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sandbox startet…"
+          }
+        }
+      }
+    },
     "Sandbox requires macOS 26 or later.": {
       "localizations": {
         "de": {
@@ -7007,6 +8117,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Speichere diesen Wiederherstellungscode. Er wird nicht nochmal angezeigt."
+          }
+        }
+      }
+    },
+    "Save your recovery code": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speichere deinen Wiederherstellungscode"
           }
         }
       }
@@ -7371,6 +8491,36 @@
         }
       }
     },
+    "Server Error": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serverfehler"
+          }
+        }
+      }
+    },
+    "Server Running": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server läuft"
+          }
+        }
+      }
+    },
+    "Server Stopped": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server gestoppt"
+          }
+        }
+      }
+    },
     "Server URL": {
       "localizations": {
         "de": {
@@ -7461,12 +8611,42 @@
         }
       }
     },
+    "Set up instructions, model settings, shortcuts, and appearance.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anweisungen, Modell-Einstellungen, Tastenkürzel und Erscheinungsbild einrichten."
+          }
+        }
+      }
+    },
+    "Set up schedules and file watchers for autonomous behavior.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeitpläne und Datei-Watcher für autonomes Verhalten einrichten."
+          }
+        }
+      }
+    },
     "Set up this agent's identity in the Identity tab": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Richte die Identität dieses Agenten im Identität-Tab ein"
+          }
+        }
+      }
+    },
+    "Set up your Osaurus Identity": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richte deine Osaurus-Identität ein"
           }
         }
       }
@@ -7487,6 +8667,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Einstellungen"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen…"
           }
         }
       }
@@ -7631,6 +8821,16 @@
         }
       }
     },
+    "Skill": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fähigkeit"
+          }
+        }
+      }
+    },
     "Skill is available for use": {
       "localizations": {
         "de": {
@@ -7701,6 +8901,16 @@
         }
       }
     },
+    "Small (<2 GB)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klein (<2 GB)"
+          }
+        }
+      }
+    },
     "Solid": {
       "localizations": {
         "de": {
@@ -7731,12 +8941,32 @@
         }
       }
     },
+    "Something Went Wrong": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etwas ist schiefgelaufen"
+          }
+        }
+      }
+    },
     "Something went wrong": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Etwas ist schiefgelaufen"
+          }
+        }
+      }
+    },
+    "Something went wrong while interacting with the browser. This might be a temporary issue.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Zugriff auf den Browser ist etwas schiefgelaufen. Vermutlich ein vorübergehendes Problem."
           }
         }
       }
@@ -7851,6 +9081,16 @@
         }
       }
     },
+    "Starting Server...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server wird gestartet…"
+          }
+        }
+      }
+    },
     "Starting...": {
       "localizations": {
         "de": {
@@ -7867,6 +9107,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Starte…"
+          }
+        }
+      }
+    },
+    "Statistics": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistiken"
           }
         }
       }
@@ -7921,6 +9171,16 @@
         }
       }
     },
+    "Stopping Server...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server wird gestoppt…"
+          }
+        }
+      }
+    },
     "Stopping...": {
       "localizations": {
         "de": {
@@ -7971,6 +9231,26 @@
         }
       }
     },
+    "Strict (One Model)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strikt (ein Modell)"
+          }
+        }
+      }
+    },
+    "Success": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfolg"
+          }
+        }
+      }
+    },
     "Suggested models will appear here": {
       "localizations": {
         "de": {
@@ -7987,6 +9267,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zusammenfassungen"
+          }
+        }
+      }
+    },
+    "Summarize text": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text zusammenfassen"
+          }
+        }
+      }
+    },
+    "Summarize the following: ": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fasse Folgendes zusammen: "
           }
         }
       }
@@ -8047,6 +9347,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Synchronisiere..."
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "System Audio": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemton"
           }
         }
       }
@@ -8137,6 +9457,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aufgabe"
+          }
+        }
+      }
+    },
+    "Task Cancelled": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgabe abgebrochen"
           }
         }
       }
@@ -8321,6 +9651,66 @@
         }
       }
     },
+    "The model exceeded its context window. Try a shorter message or start a new chat.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Modell hat sein Kontextfenster überschritten. Versuche eine kürzere Nachricht oder starte einen neuen Chat."
+          }
+        }
+      }
+    },
+    "The operation took too long to complete. Please try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Vorgang hat zu lange gedauert. Bitte erneut versuchen."
+          }
+        }
+      }
+    },
+    "The operation was stopped before it could complete.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Vorgang wurde beendet, bevor er abgeschlossen war."
+          }
+        }
+      }
+    },
+    "The requested resource could not be found.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die angeforderte Ressource wurde nicht gefunden."
+          }
+        }
+      }
+    },
+    "The service is temporarily unavailable. Please try again later.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Dienst ist vorübergehend nicht erreichbar. Bitte später erneut versuchen."
+          }
+        }
+      }
+    },
+    "Theme": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theme"
+          }
+        }
+      }
+    },
     "Theme Editor": {
       "localizations": {
         "de": {
@@ -8351,6 +9741,16 @@
         }
       }
     },
+    "There was an issue with the API credentials. Please check your settings.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Problem mit den API-Zugangsdaten. Bitte Einstellungen prüfen."
+          }
+        }
+      }
+    },
     "These instructions will be sent to the AI when the schedule runs.": {
       "localizations": {
         "de": {
@@ -8377,6 +9777,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Denkt nach"
+          }
+        }
+      }
+    },
+    "Thinking…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denkt nach…"
           }
         }
       }
@@ -8451,6 +9861,16 @@
         }
       }
     },
+    "Tight Fit": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Knappe Passform"
+          }
+        }
+      }
+    },
     "Tile": {
       "localizations": {
         "de": {
@@ -8497,6 +9917,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Modell-Denkmodus umschalten"
+          }
+        }
+      }
+    },
+    "Too Large": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu groß"
+          }
+        }
+      }
+    },
+    "Too many requests. Please wait a moment before trying again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu viele Anfragen. Bitte kurz warten und erneut versuchen."
           }
         }
       }
@@ -8581,6 +10021,16 @@
         }
       }
     },
+    "Total Calls": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufrufe gesamt"
+          }
+        }
+      }
+    },
     "Transcription": {
       "localizations": {
         "de": {
@@ -8631,6 +10081,16 @@
         }
       }
     },
+    "Triggers quickly. Best for screenshots, single-file drops.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reagiert schnell. Ideal für Screenshots und einzelne Dateien."
+          }
+        }
+      }
+    },
     "Troubleshoot or reset the application. A factory reset permanently deletes all data and settings.": {
       "localizations": {
         "de": {
@@ -8671,6 +10131,16 @@
         }
       }
     },
+    "Type your response...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antwort eingeben…"
+          }
+        }
+      }
+    },
     "Typing Indicator": {
       "localizations": {
         "de": {
@@ -8687,6 +10157,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Auf die ausgewählte Datei konnte nicht zugegriffen werden"
+          }
+        }
+      }
+    },
+    "Unable to connect to the service. Please check your internet connection.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Verbindung zum Dienst. Bitte Internetverbindung prüfen."
           }
         }
       }
@@ -8851,6 +10331,16 @@
         }
       }
     },
+    "Uses the default system behavior": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwendet das Standardverhalten"
+          }
+        }
+      }
+    },
     "Uses your global chat settings": {
       "localizations": {
         "de": {
@@ -8947,6 +10437,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Artefakt anzeigen"
+          }
+        }
+      }
+    },
+    "View conversation history, working memory, and summaries.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprächsverlauf, Arbeitsspeicher und Zusammenfassungen anzeigen."
           }
         }
       }
@@ -9151,6 +10651,36 @@
         }
       }
     },
+    "Waits for rapid changes to settle. Good for general use.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartet bis schnelle Änderungen abgeschlossen sind. Gut für allgemeinen Gebrauch."
+          }
+        }
+      }
+    },
+    "Waits for you to manually click the stop button": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartet bis du manuell den Stopp-Button klickst"
+          }
+        }
+      }
+    },
+    "Waits longer for downloads and batch operations to finish.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartet länger auf Downloads und Batch-Operationen."
+          }
+        }
+      }
+    },
     "Wake Word Settings": {
       "localizations": {
         "de": {
@@ -9171,12 +10701,32 @@
         }
       }
     },
+    "Weekly": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wöchentlich"
+          }
+        }
+      }
+    },
     "Weekly Report": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Wochenbericht"
+          }
+        }
+      }
+    },
+    "What do you want done?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was soll erledigt werden?"
           }
         }
       }
@@ -9201,12 +10751,32 @@
         }
       }
     },
+    "What's next?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was kommt als Nächstes?"
+          }
+        }
+      }
+    },
     "What's the difference?": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Was ist der Unterschied?"
+          }
+        }
+      }
+    },
+    "Wide": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Breit"
           }
         }
       }
@@ -9231,12 +10801,62 @@
         }
       }
     },
+    "Write a blog post": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blogbeitrag schreiben"
+          }
+        }
+      }
+    },
+    "Write a blog post about ": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreibe einen Blogbeitrag über "
+          }
+        }
+      }
+    },
+    "Write code": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code schreiben"
+          }
+        }
+      }
+    },
+    "Write code that ": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreibe Code, der "
+          }
+        }
+      }
+    },
     "Xcode builds need separate grants. Try 'tccutil reset AppleEvents' if stuck.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Xcode-Builds benötigen separate Berechtigungen. Bei Problemen: 'tccutil reset AppleEvents'."
+          }
+        }
+      }
+    },
+    "Yearly": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jährlich"
           }
         }
       }
@@ -9271,6 +10891,26 @@
         }
       }
     },
+    "Your Overrides": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Überschreibungen"
+          }
+        }
+      }
+    },
+    "Your identity is active": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Identität ist aktiv"
+          }
+        }
+      }
+    },
     "Your key never leaves your device.": {
       "localizations": {
         "de": {
@@ -9297,6 +10937,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dein Server ist im lokalen Netzwerk sichtbar, solange Bonjour aktiviert ist."
+          }
+        }
+      }
+    },
+    "code": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code"
           }
         }
       }
@@ -9357,6 +11007,116 @@
           "stringUnit": {
             "state": "translated",
             "value": "verbraucht"
+          }
+        }
+      }
+    },
+    "model": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell"
+          }
+        }
+      }
+    },
+    "models": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modelle"
+          }
+        }
+      }
+    },
+    "downloaded": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "heruntergeladen"
+          }
+        }
+      }
+    },
+    "Installed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installiert"
+          }
+        }
+      }
+    },
+    "Recovery": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiederherstellung"
+          }
+        }
+      }
+    },
+    "Recovery code saved": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiederherstellungscode gespeichert"
+          }
+        }
+      }
+    },
+    "From MLX registry": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus MLX-Registry"
+          }
+        }
+      }
+    },
+    "Speak and see your words here...": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprich und sieh deine Worte hier…"
+          }
+        }
+      }
+    },
+    "RAM": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arbeitsspeicher"
+          }
+        }
+      }
+    },
+    "Disk": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Festplatte"
+          }
+        }
+      }
+    },
+    "%.0f GB free / %.0f GB": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.0f GB frei / %.0f GB"
           }
         }
       }

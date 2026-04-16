@@ -42,21 +42,27 @@ private extension osaurusApp {
 
     var fileMenuCommands: some Commands {
         CommandGroup(replacing: .newItem) {
-            Button("New Window") {
+            Button {
                 Task { @MainActor in
                     ChatWindowManager.shared.createWindow()
                 }
+            } label: {
+                Text(verbatim: L("New Window"))
             }
             .keyboardShortcut("n", modifiers: .command)
 
-            Menu("New Window with Agent") {
+            Menu {
                 ForEach(AgentManager.shared.agents, id: \.id) { agent in
-                    Button(agent.name) {
+                    Button {
                         Task { @MainActor in
                             ChatWindowManager.shared.createWindow(agentId: agent.id)
                         }
+                    } label: {
+                        Text(verbatim: agent.isBuiltIn ? L("Default") : agent.name)
                     }
                 }
+            } label: {
+                Text(verbatim: L("New Window with Agent"))
             }
         }
     }
@@ -83,8 +89,8 @@ private extension osaurusApp {
 
     var settingsCommand: some Commands {
         CommandGroup(replacing: .appSettings) {
-            Button("Settings…") {
-                openManagementTab(nil)
+            Button { openManagementTab(nil) } label: {
+                Text(verbatim: L("Settings…"))
             }
             .keyboardShortcut(",", modifiers: .command)
         }
@@ -94,13 +100,15 @@ private extension osaurusApp {
 
     var aboutCommand: some Commands {
         CommandGroup(replacing: .appInfo) {
-            Button("About Osaurus") {
+            Button {
                 NSApp.orderFrontStandardAboutPanel(options: [
                     .applicationName: "Osaurus",
                     .applicationVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
                         ?? "1.0",
                     .version: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1",
                 ])
+            } label: {
+                Text(verbatim: L("About Osaurus"))
             }
         }
     }
@@ -111,7 +119,7 @@ private extension osaurusApp {
         CommandGroup(after: .sidebar) {
             Divider()
 
-            Menu("Theme") {
+            Menu {
                 ForEach(themeManager.installedThemes, id: \.metadata.id) { theme in
                     Button {
                         themeManager.applyCustomTheme(theme)
@@ -128,9 +136,11 @@ private extension osaurusApp {
 
                 Divider()
 
-                Button("Manage Themes…") {
-                    openManagementTab(.themes)
+                Button { openManagementTab(.themes) } label: {
+                    Text(verbatim: L("Manage Themes…"))
                 }
+            } label: {
+                Text(verbatim: L("Theme"))
             }
         }
     }
@@ -140,9 +150,9 @@ private extension osaurusApp {
     var windowMenuCommands: some Commands {
         CommandGroup(after: .windowList) {
             Divider()
-            Button("Models") { openManagementTab(.models) }
-            Button("Plugins") { openManagementTab(.plugins) }
-            Button("Server") { openManagementTab(.server) }
+            Button { openManagementTab(.models) } label: { Text(verbatim: L("Models")) }
+            Button { openManagementTab(.plugins) } label: { Text(verbatim: L("Plugins")) }
+            Button { openManagementTab(.server) } label: { Text(verbatim: L("Server")) }
         }
     }
 
@@ -150,37 +160,49 @@ private extension osaurusApp {
 
     var helpMenuCommands: some Commands {
         CommandGroup(replacing: .help) {
-            Button("Osaurus Help") {
+            Button {
                 openURL("https://docs.osaurus.ai/")
+            } label: {
+                Text(verbatim: L("Osaurus Help"))
             }
             .keyboardShortcut("?", modifiers: .command)
 
             Divider()
 
-            Button("Documentation") {
+            Button {
                 openURL("https://docs.osaurus.ai/")
+            } label: {
+                Text(verbatim: L("Documentation"))
             }
 
-            Button("Discord Community") {
+            Button {
                 openURL("https://discord.gg/dinoki")
+            } label: {
+                Text(verbatim: L("Discord Community"))
             }
 
-            Button("Report an Issue…") {
+            Button {
                 openURL("https://github.com/osaurus-ai/osaurus/issues/new")
+            } label: {
+                Text(verbatim: L("Report an Issue…"))
             }
 
             Divider()
 
-            Button("Keyboard Shortcuts") {
+            Button {
                 openURL("https://docs.osaurus.ai/keyboard-shortcuts")
+            } label: {
+                Text(verbatim: L("Keyboard Shortcuts"))
             }
 
             Divider()
 
-            Button("Acknowledgements…") {
+            Button {
                 Task { @MainActor in
                     appDelegate.showAcknowledgements()
                 }
+            } label: {
+                Text(verbatim: L("Acknowledgements…"))
             }
         }
     }
@@ -191,10 +213,10 @@ private extension osaurusApp {
 private extension osaurusApp {
 
     var schedulesMenu: some View {
-        Menu("Schedules") {
+        Menu {
             ForEach(scheduleManager.schedules) { schedule in
-                Button(schedule.name) {
-                    openManagementTab(.schedules)
+                Button { openManagementTab(.schedules) } label: {
+                    Text(verbatim: schedule.name)
                 }
             }
 
@@ -202,21 +224,23 @@ private extension osaurusApp {
                 Divider()
             }
 
-            Button("New Schedule…") {
-                openManagementTab(.schedules)
+            Button { openManagementTab(.schedules) } label: {
+                Text(verbatim: L("New Schedule…"))
             }
 
-            Button("Manage Schedules…") {
-                openManagementTab(.schedules)
+            Button { openManagementTab(.schedules) } label: {
+                Text(verbatim: L("Manage Schedules…"))
             }
+        } label: {
+            Text(verbatim: L("Schedules"))
         }
     }
 
     var watchersMenu: some View {
-        Menu("Watchers") {
+        Menu {
             ForEach(watcherManager.watchers) { watcher in
-                Button(watcher.name) {
-                    openManagementTab(.watchers)
+                Button { openManagementTab(.watchers) } label: {
+                    Text(verbatim: watcher.name)
                 }
             }
 
@@ -224,31 +248,37 @@ private extension osaurusApp {
                 Divider()
             }
 
-            Button("New Watcher…") {
-                openManagementTab(.watchers)
+            Button { openManagementTab(.watchers) } label: {
+                Text(verbatim: L("New Watcher…"))
             }
 
-            Button("Manage Watchers…") {
-                openManagementTab(.watchers)
+            Button { openManagementTab(.watchers) } label: {
+                Text(verbatim: L("Manage Watchers…"))
             }
+        } label: {
+            Text(verbatim: L("Watchers"))
         }
     }
 
     var agentsMenu: some View {
-        Menu("Agents") {
+        Menu {
             ForEach(AgentManager.shared.agents, id: \.id) { agent in
-                Button(agent.name) {
+                Button {
                     Task { @MainActor in
                         ChatWindowManager.shared.createWindow(agentId: agent.id)
                     }
+                } label: {
+                    Text(verbatim: agent.isBuiltIn ? L("Default") : agent.name)
                 }
             }
 
             Divider()
 
-            Button("Manage Agents…") {
-                openManagementTab(.agents)
+            Button { openManagementTab(.agents) } label: {
+                Text(verbatim: L("Manage Agents…"))
             }
+        } label: {
+            Text(verbatim: L("Agents"))
         }
     }
 }

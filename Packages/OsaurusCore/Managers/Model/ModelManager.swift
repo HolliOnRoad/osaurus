@@ -26,7 +26,13 @@ enum ModelListTab: String, CaseIterable, AnimatedTabItem {
     case downloaded = "Downloads"
 
     /// Display name for the tab (required by AnimatedTabItem)
-    var title: String { rawValue }
+    var title: String {
+        switch self {
+        case .all: return L("All")
+        case .suggested: return L("Recommended")
+        case .downloaded: return L("Downloads")
+        }
+    }
 }
 
 /// Manages MLX model catalog, discovery, and resolution.
@@ -56,6 +62,14 @@ final class ModelManager: NSObject, ObservableObject {
             case medium = "Medium (2-4 GB)"
             case large = "Large (4 GB+)"
             var id: String { rawValue }
+
+            var displayName: String {
+                switch self {
+                case .small: return L("Small (<2 GB)")
+                case .medium: return L("Medium (2-4 GB)")
+                case .large: return L("Large (4 GB+)")
+                }
+            }
 
             func matches(bytes: Int64?) -> Bool {
                 guard let bytes = bytes else { return false }
@@ -438,7 +452,7 @@ final class ModelManager: NSObject, ObservableObject {
             return MLXModel(
                 id: id,
                 name: ModelMetadataParser.friendlyName(from: id),
-                description: "From MLX registry",
+                description: L("From MLX registry"),
                 downloadURL: "https://huggingface.co/\(id)"
             )
         }

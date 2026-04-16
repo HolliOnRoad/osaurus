@@ -86,13 +86,13 @@ public enum MemoryEntryType: String, Codable, Sendable, CaseIterable {
 
     public var displayName: String {
         switch self {
-        case .fact: return "Fact"
-        case .preference: return "Preference"
-        case .decision: return "Decision"
-        case .correction: return "Correction"
-        case .commitment: return "Commitment"
-        case .relationship: return "Relationship"
-        case .skill: return "Skill"
+        case .fact: return L("Fact")
+        case .preference: return L("Preference")
+        case .decision: return L("Decision")
+        case .correction: return L("Correction")
+        case .commitment: return L("Commitment")
+        case .relationship: return L("Relationship")
+        case .skill: return L("Skill")
         }
     }
 }
